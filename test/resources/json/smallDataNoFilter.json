@@ -1,0 +1,21 @@
+{
+	"title": "Small Data No Filter",
+	"input": {
+		"WHERE": {
+		},
+		"OPTIONS": {
+			"COLUMNS": [
+				"single_dept",
+				"single_avg"
+			],
+			"ORDER": "single_avg"
+		}
+	},
+	"errorExpected": false,
+	"expected": [
+		{
+			"sections_dept": "NUM",
+			"sections_avg": 69.69
+		}
+	]
+}
