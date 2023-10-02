@@ -52,6 +52,33 @@ describe("InsightFacade", function()  {
 			});
 
 		});
+
+		// note dataset can still include non valid files
+		it("Should add a dataset but skip non JSON file", async function () {
+			let includesPDF: string = getContentFromArchives("some_invalid_file_format.zip");
+			return facade.addDataset("includesPDF", includesPDF, InsightDatasetKind.Sections)
+				.then((result) => {
+					expect(result).to.deep.equal(["includesPDF"]);
+				});
+		});
+
+		// A dataset contains some invalid sections: section doesn't contain every field that can be used for a query
+		it("Should add a dataset but skip invalid sections", async function () {
+			let invalidSections = getContentFromArchives("courses_invalidSections.zip");
+			return facade.addDataset("invalidSections", invalidSections, InsightDatasetKind.Sections)
+				.then((result) => {
+					expect(result).to.deep.equal(["invalidSections"]);
+				});
+		});
+
+		// A dataset contains only one section: fields all present but some empty
+		it("Should add dataset with section having empty fields", async function () {
+			let emptyFieldsSection = getContentFromArchives("section_with_emptyFields.zip");
+			return facade.addDataset("emptyFieldsSection", emptyFieldsSection, InsightDatasetKind.Sections)
+				.then((result) => {
+					expect(result).to.deep.equal(["emptyFieldsSection"]);
+				});
+		});
 	});
 	describe("addDataset invalid ID tests", function() {
 		let sections: string;
@@ -183,6 +210,26 @@ describe("InsightFacade", function()  {
 			const result = facade.addDataset("1234", sections, InsightDatasetKind.Sections);
 			return expect(result).to.eventually.be.rejectedWith(InsightError);
 		});
+
+		// Attempting to add a dataset with a file not in JSON format
+		it ("Should reject with an input dataset having only non JSON file", async function() {
+			let notJSONCourse = getContentFromArchives("some_invalid_file_format.zip");
+			return facade.addDataset("notJSONCourse", notJSONCourse, InsightDatasetKind.Sections)
+				.then((result) => {
+					expect(result).to.eventually.be.rejectedWith(InsightError);
+					expect(facade.listDatasets()).to.deep.equal([]);
+				});
+		});
+
+		// Attempting to add a dataset that contains no courses
+		it("Should reject with an input dataset missing courses", async function () {
+			let noCourses = getContentFromArchives("no_courses.zip");
+			return facade.addDataset("noCourses", noCourses, InsightDatasetKind.Sections)
+				.then((result) => {
+					expect(result).to.eventually.be.rejectedWith(InsightError);
+					expect(facade.listDatasets()).to.deep.equal([]);
+				});
+		});
 	});
 
 	describe("addDataset invalid kind tests", function() {
@@ -238,6 +285,22 @@ describe("InsightFacade", function()  {
 			return expect(result).to.eventually.be.deep.equal("1234").then(function() {
 				return expect(facade.listDatasets()).to.eventually.be.deep.equal([]);
 			});
+		});
+
+		// Multiple removals of datasets
+		it("Should remove multiple datasets from list", function () {
+			return facade.addDataset("1", sections, InsightDatasetKind.Sections)
+				.then(() => {
+					facade.addDataset("2", sections, InsightDatasetKind.Sections)
+						.then(async (result) => {
+							expect(result).to.deep.equal(["1", "2"]);
+							const result1 = await facade.removeDataset("1");
+							expect(result1).to.deep.equal("1");
+							const result2 = await facade.removeDataset("2");
+							expect(result2).to.deep.equal("2");
+							expect(facade.listDatasets()).to.deep.equal([]);
+						});
+				});
 		});
 	});
 
