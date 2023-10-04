@@ -1,9 +1,9 @@
-export interface Section {
-	result: Course[];
+export interface SectionQuery {
+	result: Section[];
 	rank:   number;
 }
 
-export interface Course {
+export interface Section {
 	tier_eighty_five: number;
 	tier_ninety:      number;
 	Title:            string;
