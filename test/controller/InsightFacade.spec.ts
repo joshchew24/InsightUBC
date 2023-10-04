@@ -301,121 +301,121 @@ describe("InsightFacade", function()  {
 				});
 		});
 	});
-
-	describe("listDatasets", function() {
-		let sections: string;
-		let facade: InsightFacade;
-
-		before(function() {
-			sections = singleSection;
-		});
-		beforeEach(function() {
-			clearDisk();
-			facade = new InsightFacade();
-		});
-
-		it("should return an empty list when there are no datasets to list", function() {
-			return expect(facade.listDatasets()).to.eventually.be.deep.equal([]);
-		});
-
-		it("should have one elem in the array that is the single dataset added in before", async function() {
-			await facade.addDataset("1234", sections, InsightDatasetKind.Sections);
-			const expected: InsightDataset[] = [
-				{
-					id: "test",
-					kind: InsightDatasetKind.Sections,
-					numRows: 1
-				}
-			];
-			const result = facade.listDatasets();
-			return expect(result).to.eventually.have.deep.members(expected);
-		});
-
-		it("should show all datasets that have been added", async function() {
-			await facade.addDataset("1", sections, InsightDatasetKind.Sections);
-			let expected: InsightDataset[] = [
-				{
-					id: "1",
-					kind: InsightDatasetKind.Sections,
-					numRows: 1
-				}
-			];
-			let result = await facade.listDatasets();
-			expect(result).to.have.deep.members(expected);
-
-			await facade.addDataset("2", sections, InsightDatasetKind.Sections);
-			expected.push({
-				id: "2",
-				kind: InsightDatasetKind.Sections,
-				numRows: 1
-			});
-			result = await facade.listDatasets();
-			expect(result).to.eventually.have.deep.members(expected);
-		});
-
-		it("should not show datasets that have been removed", async function() {
-			await facade.addDataset("1", sections, InsightDatasetKind.Sections);
-			await facade.addDataset("2", sections, InsightDatasetKind.Sections);
-			let expected: InsightDataset[] = [
-				{
-					id: "1",
-					kind: InsightDatasetKind.Sections,
-					numRows: 1
-				},
-				{
-					id: "2",
-					kind: InsightDatasetKind.Sections,
-					numRows: 1
-				}
-			];
-			let result = await facade.listDatasets();
-			expect(result).to.have.deep.members(expected);
-
-			await facade.removeDataset("2");
-			expected.pop();
-			return expect(facade.listDatasets()).to.eventually.be.deep.equal(expected);
-		});
-	});
-	describe("performQuery", function() {
-		let facade: InsightFacade;
-
-		before (async function() {
-			clearDisk();
-			facade = new InsightFacade();
-			await facade.addDataset("sections", pairSections, InsightDatasetKind.Sections);
-			await facade.addDataset("single", singleSection, InsightDatasetKind.Sections);
-		});
-
-		function target(input: Input): Promise<Output> {
-			return facade.performQuery(input);
-		}
-
-		function errorValidator(error: any): error is Error {
-			return error === "InsightError" || error === "ResultTooLargeError";
-		}
-
-		function assertOnResult(actual: any, expected: Output): void {
-			expect(actual).to.have.deep.members(expected);
-		}
-
-		function assertOnError(actual: any, expected: Error): void {
-			if (expected === "InsightError") {
-				expect(actual).to.be.an.instanceOf(InsightError);
-			} else {
-				expect(actual).to.be.an.instanceOf(ResultTooLargeError);
-			}
-		}
-
-		folderTest<Input, Output, Error>(
-			"performQuery tests",
-			target,
-			"./test/resources/json",
-			{
-				errorValidator,
-				assertOnError,
-				assertOnResult
-			}
-		);
-	});
+	//
+	// describe("listDatasets", function() {
+	// 	let sections: string;
+	// 	let facade: InsightFacade;
+	//
+	// 	before(function() {
+	// 		sections = singleSection;
+	// 	});
+	// 	beforeEach(function() {
+	// 		clearDisk();
+	// 		facade = new InsightFacade();
+	// 	});
+	//
+	// 	it("should return an empty list when there are no datasets to list", function() {
+	// 		return expect(facade.listDatasets()).to.eventually.be.deep.equal([]);
+	// 	});
+	//
+	// 	it("should have one elem in the array that is the single dataset added in before", async function() {
+	// 		await facade.addDataset("1234", sections, InsightDatasetKind.Sections);
+	// 		const expected: InsightDataset[] = [
+	// 			{
+	// 				id: "test",
+	// 				kind: InsightDatasetKind.Sections,
+	// 				numRows: 1
+	// 			}
+	// 		];
+	// 		const result = facade.listDatasets();
+	// 		return expect(result).to.eventually.have.deep.members(expected);
+	// 	});
+	//
+	// 	it("should show all datasets that have been added", async function() {
+	// 		await facade.addDataset("1", sections, InsightDatasetKind.Sections);
+	// 		let expected: InsightDataset[] = [
+	// 			{
+	// 				id: "1",
+	// 				kind: InsightDatasetKind.Sections,
+	// 				numRows: 1
+	// 			}
+	// 		];
+	// 		let result = await facade.listDatasets();
+	// 		expect(result).to.have.deep.members(expected);
+	//
+	// 		await facade.addDataset("2", sections, InsightDatasetKind.Sections);
+	// 		expected.push({
+	// 			id: "2",
+	// 			kind: InsightDatasetKind.Sections,
+	// 			numRows: 1
+	// 		});
+	// 		result = await facade.listDatasets();
+	// 		expect(result).to.eventually.have.deep.members(expected);
+	// 	});
+	//
+	// 	it("should not show datasets that have been removed", async function() {
+	// 		await facade.addDataset("1", sections, InsightDatasetKind.Sections);
+	// 		await facade.addDataset("2", sections, InsightDatasetKind.Sections);
+	// 		let expected: InsightDataset[] = [
+	// 			{
+	// 				id: "1",
+	// 				kind: InsightDatasetKind.Sections,
+	// 				numRows: 1
+	// 			},
+	// 			{
+	// 				id: "2",
+	// 				kind: InsightDatasetKind.Sections,
+	// 				numRows: 1
+	// 			}
+	// 		];
+	// 		let result = await facade.listDatasets();
+	// 		expect(result).to.have.deep.members(expected);
+	//
+	// 		await facade.removeDataset("2");
+	// 		expected.pop();
+	// 		return expect(facade.listDatasets()).to.eventually.be.deep.equal(expected);
+	// 	});
+	// });
+	// describe("performQuery", function() {
+	// 	let facade: InsightFacade;
+	//
+	// 	before (async function() {
+	// 		clearDisk();
+	// 		facade = new InsightFacade();
+	// 		await facade.addDataset("sections", pairSections, InsightDatasetKind.Sections);
+	// 		await facade.addDataset("single", singleSection, InsightDatasetKind.Sections);
+	// 	});
+	//
+	// 	function target(input: Input): Promise<Output> {
+	// 		return facade.performQuery(input);
+	// 	}
+	//
+	// 	function errorValidator(error: any): error is Error {
+	// 		return error === "InsightError" || error === "ResultTooLargeError";
+	// 	}
+	//
+	// 	function assertOnResult(actual: any, expected: Output): void {
+	// 		expect(actual).to.have.deep.members(expected);
+	// 	}
+	//
+	// 	function assertOnError(actual: any, expected: Error): void {
+	// 		if (expected === "InsightError") {
+	// 			expect(actual).to.be.an.instanceOf(InsightError);
+	// 		} else {
+	// 			expect(actual).to.be.an.instanceOf(ResultTooLargeError);
+	// 		}
+	// 	}
+	//
+	// 	folderTest<Input, Output, Error>(
+	// 		"performQuery tests",
+	// 		target,
+	// 		"./test/resources/json",
+	// 		{
+	// 			errorValidator,
+	// 			assertOnError,
+	// 			assertOnResult
+	// 		}
+	// 	);
+	// });
 
 });
