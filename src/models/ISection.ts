@@ -41,3 +41,17 @@ export interface Section {
 	Campus:           string;
 	Subject:          string;
 }
+
+export interface SectionPruned {
+	Title:            string;
+	id:               number;
+	Professor:        string;
+	Audit:            number;
+	Year:             string;
+	Course:           string;
+	Session:          string;
+	Pass:             number;
+	Fail:             number;
+	Avg:              number;
+	Subject:          string;
+}
