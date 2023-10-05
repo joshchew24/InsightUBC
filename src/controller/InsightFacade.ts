@@ -23,12 +23,9 @@ export default class InsightFacade implements IInsightFacade {
 	}
 
 	public addDataset(id: string, content: string, kind: InsightDatasetKind): Promise<string[]> {
-
-		// console.log("id: " + id);
 		const datasetArr: DatasetModel[] = this.retrieveDataset();
 
-		const datasets: Map<string, SectionPruned[]> = new Map<string, SectionPruned[]>();
-
+		// id data validation
 		if (!id || /^\s*$/.test(id) || id.includes("_")) {
 			return Promise.reject(new InsightError("Invalid ID"));
 		}
@@ -36,32 +33,25 @@ export default class InsightFacade implements IInsightFacade {
 			return Promise.reject(new InsightError("Invalid Content"));
 		}
 
-
 		const zip = new JSZip();
 		return zip.loadAsync(content, {base64: true})
 			.then((data) => {
+				// data validation
 				if (!data) {
 					throw new InsightError("Invalid Dataset: Missing courses directory");
 				}
-
-				// prune data of non JSON files
-				const files = data.filter((relativePath, file) => {
-					return relativePath.endsWith(".json");
-				});
-
-
 				return data;
 			})
 			.then((data) => {
-				// return an array of sections
+				// return an array of sections from content JSON
 				return this.fileProcessingPromises(data);
 			})
 			.then((sectionArr) => {
+				// write the dataset to disk
 				return this.outputDataset(id, kind, sectionArr, datasetArr);
 			})
 			.catch((error) => {
 				throw new InsightError(error.message);
-				// return this.outputDataset(id, kind, datasets, []);
 			});
 	}
 
@@ -77,19 +67,77 @@ export default class InsightFacade implements IInsightFacade {
 		return Promise.reject("Not implemented.");
 	}
 
+	private fileProcessingPromises(data: JSZip): Promise<Section[]>{
+		const sectionArr: Section[] = [];
+		const fileProcessingPromises = Object.keys(data.files).map((relativePath) => {
+			return data.file(relativePath)?.async("text").then((fileContent) => {
+				if (!fileContent) {
+					return;
+				}
+
+				// if start doesnt contain {" and the end doesnt contain "} then its not a json file
+				if (!fileContent.startsWith("{") || !fileContent.endsWith("}")) {
+					return Promise.resolve([]);
+				}
+				const courseStr = relativePath.replace("courses/", "");
+				const sectionQuery: SectionQuery = JSON.parse(fileContent);
+
+				sectionQuery.result.forEach((section: Section) => {
+					if (this.isValidSection(section)) {
+						// throw new InsightError("Invalid JSON data in file: " + relativePath);
+						sectionArr.push(section);
+					}
+				});
+			});
+		});
+		return Promise.all(fileProcessingPromises).then(() => {
+			return sectionArr.flat();
+		});
+	}
+
 	private isValidSection(section: Section): boolean {
-		if (!section.Course ||
-			!section.id ||
-			!section.Title ||
-			!section.Professor ||
-			!section.Subject ||
-			!section.Year ||
-			!section.Avg ||
-			!section.Pass ||
-			!section.Fail ||
-			!section.Audit) {
+
+		if(!section.Course){
 			return false;
+			// throw new InsightError("Invalid Course");
 		}
+		if(!section.id){
+			return false;
+			// throw new InsightError("Invalid id");
+		}
+		if(typeof section.Title !== "string"){
+			return false;
+			// throw new InsightError("Invalid Title");
+		}
+		if(typeof section.Professor !== "string"){
+			return false;
+			// throw new InsightError("Invalid Professor");
+		}
+		if(typeof section.Subject !== "string"){
+			return false;
+			// throw new InsightError("Invalid Subject");
+		}
+		if(!section.Year){
+			return false;
+			// throw new InsightError("Invalid Year");
+		}
+		if(typeof section.Avg !== "number" || section.Pass < 0){
+			return false;
+			// throw new InsightError("Invalid Avg");
+		}
+		if(typeof section.Pass !== "number" || section.Pass < 0){
+			return false;
+			// throw new InsightError("Invalid Pass");
+		}
+		if(typeof section.Fail !== "number" || section.Fail < 0){
+			return false;
+			// throw new InsightError("Invalid Fail");
+		}
+		if(typeof section.Audit !== "number" || section.Audit < 0){
+			return false;
+			// throw new InsightError("Invalid Audit");
+		}
+
 		return true;
 	}
 
@@ -115,111 +163,45 @@ export default class InsightFacade implements IInsightFacade {
 
 		datasetMap.set(id, sectionArr);
 
-		// console.log(sectionArr);
-
 		// new dataset array to remove repeated id
 		const newDatasetArr: DatasetModel[] = [];
-		datasetMap.forEach((value, key) => {
-			value.forEach((section) => {
-				newDatasetArr.push({
-					id: key,
-					section: value
-				});
+
+		// for each id in datasetMap, add the id and the section array to newDatasetArr
+		// throw error if section array is empty
+		for(const key of datasetMap.keys()){
+			const arrSize = datasetMap.get(key)?.length;
+			if(arrSize === 0){
+				throw new InsightError("Empty dataset");
+			}
+			newDatasetArr.push({
+				id: key,
+				section: datasetMap.get(key) as SectionPruned[]
 			});
-		});
+		}
 
-		// console.log(newDatasetArr);
-
-		// console.log(datasetArr);
-
-        // console.log(this.newDataset.keys());
-		// console.log(JSON.stringify(datasetArr, null, 4));
-		// console.log(datasetMap.keys());
-
-		fs.outputFileSync("./data/dataset.json", JSON.stringify(newDatasetArr, null, 4));
+		fs.outputFileSync(`./data/${id}.json`, JSON.stringify(newDatasetArr, null, 4));
 		return Array.from(datasetMap.keys());
 	}
 
 	private retrieveDataset(): DatasetModel[] {
 		try {
-			const data = fs.readFileSync("./data/dataset.json", "utf8");
-			const datasetArr: DatasetModel[] = JSON.parse(data);
-			// console.log(datasetArr);
+			// retrieve all JSON files from ./data if it exists
+			const files = fs.readdirSync("./data");
+			const datasetArr: DatasetModel[] = [];
+			files.forEach((file) => {
+				if (file.endsWith(".json")) {
+					const data = fs.readFileSync(`./data/${file}`, "utf8");
+					const dataset: DatasetModel[] = JSON.parse(data);
+					datasetArr.push(...dataset);
+				}
+			});
 			return datasetArr;
+
 		} catch (err) {
-			// console.log(err);
 			return [];
 		}
 	}
 
-	private fileProcessingPromises(data: JSZip): Promise<Section[]>{
-
-		const sectionArr: Section[] = [];
-
-		const fileProcessingPromises = Object.keys(data.files).map((relativePath) => {
-			return data.file(relativePath)?.async("text").then((fileContent) => {
-				if (!fileContent) {
-					return;
-				}
-				// console.log(relativePath);
-
-				const courseStr = relativePath.replace("courses/", "");
-				const sectionQuery: SectionQuery = JSON.parse(fileContent);
-
-				if (sectionQuery.result.length === 0) {
-					throw new InsightError("No valid sections found");
-				}
-
-				sectionQuery.result.forEach((section: Section) => {
-
-					// console.log(section);
-
-					if (!this.isValidSection(section)) {
-						// console.log("triggered");
-						throw new InsightError("Invalid JSON data in file: " + relativePath);
-					}
-
-					sectionArr.push(section);
-
-				});
-			});
-		});
-		return Promise.all(fileProcessingPromises).then(() => {
-			return Promise.resolve(sectionArr);
-		});
-
-		// return Promise.all(data.map((file) => {
-		// 	return file.async("text").then((fileContent) => {
-		// 		if (!fileContent) {
-		// 			return;
-		// 		}
-		// 		// console.log(relativePath);
-		//
-		// 		const courseStr = file.name.replace("courses/", "");
-		// 		const sectionQuery: SectionQuery = JSON.parse(fileContent);
-		//
-		// 		if (sectionQuery.result.length === 0) {
-		// 			throw new InsightError("No valid sections found");
-		// 		}
-		//
-		// 		sectionQuery.result.forEach((section: Section) => {
-		//
-		// 			// console.log(section);
-		//
-		// 			if (!this.isValidSection(section)) {
-		// 				// console.log("triggered");
-		// 				throw new InsightError("Invalid JSON data in file: " + file.name);
-		// 			}
-		//
-		// 			sectionArr.push(section);
-		//
-		// 		});
-		// 	});
-		// }
-		// )).then(() => {
-		// 	return Promise.resolve(sectionArr);
-		// }
-		// );
-	}
 }
+
 
