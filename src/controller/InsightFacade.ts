@@ -56,7 +56,32 @@ export default class InsightFacade implements IInsightFacade {
 	}
 
 	public removeDataset(id: string): Promise<string> {
-		return Promise.reject("Not implemented.");
+		try {
+			if (!id || /^\s*$/.test(id) || id.includes("_")) {
+				return Promise.reject(new InsightError("Invalid ID"));
+			}
+
+			const datasetArr: DatasetModel[] = this.retrieveDataset();
+
+			// console.log("dataset before: ", datasetArr);
+			// remove the dataset from disk if it exists and matches id
+			const filteredDatasetArr = datasetArr.filter((dataset) => {
+				// console.log("dataset.id: ", dataset.id);
+				// console.log("id: ", id);
+				return dataset.id !== id;
+			});
+			// console.log("dataset after: ", filteredDatasetArr);
+
+			if (filteredDatasetArr.length === datasetArr.length) {
+				throw new NotFoundError("ID not found");
+			}
+
+			fs.outputFileSync(`./data/${id}.json`, JSON.stringify(filteredDatasetArr, null, 4));
+			return Promise.resolve(id);
+		} catch (err) {
+			return Promise.reject(err);
+		}
+
 	}
 
 	public performQuery(query: unknown): Promise<InsightResult[]> {
@@ -64,7 +89,20 @@ export default class InsightFacade implements IInsightFacade {
 	}
 
 	public listDatasets(): Promise<InsightDataset[]> {
-		return Promise.reject("Not implemented.");
+		try {
+			const datasetArr: DatasetModel[] = this.retrieveDataset();
+
+			const insightDatasetArr: InsightDataset[] = datasetArr.map((dataset) => {
+				return {
+					id: dataset.id,
+					kind: InsightDatasetKind.Sections,
+					numRows: dataset.section.length,
+				};
+			});
+			return Promise.resolve(insightDatasetArr);
+		} catch (err) {
+			return Promise.reject(err);
+		}
 	}
 
 	private fileProcessingPromises(data: JSZip): Promise<Section[]>{
