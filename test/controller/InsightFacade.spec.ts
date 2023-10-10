@@ -103,7 +103,7 @@ describe("InsightFacade", function()  {
 
 		it("should reject adding a dataset with an existing id", function() {
 			const first = facade.addDataset("24", sections, InsightDatasetKind.Sections);
-			expect(first).to.eventually.deep.equal(["24"]).then(function() {
+			return expect(first).to.eventually.deep.equal(["24"]).then(function() {
 				const result = facade.addDataset("24", sections, InsightDatasetKind.Sections);
 				return expect(result).to.eventually.be.rejectedWith(InsightError);
 			});
