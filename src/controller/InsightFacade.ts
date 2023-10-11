@@ -97,7 +97,7 @@ export default class InsightFacade implements IInsightFacade {
 	public listDatasets(): Promise<InsightDataset[]> {
 		try {
 			const datasetArr: DatasetModel[] = this.retrieveDataset();
-			// check if datasetArr contains an empty array
+			// check if datasetArr contains dataset objects, if not return empty array
 			if (datasetArr.length === 1 && datasetArr[0].id === undefined) {
 				return Promise.resolve([]);
 			}
