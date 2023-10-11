@@ -27,7 +27,7 @@ describe("InsightFacade", function()  {
 		let facade: InsightFacade;
 
 		before(function() {
-			sections = pairSections;
+			sections = singleSection;
 		});
 
 		beforeEach(function() {
@@ -36,12 +36,10 @@ describe("InsightFacade", function()  {
 		});
 
 		it("should fulfill adding a new dataset with a valid ID", function() {
-			sections = pairSections;
 			const result = facade.addDataset("1234", sections, InsightDatasetKind.Sections);
 			return expect(result).to.eventually.deep.equal(["1234"]);
 		});
 		it("should accept multiple datasets with unique IDs", function() {
-			sections = pairSections;
 			const first = facade.addDataset("1", sections, InsightDatasetKind.Sections);
 			return expect(first).to.eventually.have.deep.members(["1"]).then(function() {
 				const second = facade.addDataset("2", sections, InsightDatasetKind.Sections);
@@ -212,23 +210,18 @@ describe("InsightFacade", function()  {
 		});
 
 		// Attempting to add a dataset with a file not in JSON format
-		it ("Should reject with an input dataset having only non JSON file", async function() {
-			let notJSONCourse = getContentFromArchives("some_invalid_file_format.zip");
-			return facade.addDataset("notJSONCourse", notJSONCourse, InsightDatasetKind.Sections)
-				.then((result) => {
-					expect(result).to.eventually.be.rejectedWith(InsightError);
-					expect(facade.listDatasets()).to.deep.equal([]);
-				});
+		it("Should reject with an input dataset having only non JSON file", function() {
+			let notJSONCourse = getContentFromArchives("only_nonjson_course.zip");
+			return expect(facade.addDataset("notJSONCourse", notJSONCourse, InsightDatasetKind.Sections))
+				.to.eventually.be.rejectedWith(InsightError);
 		});
+
 
 		// Attempting to add a dataset that contains no courses
 		it("Should reject with an input dataset missing courses", async function () {
 			let noCourses = getContentFromArchives("no_courses.zip");
-			return facade.addDataset("noCourses", noCourses, InsightDatasetKind.Sections)
-				.then((result) => {
-					expect(result).to.eventually.be.rejectedWith(InsightError);
-					expect(facade.listDatasets()).to.deep.equal([]);
-				});
+			return expect(facade.addDataset("noCourses", noCourses, InsightDatasetKind.Sections))
+				.to.eventually.be.rejectedWith(InsightError);
 		});
 	});
 
