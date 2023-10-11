@@ -69,21 +69,18 @@ export default class InsightFacade implements IInsightFacade {
 
 	public removeDataset(id: string): Promise<string> {
 		try {
+			// id data validation
 			if (!id || /^\s*$/.test(id) || id.includes("_")) {
 				return Promise.reject(new InsightError("Invalid ID"));
 			}
-
 			const datasetArr: DatasetModel[] = this.retrieveDataset();
-
 			// remove the dataset from disk if it exists and matches id
 			const filteredDatasetArr = datasetArr.filter((dataset) => {
 				return dataset.id !== id;
 			});
-
 			if (filteredDatasetArr.length === datasetArr.length) {
 				throw new NotFoundError("ID not found");
 			}
-
 			// remove the dataset from disk
 			fs.removeSync(`./data/${id}.json`);
 			return Promise.resolve(id);
@@ -100,12 +97,11 @@ export default class InsightFacade implements IInsightFacade {
 	public listDatasets(): Promise<InsightDataset[]> {
 		try {
 			const datasetArr: DatasetModel[] = this.retrieveDataset();
-
 			// check if datasetArr contains an empty array
 			if (datasetArr.length === 1 && datasetArr[0].id === undefined) {
 				return Promise.resolve([]);
 			}
-
+			// return an array of InsightDataset objects
 			const insightDatasetArr: InsightDataset[] = datasetArr.map((dataset) => {
 				return {
 					id: dataset.id,
