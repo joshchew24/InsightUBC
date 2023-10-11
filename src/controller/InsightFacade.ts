@@ -165,7 +165,7 @@ export default class InsightFacade implements IInsightFacade {
 						  sectionArr: Section[] ): string[] {
 
 
-		// the dataset output with the pruned version of the orignal JSON input
+		// the dataset output with the pruned version of the original JSON input
 		const newDataset: DatasetModel = {
 			id: id,
 			kind: kind,
