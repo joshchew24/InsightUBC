@@ -28,6 +28,7 @@ export default class InsightFacade implements IInsightFacade {
 			return Promise.reject(new InsightError("Invalid ID"));
 		}
 
+		// TODO: room for potential improvement for computation speed
 		// check if id already exists in dataset
 		const datasetArr: DatasetModel[] = this.retrieveDataset();
 		if (datasetArr.some((dataset) => dataset.id === id)) {
@@ -188,6 +189,7 @@ export default class InsightFacade implements IInsightFacade {
 
 		fs.outputFileSync(`./data/${id}.json`, JSON.stringify(newDataset, null, 4));
 
+		// TODO: room for potential improvement for computation speed
 		// return ids from datasetArr
 		const datasetArr: DatasetModel[] = this.retrieveDataset();
 		return datasetArr.map((dataset) => dataset.id);
