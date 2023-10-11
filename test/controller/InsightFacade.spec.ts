@@ -372,46 +372,46 @@ describe("InsightFacade", function()  {
 			return expect(facade.listDatasets()).to.eventually.be.deep.equal(expected);
 		});
 	});
-	// describe("performQuery", function() {
-	// 	let facade: InsightFacade;
-	//
-	// 	before (async function() {
-	// 		clearDisk();
-	// 		facade = new InsightFacade();
-	// 		await facade.addDataset("sections", pairSections, InsightDatasetKind.Sections);
-	// 		await facade.addDataset("single", singleSection, InsightDatasetKind.Sections);
-	// 	});
-	//
-	// 	function target(input: Input): Promise<Output> {
-	// 		return facade.performQuery(input);
-	// 	}
-	//
-	// 	function errorValidator(error: any): error is Error {
-	// 		return error === "InsightError" || error === "ResultTooLargeError";
-	// 	}
-	//
-	// 	function assertOnResult(actual: any, expected: Output): void {
-	// 		expect(actual).to.have.deep.members(expected);
-	// 	}
-	//
-	// 	function assertOnError(actual: any, expected: Error): void {
-	// 		if (expected === "InsightError") {
-	// 			expect(actual).to.be.an.instanceOf(InsightError);
-	// 		} else {
-	// 			expect(actual).to.be.an.instanceOf(ResultTooLargeError);
-	// 		}
-	// 	}
-	//
-	// 	folderTest<Input, Output, Error>(
-	// 		"performQuery tests",
-	// 		target,
-	// 		"./test/resources/json",
-	// 		{
-	// 			errorValidator,
-	// 			assertOnError,
-	// 			assertOnResult
-	// 		}
-	// 	);
-	// });
+	describe("performQuery", function() {
+		let facade: InsightFacade;
+
+		before (async function() {
+			clearDisk();
+			facade = new InsightFacade();
+			await facade.addDataset("sections", pairSections, InsightDatasetKind.Sections);
+			await facade.addDataset("single", singleSection, InsightDatasetKind.Sections);
+		});
+
+		function target(input: Input): Promise<Output> {
+			return facade.performQuery(input);
+		}
+
+		function errorValidator(error: any): error is Error {
+			return error === "InsightError" || error === "ResultTooLargeError";
+		}
+
+		function assertOnResult(actual: any, expected: Output): void {
+			expect(actual).to.have.deep.members(expected);
+		}
+
+		function assertOnError(actual: any, expected: Error): void {
+			if (expected === "InsightError") {
+				expect(actual).to.be.an.instanceOf(InsightError);
+			} else {
+				expect(actual).to.be.an.instanceOf(ResultTooLargeError);
+			}
+		}
+
+		folderTest<Input, Output, Error>(
+			"performQuery tests",
+			target,
+			"./test/resources/json",
+			{
+				errorValidator,
+				assertOnError,
+				assertOnResult
+			}
+		);
+	});
 
 });
