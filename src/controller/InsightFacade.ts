@@ -95,7 +95,6 @@ export default class InsightFacade implements IInsightFacade {
 				sectionQuery.result.forEach((section: Section) => {
 					// check if year is "overall"
 					if (section.Year === "overall") {
-						console.log("triggered");
 						section.Year = "1900";
 					}
 					// check if section is valid
