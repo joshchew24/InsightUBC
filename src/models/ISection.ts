@@ -43,15 +43,17 @@ export interface Section {
 }
 
 export interface SectionPruned {
-	Title:            string;
-	id:               number;
-	Professor:        string;
-	Audit:            number;
-	Year:             string;
-	Course:           string;
-	Session:          string;
-	Pass:             number;
-	Fail:             number;
-	Avg:              number;
-	Subject:          string;
+	title:            string;
+	// originally id
+	uuid:               number;
+	instructor:        string;
+	audit:            number;
+	year:             string;
+	// originally Course
+	id:           	string;
+	pass:             number;
+	fail:             number;
+	avg:              number;
+	// originally Subject
+	dept:          string;
 }
