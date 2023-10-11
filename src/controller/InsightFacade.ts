@@ -75,20 +75,17 @@ export default class InsightFacade implements IInsightFacade {
 
 			const datasetArr: DatasetModel[] = this.retrieveDataset();
 
-			// console.log("dataset before: ", datasetArr);
 			// remove the dataset from disk if it exists and matches id
 			const filteredDatasetArr = datasetArr.filter((dataset) => {
-				// console.log("dataset.id: ", dataset.id);
-				// console.log("id: ", id);
 				return dataset.id !== id;
 			});
-			// console.log("dataset after: ", filteredDatasetArr);
 
 			if (filteredDatasetArr.length === datasetArr.length) {
 				throw new NotFoundError("ID not found");
 			}
 
-			fs.outputFileSync(`./data/${id}.json`, JSON.stringify(filteredDatasetArr, null, 4));
+			// remove the dataset from disk
+			fs.removeSync(`./data/${id}.json`);
 			return Promise.resolve(id);
 		} catch (err) {
 			return Promise.reject(err);
@@ -103,6 +100,11 @@ export default class InsightFacade implements IInsightFacade {
 	public listDatasets(): Promise<InsightDataset[]> {
 		try {
 			const datasetArr: DatasetModel[] = this.retrieveDataset();
+
+			// check if datasetArr contains an empty array
+			if (datasetArr.length === 1 && datasetArr[0].id === undefined) {
+				return Promise.resolve([]);
+			}
 
 			const insightDatasetArr: InsightDataset[] = datasetArr.map((dataset) => {
 				return {
@@ -199,6 +201,7 @@ export default class InsightFacade implements IInsightFacade {
 		return true;
 	}
 
+
 	private outputDataset(id: string, kind: InsightDatasetKind,
 						  sectionArr: Section[] ): string[] {
 
@@ -225,6 +228,7 @@ export default class InsightFacade implements IInsightFacade {
 			})
 		};
 
+		// outputs JSON file for an id
 		fs.outputFileSync(`./data/${id}.json`, JSON.stringify(newDataset, null, 4));
 
 		// TODO: room for potential improvement for computation speed

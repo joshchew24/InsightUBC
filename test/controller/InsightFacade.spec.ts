@@ -314,7 +314,7 @@ describe("InsightFacade", function()  {
 		});
 
 		it("should have one elem in the array that is the single dataset added in before", async function() {
-			await facade.addDataset("1234", sections, InsightDatasetKind.Sections);
+			await facade.addDataset("test", sections, InsightDatasetKind.Sections);
 			const expected: InsightDataset[] = [
 				{
 					id: "test",
@@ -345,7 +345,8 @@ describe("InsightFacade", function()  {
 				numRows: 1
 			});
 			result = await facade.listDatasets();
-			expect(result).to.eventually.have.deep.members(expected);
+			// expect(result).to.eventually.have.deep.members(expected);
+			expect(result).to.have.deep.members(expected);
 		});
 
 		it("should not show datasets that have been removed", async function() {
