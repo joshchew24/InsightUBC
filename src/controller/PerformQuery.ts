@@ -1,11 +1,14 @@
 import {InsightDataset, InsightError, InsightResult} from "./IInsightFacade";
 import InsightFacade from "./InsightFacade";
 import {SectionPruned} from "../models/ISection";
+import {doesDatasetIDExist} from "./DiskUtil";
 
 export function performQuery(query: unknown, datasetList: InsightDataset[]): Promise<InsightResult[]> {
 	if (!isJSON) {
 		return Promise.reject(new InsightError("query is not valid JSON"));
 	}
+	// check if all IDs in query are the same
+	// doesDatasetIDExist()
 	// if (id is in datasetlist)
 
 	let promiseChain = Promise.resolve(query);
