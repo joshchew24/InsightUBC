@@ -27,24 +27,18 @@ export default class InsightFacade implements IInsightFacade {
 		if (!id || /^\s*$/.test(id) || id.includes("_")) {
 			return Promise.reject(new InsightError("Invalid ID"));
 		}
-
-		// TODO: room for potential improvement for computation speed
 		// check if id already exists in dataset
-		const datasetArr: DatasetModel[] = this.retrieveDataset();
-		if (datasetArr.some((dataset) => dataset.id === id)) {
+		if (this.doesIdExist(id)) {
 			return Promise.reject(new InsightError("ID already exists"));
 		}
-
 		// section type should Sections only
 		if (kind !== InsightDatasetKind.Sections) {
 			return Promise.reject(new InsightError("Invalid dataset kind"));
 		}
-
 		// checks if zip content exists
 		if (!content) {
 			return Promise.reject(new InsightError("Invalid Content"));
 		}
-
 		const zip = new JSZip();
 		return zip.loadAsync(content, {base64: true})
 			.then((data) => {
@@ -71,14 +65,10 @@ export default class InsightFacade implements IInsightFacade {
 		try {
 			// id data validation
 			if (!id || /^\s*$/.test(id) || id.includes("_")) {
-				return Promise.reject(new InsightError("Invalid ID"));
+				throw new InsightError("Invalid ID");
 			}
-			const datasetArr: DatasetModel[] = this.retrieveDataset();
-			// remove the dataset from disk if it exists and matches id
-			const filteredDatasetArr = datasetArr.filter((dataset) => {
-				return dataset.id !== id;
-			});
-			if (filteredDatasetArr.length === datasetArr.length) {
+			// check if id exists in dataset, else stop execution
+			if(!this.doesIdExist(id)){
 				throw new NotFoundError("ID not found");
 			}
 			// remove the dataset from disk
@@ -87,7 +77,6 @@ export default class InsightFacade implements IInsightFacade {
 		} catch (err) {
 			return Promise.reject(err);
 		}
-
 	}
 
 	public performQuery(query: unknown): Promise<InsightResult[]> {
@@ -193,14 +182,11 @@ export default class InsightFacade implements IInsightFacade {
 			return false;
 			// throw new InsightError("Invalid Audit");
 		}
-
 		return true;
 	}
 
-
 	private outputDataset(id: string, kind: InsightDatasetKind,
 						  sectionArr: Section[] ): string[] {
-
 
 		// the dataset output with the pruned version of the original JSON input
 		const newDataset: DatasetModel = {
@@ -223,14 +209,16 @@ export default class InsightFacade implements IInsightFacade {
 				return sectionPruned;
 			})
 		};
-
 		// outputs JSON file for an id
 		fs.outputFileSync(`./data/${id}.json`, JSON.stringify(newDataset, null, 4));
-
 		// TODO: room for potential improvement for computation speed
 		// return ids from datasetArr
 		const datasetArr: DatasetModel[] = this.retrieveDataset();
 		return datasetArr.map((dataset) => dataset.id);
+	}
+
+	private doesIdExist(id: string): boolean {
+		return fs.pathExistsSync("./data/" + id + ".json");
 	}
 
 	private retrieveDataset(): DatasetModel[] {
@@ -252,7 +240,6 @@ export default class InsightFacade implements IInsightFacade {
 			return [];
 		}
 	}
-
 }
 
 
