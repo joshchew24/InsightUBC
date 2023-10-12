@@ -1,5 +1,25 @@
-import {InsightDataset, InsightResult} from "./IInsightFacade";
+import {InsightDataset, InsightError, InsightResult} from "./IInsightFacade";
+import InsightFacade from "./InsightFacade";
 
 export function performQuery(query: unknown, datasetList: InsightDataset[]): Promise<InsightResult[]> {
+	if (!isJSON) {
+		return Promise.reject(new InsightError("query is not valid JSON"));
+	}
+	let promiseChain = Promise.resolve(query);
+	promiseChain.then((queryToValidate) => {
+		if (!isValidQuery(queryToValidate)) {
+			return Promise.reject("query does not follow the EBNF");
+		}
+	});
 	return Promise.reject("Not implemented.");
+}
+
+function isJSON(input: unknown): boolean {
+	// checks if input is valid JSON
+	// arrays are objects, so we must ensure that input is not an array
+	return (input !== null && input !== undefined && typeof input === "object" && !Array.isArray(input));
+}
+
+function isValidQuery(query: unknown): boolean {
+	return false;
 }
