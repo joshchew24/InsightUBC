@@ -46,7 +46,6 @@ function validateBody(query: object) {
 	validateWhere(query["WHERE"] as object);
 }
 
-// TODO: implement recursive(?) filter validation
 function validateWhere(filter: object) {
 	// if filter is empty, it is trivially valid
 	let numKeys = Object.keys(filter).length;

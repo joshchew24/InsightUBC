@@ -102,6 +102,7 @@ function validateSComparison(filter: {[index: string]: {[index: string]: string}
 	validateWildcard(operator, value);
 }
 
+// TODO: refactor to use in validateOPTIONS
 // takes operator (oneof GT, LT, EQ, IS) and the qkey (idstring_field) and validates
 // a valid qkey must be formatted properly, and field must be correct type based on operator
 function validateQueryKey(operator: string, qkey: string) {
