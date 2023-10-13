@@ -6,7 +6,8 @@ import InsightFacade from "../../src/controller/InsightFacade";
 import {
 	InsightDataset,
 	InsightDatasetKind,
-	InsightError, InsightResult,
+	InsightError,
+	InsightResult,
 	NotFoundError,
 	ResultTooLargeError
 } from "../../src/controller/IInsightFacade";
@@ -77,13 +78,21 @@ describe("InsightFacade", function()  {
 					expect(result).to.deep.equal(["emptyFieldsSection"]);
 				});
 		});
+
+		it("Should be able to handle adding a large dataset", async function() {
+			sections = pairSections;
+			return facade.addDataset("sections", sections, InsightDatasetKind.Sections)
+				.then((result) => {
+					expect(result).to.deep.equal(["sections"]);
+				});
+		});
 	});
 	describe("addDataset invalid ID tests", function() {
 		let sections: string;
 		let facade: InsightFacade;
 
 		before(function() {
-			sections = pairSections;
+			sections = singleSection;
 		});
 
 		beforeEach(function() {
