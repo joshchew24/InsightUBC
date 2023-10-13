@@ -11,6 +11,7 @@ import {Section, SectionPruned, SectionQuery} from "../models/ISection";
 import fs from "fs-extra";
 import {DatasetModel} from "../models/IModel";
 import {performQuery} from "./PerformQuery";
+import {doesDatasetIDExist} from "./DiskUtil";
 
 /**
  * This is the main programmatic entry point for the project.
@@ -29,7 +30,7 @@ export default class InsightFacade implements IInsightFacade {
 			return Promise.reject(new InsightError("Invalid ID"));
 		}
 		// check if id already exists in dataset
-		if (this.doesIdExist(id)) {
+		if (doesDatasetIDExist(id)) {
 			return Promise.reject(new InsightError("ID already exists"));
 		}
 		// section type should Sections only
@@ -69,7 +70,7 @@ export default class InsightFacade implements IInsightFacade {
 				throw new InsightError("Invalid ID");
 			}
 			// check if id exists in dataset, else stop execution
-			if(!this.doesIdExist(id)){
+			if(!doesDatasetIDExist(id)){
 				throw new NotFoundError("ID not found");
 			}
 			// remove the dataset from disk
@@ -218,10 +219,6 @@ export default class InsightFacade implements IInsightFacade {
 		// return ids from datasetArr
 		const datasetArr: DatasetModel[] = this.retrieveDataset();
 		return datasetArr.map((dataset) => dataset.id);
-	}
-
-	private doesIdExist(id: string): boolean {
-		return fs.pathExistsSync("./data/" + id + ".json");
 	}
 
 	private retrieveDataset(): DatasetModel[] {
