@@ -60,7 +60,9 @@ function validateLogic(filter: {[index: string]: object[]}) {
 	if (!Array.isArray(filterArr) || filterArr.length === 0) {
 		throw new InsightError(logic + " must be a non-empty array");
 	}
-	return;
+	for (let elem of filterArr) {
+		validateFilter(elem);
+	}
 }
 
 // e.g. "GT": {"XXX_year": "2010"}
