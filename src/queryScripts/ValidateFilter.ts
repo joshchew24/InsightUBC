@@ -1,5 +1,6 @@
 import {InsightError} from "../controller/IInsightFacade";
 import {isJSON} from "./PerformQuery";
+import {validateQueryKey} from "./ValidateQuery";
 
 type ValidationFunction = (filter: any) => void;
 enum FilterKeys {
@@ -11,20 +12,6 @@ enum FilterKeys {
 	"IS" = "IS",
 	"NOT" = "NOT"
 }
-
-const Operators = ["LT", "GT", "EQ", "IS"];
-const OperatorTypeMap: {[index: string]: number} = {
-	LT: 0,
-	GT: 0,
-	EQ: 0,
-	IS: 1,
-};
-
-const MathFields = ["avg", "pass", "fail", "audit", "year"];
-const StringFields = ["dept", "id", "instructor", "title", "uuid"];
-// lol this is so hacky but whatever
-const fields = [MathFields, StringFields];
-const oppositeFields = [StringFields, MathFields];
 
 let filterValidationMap: {[index: string]: ValidationFunction} = {
 	AND: validateLogic,
@@ -100,32 +87,6 @@ function validateSComparison(filter: {[index: string]: {[index: string]: string}
 	let value = attribute[qkey];
 	validateQueryKey(operator, qkey);
 	validateWildcard(operator, value);
-}
-
-// TODO: refactor to use in validateOPTIONS
-// takes operator (oneof GT, LT, EQ, IS) and the qkey (idstring_field) and validates
-// a valid qkey must be formatted properly, and field must be correct type based on operator
-function validateQueryKey(operator: string, qkey: string) {
-	const regex = /^[^_]+_[^_]+$/g;
-	if (!regex.test(qkey)) {
-		throw new InsightError("Invalid key " + qkey + " in " + operator);
-	}
-
-	let split = qkey.split("_");
-	if (split.length !== 2) {
-		throw new InsightError("Invalid key " + qkey + " in " + operator);
-	}
-	// TODO: validate ID?
-	let id = split[0];
-	let field = split[1];
-	let operatorType = OperatorTypeMap[operator];
-	if (field in fields[operatorType]) {
-		return;
-	} else if (field in oppositeFields[operatorType]) {
-		throw new InsightError("Invalid key type in " + operator);
-	} else {
-		throw new InsightError("Invalid key " + qkey + " in " + operator);
-	}
 }
 
 function validateWildcard(operator: string, inputString: string) {

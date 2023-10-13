@@ -66,3 +66,44 @@ function validateOptions(query: object) {
 	// TODO: if ORDER key exists, corresponding value should also exist in COLUMNS key_list
 }
 
+const Operators = ["LT", "GT", "EQ", "IS"];
+const OperatorTypeMap: {[index: string]: number} = {
+	LT: 0,
+	GT: 0,
+	EQ: 0,
+	IS: 1,
+};
+const MathFields = ["avg", "pass", "fail", "audit", "year"];
+const StringFields = ["dept", "id", "instructor", "title", "uuid"];
+const allFields = ["avg", "pass", "fail", "audit", "year", "dept", "id", "instructor", "title", "uuid"];
+// lol this is so hacky but whatever
+const fields = [MathFields, StringFields];
+const oppositeFields = [StringFields, MathFields];
+// takes operator (oneof GT, LT, EQ, IS) and the qkey (idstring_field) and validates
+// a valid qkey must be formatted properly, and field must be correct type based on operator
+export function validateQueryKey(fieldKey: string, qkey: string) {
+	const regex = /^[^_]+_[^_]+$/g;
+	if (!regex.test(qkey)) {
+		throw new InsightError("Invalid key " + qkey + " in " + fieldKey);
+	}
+
+	let split = qkey.split("_");
+	if (split.length !== 2) {
+		throw new InsightError("Invalid key " + qkey + " in " + fieldKey);
+	}
+	// TODO: validate ID?
+	let id = split[0];
+	let field = split[1];
+	if (!(field in allFields)) {
+		throw new InsightError("Invalid key " + qkey + " in " + fieldKey);
+	}
+	// if fieldKey is in operators, we must validate the fieldType
+	if (fieldKey in Operators) {
+		let operatorType = OperatorTypeMap[fieldKey];
+		if (field in fields[operatorType]) {
+			return;
+		} else if (field in oppositeFields[operatorType]) {
+			throw new InsightError("Invalid key type in " + fieldKey);
+		}
+	}
+}
