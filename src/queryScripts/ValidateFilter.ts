@@ -92,6 +92,16 @@ function validateMComparison(filter: {[index: string]: {[index: string]: number}
 	validateQueryKey(operator, qkey);
 }
 
+// e.g. "IS": {"XXX_title": "*asdf"}
+function validateSComparison(filter: {[index: string]: {[index: string]: string}}) {
+	let operator = Object.keys(filter)[0];
+	let attribute = filter[operator];
+	let qkey = Object.keys(attribute)[0];
+	let value = attribute[qkey];
+	validateQueryKey(operator, qkey);
+	validateWildcard(operator, value);
+}
+
 // takes operator (oneof GT, LT, EQ, IS) and the qkey (idstring_field) and validates
 // a valid qkey must be formatted properly, and field must be correct type based on operator
 function validateQueryKey(operator: string, qkey: string) {
@@ -117,9 +127,14 @@ function validateQueryKey(operator: string, qkey: string) {
 	}
 }
 
-// e.g. "IS": {"XXX_title": "*asdf"}
-function validateSComparison(filter: {[index: string]: string}) {
-	return;
+function validateWildcard(operator: string, inputString: string) {
+	if (typeof inputString !== "string") {
+		throw new InsightError("Invalid value type in " + operator + ", should be string");
+	}
+	const regex = /^\*?[^*]*\*?$/g;
+	if (!regex.test(inputString)) {
+		throw new InsightError("Asterisks (*) can only be the first or last characters of input strings");
+	}
 }
 
 // e.g. "NOT": {"XXX": {XXX}}
