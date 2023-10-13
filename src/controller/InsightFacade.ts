@@ -10,7 +10,7 @@ import {
 import {Section, SectionPruned, SectionQuery} from "../models/ISection";
 import fs from "fs-extra";
 import {DatasetModel} from "../models/IModel";
-import {performQuery} from "./PerformQuery";
+import {handleQuery} from "../queryScripts/PerformQuery";
 
 /**
  * This is the main programmatic entry point for the project.
@@ -82,7 +82,7 @@ export default class InsightFacade implements IInsightFacade {
 
 	public performQuery(query: unknown): Promise<InsightResult[]> {
 		return this.listDatasets().then((datasetList) => {
-			return performQuery(query, datasetList);
+			return handleQuery(query, datasetList);
 		});
 	}
 
