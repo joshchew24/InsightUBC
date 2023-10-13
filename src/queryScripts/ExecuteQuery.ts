@@ -4,6 +4,10 @@ import {InsightResult} from "../controller/IInsightFacade";
 
 
 export function processQueryToAST(queryItem: any) {
+	if (Object.keys(queryItem).length === 0) {
+		// node with dummy key and no children should automatically pass PassesQuery
+		return new QueryASTNode("no_filter", []);
+	}
 	// at top level key[0] WHERE has one key and value
 	let queryItemKey = Object.keys(queryItem)[0];
 	let itemChildren = queryItem[queryItemKey];
