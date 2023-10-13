@@ -1,12 +1,12 @@
-import {InsightDataset, InsightError, InsightResult, ResultTooLargeError} from "../controller/IInsightFacade";
+import {InsightError, InsightResult, ResultTooLargeError} from "../controller/IInsightFacade";
 import {SectionPruned} from "../models/ISection";
-import {doesDatasetIDExist, retrieveDataset} from "../controller/DiskUtil";
+import {retrieveDataset} from "../controller/DiskUtil";
 import {passesQuery, transformColumns, orderRows, processQueryToAST} from "./ExecuteQuery";
 import {QueryASTNode} from "../models/QueryASTNode";
 import {validateQuery} from "./ValidateQuery";
 import {QueryWithID} from "../models/IQuery";
 
-export function handleQuery(query: unknown, datasetList: InsightDataset[]): Promise<InsightResult[]> {
+export function handleQuery(query: unknown): Promise<InsightResult[]> {
 	let sectionList: SectionPruned[] = [];
 	if (!isJSON) {
 		return Promise.reject(new InsightError("Invalid query string"));
