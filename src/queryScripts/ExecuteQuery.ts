@@ -4,13 +4,22 @@ import {InsightResult} from "../controller/IInsightFacade";
 
 
 export function processQueryToAST(queryItem: any) {
+	if (Object.keys(queryItem).length === 0) {
+		// node with dummy key and no children should automatically pass PassesQuery
+		return new QueryASTNode("no_filter", []);
+	}
 	// at top level key[0] WHERE has one key and value
 	let queryItemKey = Object.keys(queryItem)[0];
 	let itemChildren = queryItem[queryItemKey];
 
 	/* if the current query item has a value that isn't a list we've reached our base case (comparison with key : value)
 	   else we iterate through list to make a new node for each child */
-	if(!Array.isArray(itemChildren)) {
+	if (queryItemKey === "NOT"){
+		let notNode = new QueryASTNode(queryItemKey, []);
+		let childNode = processQueryToAST(itemChildren);
+		notNode.addChild(childNode);
+		return notNode;
+	} else if(!Array.isArray(itemChildren)) {
 		// make final node with key:value, add to list of MCOMPARISON/SCOMPARISON node
 		let leafItemKey = Object.keys(itemChildren)[0];
 		let leaf = new QueryASTNode(leafItemKey, itemChildren[leafItemKey]);
@@ -26,18 +35,18 @@ export function processQueryToAST(queryItem: any) {
 
 export function passesQuery(currSection: SectionPruned, query: QueryASTNode): boolean {
 	// if section doesn't pass any of the query execution return false; will only return true if query works
-	let includeSection = true;
+	let includeSection = false;
 	let queryNodeKey = query.key;
 	let queryChildren = query.children as QueryASTNode[];
 
 	switch (queryNodeKey) {
 		case "AND":
+			includeSection = true;
 			for(const child of query.children as QueryASTNode[]) {
 				includeSection = includeSection && passesQuery(currSection, child);
 			}
 			return includeSection;
 		case "OR":
-			includeSection = false;
 			for(const child of queryChildren) {
 				includeSection = includeSection || passesQuery(currSection, child);
 			}
@@ -49,12 +58,13 @@ export function passesQuery(currSection: SectionPruned, query: QueryASTNode): bo
 		case "EQ":
 			return passesMComparator(currSection, queryChildren[0], "EQ");
 		case "NOT": {
-
 			return !passesQuery(currSection, queryChildren[0]);
 		}
 		case "IS": {
 			return matchesSField(currSection, queryChildren[0]);
-
+		}
+		case "no_filter": {
+			return true;
 		}
 		default:
 			return includeSection;
@@ -71,6 +81,7 @@ export function transformColumns(rawResult: SectionPruned[], columns: string[]) 
 				transformedSection[column] = section.getField(fieldName);
 			}
 		}
+		transformedResult.push(transformedSection);
 	}
 	return transformedResult;
 }
@@ -116,7 +127,7 @@ function matchesSField(section: SectionPruned, sComparison: QueryASTNode) {
 		return true;
 	}
 
-	if(fieldName === "" && sValue !== "") {
+	if(field === "" && sValue !== "") {
 		return false;
 	}
 

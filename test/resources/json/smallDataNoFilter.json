@@ -14,8 +14,8 @@
 	"errorExpected": false,
 	"expected": [
 		{
-			"sections_dept": "NUM",
-			"sections_avg": 69.69
+			"single_dept": "NUM",
+			"single_avg": 69.69
 		}
 	]
 }
