@@ -1,4 +1,4 @@
-import {InsightDataset, InsightError, InsightResult} from "../controller/IInsightFacade";
+import {InsightDataset, InsightError, InsightResult, ResultTooLargeError} from "../controller/IInsightFacade";
 import {SectionPruned} from "../models/ISection";
 import {doesDatasetIDExist, retrieveDataset} from "../controller/DiskUtil";
 import {passesQuery, transformColumns, orderRows, processQueryToAST} from "./ExecuteQuery";
@@ -41,11 +41,19 @@ export function isJSON(input: unknown): boolean {
 function executeQuery(inputQuery: any, sectionList: SectionPruned[])  {
 	let rawResult: SectionPruned[] = [];
 	let queryTree: QueryASTNode = processQueryToAST(inputQuery["WHERE"]);
+	let resultSize = 0;
 
 	// iterate through section list and add sections to unprocessed result list that pass query
-	for (let currSection of sectionList) {
+	for (let section of sectionList) {
+		let currSection = new SectionPruned(section);
 		if(passesQuery(currSection, queryTree)) {
-			rawResult.push(currSection);
+			if (resultSize <= 5000) {
+				rawResult.push(currSection);
+				resultSize++;
+			} else {
+				throw new ResultTooLargeError("The result is too big. " +
+					"Only queries with a maximum of 5000 results are supported.");
+			}
 		}
 	}
 	// should transform result sections to object containing just the columns given
