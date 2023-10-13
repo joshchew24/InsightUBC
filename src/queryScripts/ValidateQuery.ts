@@ -1,5 +1,7 @@
 import {InsightError} from "../controller/IInsightFacade";
-import {FilterKeys, QueryWithID} from "../models/IQuery";
+import {QueryWithID} from "../models/IQuery";
+import {validateFilter} from "./ValidateFilter";
+import {isJSON} from "./PerformQuery";
 
 // if query is valid, returns id_string, else false
 export function validateQuery(query: object): QueryWithID {
@@ -38,22 +40,24 @@ function validateBody(query: object) {
 	if (!("WHERE" in query)) {
 		throw new InsightError("Missing WHERE");
 	}
-	let filter = query["WHERE"] as object;
-	validateFilter(filter);
+	// TODO: can WHERE have undefined?
+	if (!isJSON(query["WHERE"])) {
+		throw new InsightError("WHERE must be object");
+	}
+	validateWhere(query["WHERE"] as object);
 }
 
 // TODO: implement recursive(?) filter validation
-function validateFilter(filter: object) {
+function validateWhere(filter: object) {
 	// if filter is empty, it is trivially valid
-	if (Object.keys(filter).length === 0) {
+	let numKeys = Object.keys(filter).length;
+	if (numKeys === 0) {
 		return;
 	}
-	validateFilterKey(Object.keys(filter)[0]);
-}
-function validateFilterKey(key: string) {
-	if (!(key in FilterKeys)) {
-		throw new InsightError("Invalid filter key:" + key);
+	if (numKeys > 1) {
+		throw new InsightError("WHERE should only have 1 key, has " + numKeys);
 	}
+	validateFilter(filter);
 }
 
 function validateOptions(query: object) {

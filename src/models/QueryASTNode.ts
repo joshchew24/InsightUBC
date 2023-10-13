@@ -8,4 +8,11 @@ export class QueryASTNode {
 
 	}
 
+	// function should only add child to node with list of QueryASTNodes as children
+	public addChild(childNode: QueryASTNode) {
+		if(Array.isArray(this.children)) {
+			this.children.push(childNode);
+		}
+	}
+
 }

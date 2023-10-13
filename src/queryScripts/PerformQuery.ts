@@ -31,7 +31,7 @@ export function handleQuery(query: unknown, datasetList: InsightDataset[]): Prom
 }
 
 // returns true if input looks like valid JSON
-function isJSON(input: unknown): boolean {
+export function isJSON(input: unknown): boolean {
 	// checks if input is valid JSON
 	// arrays are objects, so we must ensure that input is not an array
 	return (input !== null && input !== undefined && typeof input === "object" && !Array.isArray(input));
@@ -49,7 +49,6 @@ function executeQuery(inputQuery: any, sectionList: SectionPruned[])  {
 	}
 	// should transform result sections to object containing just the columns given
 	let processedResult = transformColumns(rawResult, inputQuery["OPTIONS"]["COLUMNS"]);
-	// TODO: from transformation, perform a sort if ORDER is given
 	// will order transformed results if order key is given, else return unordered result
 	if (inputQuery["OPTIONS"]["ORDER"]) {
 		return orderRows(processedResult, inputQuery["OPTIONS"]["ORDER"]);

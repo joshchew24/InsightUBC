@@ -3,10 +3,21 @@ import {QueryASTNode} from "../models/QueryASTNode";
 import {InsightResult} from "../controller/IInsightFacade";
 
 
-// TODO: create an AST using the provided QUERY
-export function processQueryToAST(query: any) {
-	let rootNode: QueryASTNode = new QueryASTNode(query["WHERE"], []);
-	return new QueryASTNode("", []);
+export function processQueryToAST(queryItem: any) {
+	let queryItemKey = Object.keys(queryItem)[0];
+	let itemChildren = queryItem[queryItemKey];
+
+	// if the current query item has a value that isn't a list we've reached our base case (some field)
+	// else we iterate through list to make a new node for each child
+	if(!Array.isArray(itemChildren)) {
+		return new QueryASTNode(queryItemKey, itemChildren);
+	} else {
+		let currRoot = new QueryASTNode(queryItemKey, []);
+		for(let childItem of itemChildren) {
+			currRoot.addChild(processQueryToAST(childItem));
+		}
+		return currRoot;
+	}
 }
 
 // TODO: check if section should be included in result given query
@@ -30,7 +41,7 @@ export function transformColumns(rawResult: SectionPruned[], columns: string[]) 
 	return transformedResult;
 }
 
-export function orderRows(result: InsightResult[], order: any) {
+export function orderRows(result: InsightResult[], order: string) {
 	return result.sort((section1, section2) => {
 		if (section1[order] < section2[order]) {
 			return -1;
@@ -38,6 +49,7 @@ export function orderRows(result: InsightResult[], order: any) {
 		if (section1[order] > section2[order]) {
 			return 1;
 		}
+		// keep order as is
 		return 0;
 	});
 }
