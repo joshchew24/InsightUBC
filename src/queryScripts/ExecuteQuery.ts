@@ -135,9 +135,9 @@ function matchesSField(section: SectionPruned, sComparison: QueryASTNode) {
 	if (sValue.startsWith("*") && sValue.endsWith("*")) {
 		return field.includes(sValue.slice(1, -1));
 	} else if (sValue.startsWith("*")) {
-		return field.startsWith(sValue.slice(0, -1));
-	} else if (sValue.endsWith("*")) {
 		return field.endsWith(sValue.slice(1));
+	} else if (sValue.endsWith("*")) {
+		return field.startsWith(sValue.slice(0, -1));
 	} else {
 		return sValue === field;
 	}
