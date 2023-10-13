@@ -68,12 +68,36 @@ function validateWhere(filter: object) {
 	validateFilter(filter);
 }
 
+/*
+ "OPTIONS": {
+ 	"COLUMNS": [
+ 		"XXX_XXX",
+ 		"XXX_XXX"
+ 	],
+ 	"ORDER": "XXX_XXX"
+ }
+*/
 function validateOptions(query: object) {
 	if (!("OPTIONS" in query)) {
 		throw new InsightError("Missing OPTIONS");
 	}
-	// TODO: validate OPTIONS object
-	// TODO: if ORDER key exists, corresponding value should also exist in COLUMNS key_list
+	let options = query["OPTIONS"] as {[index: string]: string[] | string};
+	if (!("COLUMNS" in query)) {
+		throw new InsightError("OPTIONS missing COLUMNS");
+	}
+	let colKeys: string[] = options["COLUMNS"] as string[];
+	for (let colKey in colKeys) {
+		validateQueryKey("COLUMNS", colKey);
+	}
+	let numKeys = Object.keys(options).length;
+	if ((numKeys === 2 && !("ORDER" in query)) || numKeys > 2) {
+		throw new InsightError("Invalid keys in OPTIONS");
+	}
+	let orderKey: string = options["ORDER"] as string;
+	validateQueryKey("ORDER", orderKey);
+	if (!(orderKey in colKeys)) {
+		throw new InsightError("ORDER key must be in COLUMNS");
+	}
 }
 
 const Operators = ["LT", "GT", "EQ", "IS"];
