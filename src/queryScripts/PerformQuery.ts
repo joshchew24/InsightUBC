@@ -12,7 +12,7 @@ export function handleQuery(query: unknown, datasetList: InsightDataset[]): Prom
 		return Promise.reject(new InsightError("Invalid query string"));
 	}
 
-	Promise.resolve(query as object).then((queryToValidate) => {
+	return Promise.resolve(query as object).then((queryToValidate) => {
 		let queryWithID: QueryWithID;
 		try {
 			queryWithID = validateQuery(queryToValidate);
@@ -27,7 +27,7 @@ export function handleQuery(query: unknown, datasetList: InsightDataset[]): Prom
 		sectionList = retrieveDataset((queryWithID as QueryWithID).id);
 		return Promise.resolve(executeQuery(validQuery, sectionList));
 	});
-	return Promise.reject("Not implemented.");
+	// TODO: catch block to propagate errors
 }
 
 // returns true if input looks like valid JSON
