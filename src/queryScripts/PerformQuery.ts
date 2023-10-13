@@ -49,7 +49,6 @@ function executeQuery(inputQuery: any, sectionList: SectionPruned[])  {
 	}
 	// should transform result sections to object containing just the columns given
 	let processedResult = transformColumns(rawResult, inputQuery["OPTIONS"]["COLUMNS"]);
-	// TODO: from transformation, perform a sort if ORDER is given
 	// will order transformed results if order key is given, else return unordered result
 	if (inputQuery["OPTIONS"]["ORDER"]) {
 		return orderRows(processedResult, inputQuery["OPTIONS"]["ORDER"]);
