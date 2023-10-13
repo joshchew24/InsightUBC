@@ -26,8 +26,9 @@ export function handleQuery(query: unknown, datasetList: InsightDataset[]): Prom
 		// TODO: refactor to make this async
 		sectionList = retrieveDataset((queryWithID as QueryWithID).id);
 		return Promise.resolve(executeQuery(validQuery, sectionList));
+	}).catch((error) => {
+		return Promise.reject(error);
 	});
-	// TODO: catch block to propagate errors
 }
 
 // returns true if input looks like valid JSON

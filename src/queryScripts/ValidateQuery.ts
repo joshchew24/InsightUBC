@@ -39,7 +39,7 @@ function validateIDs(query: object): string | never {
 		if (!doesDatasetIDExist(idString)) {
 			throw new InsightError("Referenced dataset \"" + idString + "\" not added yet");
 		}
-		return idStringList[0];
+		return idString;
 	} else {
 		throw new InsightError("Cannot query more than one dataset");
 	}
