@@ -14,7 +14,11 @@ export function processQueryToAST(queryItem: any) {
 
 	/* if the current query item has a value that isn't a list we've reached our base case (comparison with key : value)
 	   else we iterate through list to make a new node for each child */
-	if(!Array.isArray(itemChildren)) {
+	if (queryItemKey === "NOT"){
+		let notNode = new QueryASTNode(queryItemKey, []);
+		notNode.addChild(itemChildren);
+		return notNode;
+	} else if(!Array.isArray(itemChildren)) {
 		// make final node with key:value, add to list of MCOMPARISON/SCOMPARISON node
 		let leafItemKey = Object.keys(itemChildren)[0];
 		let leaf = new QueryASTNode(leafItemKey, itemChildren[leafItemKey]);
@@ -53,15 +57,13 @@ export function passesQuery(currSection: SectionPruned, query: QueryASTNode): bo
 		case "EQ":
 			return passesMComparator(currSection, queryChildren[0], "EQ");
 		case "NOT": {
-
 			return !passesQuery(currSection, queryChildren[0]);
 		}
 		case "IS": {
 			return matchesSField(currSection, queryChildren[0]);
-
 		}
 		case "no_filter": {
-			includeSection = true;
+			return includeSection;
 		}
 		default:
 			return includeSection;
