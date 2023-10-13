@@ -12,6 +12,8 @@ export class QueryASTNode {
 	public addChild(childNode: QueryASTNode) {
 		if(Array.isArray(this.children)) {
 			this.children.push(childNode);
+		} else {
+			throw new Error("trying to add child nodes to a leaf node");
 		}
 	}
 
