@@ -9,6 +9,7 @@ export function validateQuery(query: object): QueryWithID {
 	validateBody(query);
 	validateOptions(query);
 	let idString: string = validateIDs(query);
+	// TODO: doesDatasetIDExist
 	return {
 		id: idString,
 		query: query
@@ -17,8 +18,6 @@ export function validateQuery(query: object): QueryWithID {
 
 // check if BODY (WHERE) and OPTIONS are the only keys present
 // check if all IDs in query are the same
-// doesDatasetIDExist()
-// if (id is in datasetlist)
 function validateRootStructure(query: object) {
 	if (Object.keys(query).length !== 2) {
 		throw new InsightError("Excess keys in query");

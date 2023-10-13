@@ -12,10 +12,34 @@ enum FilterKeys {
 	"NOT" = "NOT"
 }
 
+const Operators = ["LT", "GT", "EQ", "IS"];
+const OperatorTypeMap: {[index: string]: number} = {
+	LT: 0,
+	GT: 0,
+	EQ: 0,
+	IS: 1,
+};
+
+const MathFields = ["avg", "pass", "fail", "audit", "year"];
+const StringFields = ["dept", "id", "instructor", "title", "uuid"];
+// lol this is so hacky but whatever
+const fields = [MathFields, StringFields];
+const oppositeFields = [StringFields, MathFields];
+
+let filterValidationMap: {[index: string]: ValidationFunction} = {
+	AND: validateLogic,
+	OR: validateLogic,
+	LT: validateMComparison,
+	GT: validateMComparison,
+	EQ: validateMComparison,
+	IS: validateSComparison,
+	NOT: validateNegation
+};
+
 // filter must have one key
 export function validateFilter(filter: {[index: string]: any}) {
 	let key = Object.keys(filter)[0];
-	validateKey(key);
+	validateFilterKey(key);
 	// double check this behaviour
 	if (key !== FilterKeys.AND && key !== FilterKeys.OR) {
 		basicValidate(key, filter[key]);
@@ -23,7 +47,7 @@ export function validateFilter(filter: {[index: string]: any}) {
 	filterValidationMap[key](filter);
 }
 
-function validateKey(key: string) {
+function validateFilterKey(key: string) {
 	if (!(key in FilterKeys)) {
 		throw new InsightError("Invalid filter key:" + key);
 	}
@@ -40,16 +64,6 @@ function basicValidate(key: string, value: object) {
 	}
 }
 
-let filterValidationMap: {[index: string]: ValidationFunction} = {
-	AND: validateLogic,
-	OR: validateLogic,
-	LT: validateMComparison,
-	GT: validateMComparison,
-	EQ: validateMComparison,
-	IS: validateSComparison,
-	NOT: validateNegation
-};
-
 /* logic can have an array of filters
  e.g. AND: [{}, {}, {}]
  		   ^filterArr ^
@@ -65,13 +79,46 @@ function validateLogic(filter: {[index: string]: object[]}) {
 	}
 }
 
-// e.g. "GT": {"XXX_year": "2010"}
-function validateMComparison(key: {[index: string]: number}) {
-	return;
+// e.g. "GT": {"XXX_year": 2010}
+// <operator>: {<attribute == qkey: value>}
+function validateMComparison(filter: {[index: string]: {[index: string]: number}}) {
+	let operator = Object.keys(filter)[0];
+	let attribute = filter[operator];
+	let qkey = Object.keys(attribute)[0];
+	let value = attribute[qkey];
+	if (typeof value !== "number") {
+		throw new InsightError("Invalid value type in " + operator + ", should be number");
+	}
+	validateQueryKey(operator, qkey);
+}
+
+// takes operator (oneof GT, LT, EQ, IS) and the qkey (idstring_field) and validates
+// a valid qkey must be formatted properly, and field must be correct type based on operator
+function validateQueryKey(operator: string, qkey: string) {
+	const regex = /^[^_]+_[^_]+$/g;
+	if (!regex.test(qkey)) {
+		throw new InsightError("Invalid key " + qkey + " in " + operator);
+	}
+
+	let split = qkey.split("_");
+	if (split.length !== 2) {
+		throw new InsightError("Invalid key " + qkey + " in " + operator);
+	}
+	// TODO: validate ID?
+	let id = split[0];
+	let field = split[1];
+	let operatorType = OperatorTypeMap[operator];
+	if (field in fields[operatorType]) {
+		return;
+	} else if (field in oppositeFields[operatorType]) {
+		throw new InsightError("Invalid key type in " + operator);
+	} else {
+		throw new InsightError("Invalid key " + qkey + " in " + operator);
+	}
 }
 
 // e.g. "IS": {"XXX_title": "*asdf"}
-function validateSComparison(key: {[index: string]: string}) {
+function validateSComparison(filter: {[index: string]: string}) {
 	return;
 }
 
