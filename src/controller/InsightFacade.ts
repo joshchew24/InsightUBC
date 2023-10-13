@@ -82,9 +82,7 @@ export default class InsightFacade implements IInsightFacade {
 	}
 
 	public performQuery(query: unknown): Promise<InsightResult[]> {
-		return this.listDatasets().then((datasetList) => {
-			return handleQuery(query, datasetList);
-		});
+		return handleQuery(query);
 	}
 
 	public listDatasets(): Promise<InsightDataset[]> {
