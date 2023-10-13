@@ -82,20 +82,20 @@ function validateOptions(query: object) {
 		throw new InsightError("Missing OPTIONS");
 	}
 	let options = query["OPTIONS"] as {[index: string]: string[] | string};
-	if (!("COLUMNS" in query)) {
+	if (!("COLUMNS" in options)) {
 		throw new InsightError("OPTIONS missing COLUMNS");
 	}
 	let colKeys: string[] = options["COLUMNS"] as string[];
-	for (let colKey in colKeys) {
+	for (let colKey of colKeys) {
 		validateQueryKey("COLUMNS", colKey);
 	}
 	let numKeys = Object.keys(options).length;
-	if ((numKeys === 2 && !("ORDER" in query)) || numKeys > 2) {
+	if ((numKeys === 2 && !("ORDER" in options)) || numKeys > 2) {
 		throw new InsightError("Invalid keys in OPTIONS");
 	}
 	let orderKey: string = options["ORDER"] as string;
 	validateQueryKey("ORDER", orderKey);
-	if (!(orderKey in colKeys)) {
+	if (!(colKeys.includes(orderKey))) {
 		throw new InsightError("ORDER key must be in COLUMNS");
 	}
 }
@@ -129,7 +129,7 @@ export function validateQueryKey(fieldKey: string, qkey: string) {
 	let id = split[0];
 	idStringList.push(id);
 	let field = split[1];
-	if (!(field in allFields)) {
+	if (!(allFields.includes(field))) {
 		throw new InsightError("Invalid key " + qkey + " in " + fieldKey);
 	}
 	// if fieldKey is in operators, we must validate the fieldType
