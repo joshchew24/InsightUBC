@@ -30,7 +30,14 @@ export function transformColumns(rawResult: SectionPruned[], columns: string[]) 
 	return transformedResult;
 }
 
-// TODO: if order is given, order result
 export function orderRows(result: InsightResult[], order: any) {
-	return result;
+	return result.sort((section1, section2) => {
+		if (section1[order] < section2[order]) {
+			return -1;
+		}
+		if (section1[order] > section2[order]) {
+			return 1;
+		}
+		return 0;
+	});
 }
