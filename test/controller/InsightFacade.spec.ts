@@ -384,7 +384,7 @@ describe("InsightFacade", function()  {
 	describe("performQuery", function() {
 		let facade: InsightFacade;
 
-		before (async function() {
+		before ( async function () {
 			clearDisk();
 			facade = new InsightFacade();
 			await facade.addDataset("sections", pairSections, InsightDatasetKind.Sections);

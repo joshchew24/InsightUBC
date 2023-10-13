@@ -30,18 +30,18 @@ export function processQueryToAST(queryItem: any) {
 
 export function passesQuery(currSection: SectionPruned, query: QueryASTNode): boolean {
 	// if section doesn't pass any of the query execution return false; will only return true if query works
-	let includeSection = true;
+	let includeSection = false;
 	let queryNodeKey = query.key;
 	let queryChildren = query.children as QueryASTNode[];
 
 	switch (queryNodeKey) {
 		case "AND":
+			includeSection = true;
 			for(const child of query.children as QueryASTNode[]) {
 				includeSection = includeSection && passesQuery(currSection, child);
 			}
 			return includeSection;
 		case "OR":
-			includeSection = false;
 			for(const child of queryChildren) {
 				includeSection = includeSection || passesQuery(currSection, child);
 			}
@@ -75,6 +75,7 @@ export function transformColumns(rawResult: SectionPruned[], columns: string[]) 
 				transformedSection[column] = section.getField(fieldName);
 			}
 		}
+		transformedResult.push(transformedSection);
 	}
 	return transformedResult;
 }
