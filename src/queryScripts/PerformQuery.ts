@@ -31,7 +31,7 @@ export function handleQuery(query: unknown, datasetList: InsightDataset[]): Prom
 }
 
 // returns true if input looks like valid JSON
-function isJSON(input: unknown): boolean {
+export function isJSON(input: unknown): boolean {
 	// checks if input is valid JSON
 	// arrays are objects, so we must ensure that input is not an array
 	return (input !== null && input !== undefined && typeof input === "object" && !Array.isArray(input));
