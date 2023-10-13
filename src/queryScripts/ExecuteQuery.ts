@@ -63,7 +63,7 @@ export function passesQuery(currSection: SectionPruned, query: QueryASTNode): bo
 			return matchesSField(currSection, queryChildren[0]);
 		}
 		case "no_filter": {
-			return includeSection;
+			return true;
 		}
 		default:
 			return includeSection;
