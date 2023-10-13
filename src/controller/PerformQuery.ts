@@ -1,37 +1,41 @@
 import {InsightDataset, InsightError, InsightResult} from "./IInsightFacade";
 import InsightFacade from "./InsightFacade";
 import {SectionPruned} from "../models/ISection";
+import {doesDatasetIDExist, retrieveDataset} from "./DiskUtil";
 import {passesQuery, transformColumns, orderRows, processQueryToAST} from "./ExecuteQuery";
 import {QueryASTNode} from "../models/QueryASTNode";
+import {validateQuery} from "./ValidateQuery";
+import {QueryWithID} from "../models/IQuery";
 
 export function performQuery(query: unknown, datasetList: InsightDataset[]): Promise<InsightResult[]> {
 	let sectionList: SectionPruned[] = [];
 	if (!isJSON) {
-		return Promise.reject(new InsightError("query is not valid JSON"));
+		return Promise.reject(new InsightError("Invalid query string"));
 	}
-	// if (id is in datasetlist)
 
-	let promiseChain = Promise.resolve(query);
-	promiseChain.then((queryToValidate) => {
-		if (!isValidQuery(queryToValidate)) {
-			return Promise.reject(new InsightError("query does not follow the EBNF"));
+	Promise.resolve(query as object).then((queryToValidate) => {
+		let queryWithID: QueryWithID;
+		try {
+			queryWithID = validateQuery(queryToValidate);
+		} catch (error) {
+			return Promise.reject(error);
 		}
-		return queryToValidate;
-	}).then((validQuery) => {
+		return queryWithID;
+	}).then((queryWithID) => {
 		// construct tree and process the query
+		let validQuery = (queryWithID as QueryWithID).query;
+		// TODO: refactor to make this async
+		sectionList = retrieveDataset((queryWithID as QueryWithID).id);
 		return Promise.resolve(executeQuery(validQuery, sectionList));
 	});
 	return Promise.reject("Not implemented.");
 }
 
+// returns true if input looks like valid JSON
 function isJSON(input: unknown): boolean {
 	// checks if input is valid JSON
 	// arrays are objects, so we must ensure that input is not an array
 	return (input !== null && input !== undefined && typeof input === "object" && !Array.isArray(input));
-}
-
-function isValidQuery(query: unknown): boolean {
-	return false;
 }
 
 function executeQuery(validQuery: any, sectionList: SectionPruned[])  {
