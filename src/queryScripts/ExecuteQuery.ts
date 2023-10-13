@@ -16,7 +16,8 @@ export function processQueryToAST(queryItem: any) {
 	   else we iterate through list to make a new node for each child */
 	if (queryItemKey === "NOT"){
 		let notNode = new QueryASTNode(queryItemKey, []);
-		notNode.addChild(itemChildren);
+		let childNode = processQueryToAST(itemChildren);
+		notNode.addChild(childNode);
 		return notNode;
 	} else if(!Array.isArray(itemChildren)) {
 		// make final node with key:value, add to list of MCOMPARISON/SCOMPARISON node
@@ -126,7 +127,7 @@ function matchesSField(section: SectionPruned, sComparison: QueryASTNode) {
 		return true;
 	}
 
-	if(fieldName === "" && sValue !== "") {
+	if(field === "" && sValue !== "") {
 		return false;
 	}
 
