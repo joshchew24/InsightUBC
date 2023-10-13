@@ -2,14 +2,18 @@ import {InsightError} from "../controller/IInsightFacade";
 import {QueryWithID} from "../models/IQuery";
 import {validateFilter} from "./ValidateFilter";
 import {isJSON} from "./PerformQuery";
+import {doesDatasetIDExist} from "../controller/DiskUtil";
+
+let idStringList: string[] = [];
 
 // if query is valid, returns id_string, else false
 export function validateQuery(query: object): QueryWithID {
+	// reset the idStringList whenever we validate a new query.
+	idStringList = [];
 	validateRootStructure(query);
 	validateBody(query);
 	validateOptions(query);
 	let idString: string = validateIDs(query);
-	// TODO: doesDatasetIDExist
 	return {
 		id: idString,
 		query: query
@@ -26,10 +30,16 @@ function validateRootStructure(query: object) {
 // check that all id_strings in query are the same
 // if same, return the id, else throw InsightError
 function validateIDs(query: object): string | never {
-	let idStrings: string[] = [];
-	// TODO: populate idStrings from query keys
-	if (idStrings.every((id) => id === idStrings[0])) {
-		return idStrings[0];
+	// is this possible to reach? how can you have a query that doesn't reference a dataset
+	if (idStringList.length === 0) {
+		throw new InsightError("something is definitely wrong if you got this error");
+	}
+	let idString = idStringList[0];
+	if (idStringList.every((id) => id === idString)) {
+		if (!doesDatasetIDExist(idString)) {
+			throw new InsightError("Referenced dataset \"" + idString + "\" not added yet");
+		}
+		return idStringList[0];
 	} else {
 		throw new InsightError("Cannot query more than one dataset");
 	}
@@ -81,6 +91,7 @@ const fields = [MathFields, StringFields];
 const oppositeFields = [StringFields, MathFields];
 // takes operator (oneof GT, LT, EQ, IS) and the qkey (idstring_field) and validates
 // a valid qkey must be formatted properly, and field must be correct type based on operator
+// updates the idStringList
 export function validateQueryKey(fieldKey: string, qkey: string) {
 	const regex = /^[^_]+_[^_]+$/g;
 	if (!regex.test(qkey)) {
@@ -91,8 +102,8 @@ export function validateQueryKey(fieldKey: string, qkey: string) {
 	if (split.length !== 2) {
 		throw new InsightError("Invalid key " + qkey + " in " + fieldKey);
 	}
-	// TODO: validate ID?
 	let id = split[0];
+	idStringList.push(id);
 	let field = split[1];
 	if (!(field in allFields)) {
 		throw new InsightError("Invalid key " + qkey + " in " + fieldKey);
