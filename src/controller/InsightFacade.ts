@@ -10,6 +10,8 @@ import {
 import {Section, SectionPruned, SectionQuery} from "../models/ISection";
 import fs from "fs-extra";
 import {DatasetModel} from "../models/IModel";
+import {handleQuery} from "../queryScripts/PerformQuery";
+import {doesDatasetIDExist} from "./DiskUtil";
 
 /**
  * This is the main programmatic entry point for the project.
@@ -28,7 +30,7 @@ export default class InsightFacade implements IInsightFacade {
 			return Promise.reject(new InsightError("Invalid ID"));
 		}
 		// check if id already exists in dataset
-		if (this.doesIdExist(id)) {
+		if (doesDatasetIDExist(id)) {
 			return Promise.reject(new InsightError("ID already exists"));
 		}
 		// section type should Sections only
@@ -68,7 +70,7 @@ export default class InsightFacade implements IInsightFacade {
 				throw new InsightError("Invalid ID");
 			}
 			// check if id exists in dataset, else stop execution
-			if(!this.doesIdExist(id)){
+			if(!doesDatasetIDExist(id)){
 				throw new NotFoundError("ID not found");
 			}
 			// remove the dataset from disk
@@ -80,7 +82,7 @@ export default class InsightFacade implements IInsightFacade {
 	}
 
 	public performQuery(query: unknown): Promise<InsightResult[]> {
-		return Promise.reject("Not implemented.");
+		return handleQuery(query);
 	}
 
 	public listDatasets(): Promise<InsightDataset[]> {
@@ -119,8 +121,8 @@ export default class InsightFacade implements IInsightFacade {
 				}
 				const sectionQuery: SectionQuery = JSON.parse(fileContent);
 				sectionQuery.result.forEach((section: Section) => {
-					// check if year is "overall"
-					if (section.Year === "overall") {
+					// check if section is "overall"
+					if (section.Section === "overall") {
 						section.Year = "1900";
 					}
 					// check if section is valid
@@ -178,11 +180,8 @@ export default class InsightFacade implements IInsightFacade {
 			return false;
 			// throw new InsightError("Invalid Fail");
 		}
-		if(section.Audit === undefined || section.Audit < 0){
-			return false;
-			// throw new InsightError("Invalid Audit");
-		}
-		return true;
+		return !(section.Audit === undefined || section.Audit < 0);
+
 	}
 
 	private outputDataset(id: string, kind: InsightDatasetKind,
@@ -194,19 +193,7 @@ export default class InsightFacade implements IInsightFacade {
 			kind: kind,
 			numRows: sectionArr.length,
 			section: sectionArr.map((section) => {
-				const sectionPruned: SectionPruned = {
-					title: section.Title,
-					uuid: section.id,
-					instructor: section.Professor,
-					audit: section.Audit,
-					year: section.Year,
-					id: section.Course,
-					pass: section.Pass,
-					fail: section.Fail,
-					avg: section.Avg,
-					dept: section.Subject
-				};
-				return sectionPruned;
+				return new SectionPruned(section);
 			})
 		};
 		// outputs JSON file for an id
@@ -215,10 +202,6 @@ export default class InsightFacade implements IInsightFacade {
 		// return ids from datasetArr
 		const datasetArr: DatasetModel[] = this.retrieveDataset();
 		return datasetArr.map((dataset) => dataset.id);
-	}
-
-	private doesIdExist(id: string): boolean {
-		return fs.pathExistsSync("./data/" + id + ".json");
 	}
 
 	private retrieveDataset(): DatasetModel[] {
