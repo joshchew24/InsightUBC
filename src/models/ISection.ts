@@ -42,18 +42,69 @@ export interface Section {
 	Subject:          string;
 }
 
-export interface SectionPruned {
-	title:            string;
-	// originally id
-	uuid:               number;
-	instructor:        string;
-	audit:            number;
-	year:             string;
-	// originally Course
-	id:           	string;
-	pass:             number;
-	fail:             number;
-	avg:              number;
-	// originally Subject
-	dept:          string;
+export class SectionPruned {
+	public uuid:               string;
+	public id:           	string;
+	public title:            string;
+	public instructor:        string;
+	public dept:          string;
+	public year:             string;
+	public avg:              number;
+	public pass:             number;
+	public fail:             number;
+	public audit:            number;
+
+	constructor(section: Section) {
+		this.uuid = section.id.toString();
+		this.id = section.Course;
+		this.title = section.Title;
+		this.instructor = section.Professor;
+		this.dept = section.Subject;
+		this.year = section.Year;
+		this.avg = section.Avg;
+		this.pass = section.Pass;
+		this.fail = section.Fail;
+		this.audit = section.Audit;
+	}
+
+	public getField(fieldName: string) {
+		let fieldValue: string | number;
+
+		switch (fieldName) {
+			case "uuid":
+				fieldValue = this.uuid;
+				break;
+			case "id":
+				fieldValue = this.id;
+				break;
+			case "title":
+				fieldValue = this.title;
+				break;
+			case "instructor":
+				fieldValue = this.instructor;
+				break;
+			case "dept":
+				fieldValue = this.dept;
+				break;
+			case "year":
+				fieldValue = this.year;
+				break;
+			case "avg":
+				fieldValue = this.avg;
+				break;
+			case "pass":
+				fieldValue = this.pass;
+				break;
+			case "fail":
+				fieldValue = this.fail;
+				break;
+			case "audit":
+				fieldValue = this.audit;
+				break;
+			default:
+				fieldValue = "";
+		}
+
+		return fieldValue;
+	}
 }
