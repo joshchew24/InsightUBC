@@ -1,12 +1,12 @@
-import {InsightError} from "./IInsightFacade";
-import {QueryWithID} from "../models/IQuery";
+import {InsightError} from "../controller/IInsightFacade";
+import {FilterKeys, QueryWithID} from "../models/IQuery";
 
 // if query is valid, returns id_string, else false
 export function validateQuery(query: object): QueryWithID {
-	checkRootStructure(query);
-	checkBody(query);
-	checkOptions(query);
-	let idString: string = checkIDs(query);
+	validateRootStructure(query);
+	validateBody(query);
+	validateOptions(query);
+	let idString: string = validateIDs(query);
 	return {
 		id: idString,
 		query: query
@@ -17,14 +17,14 @@ export function validateQuery(query: object): QueryWithID {
 // check if all IDs in query are the same
 // doesDatasetIDExist()
 // if (id is in datasetlist)
-function checkRootStructure(query: object) {
+function validateRootStructure(query: object) {
 	if (Object.keys(query).length !== 2) {
 		throw new InsightError("Excess keys in query");
 	}
 }
 // check that all id_strings in query are the same
 // if same, return the id, else throw InsightError
-function checkIDs(query: object): string | never {
+function validateIDs(query: object): string | never {
 	let idStrings: string[] = [];
 	// TODO: populate idStrings from query keys
 	if (idStrings.every((id) => id === idStrings[0])) {
@@ -34,14 +34,29 @@ function checkIDs(query: object): string | never {
 	}
 }
 
-function checkBody(query: object) {
+function validateBody(query: object) {
 	if (!("WHERE" in query)) {
 		throw new InsightError("Missing WHERE");
 	}
-	// TODO: validate WHERE object
+	let filter = query["WHERE"] as object;
+	validateFilter(filter);
 }
 
-function checkOptions(query: object) {
+// TODO: implement recursive(?) filter validation
+function validateFilter(filter: object) {
+	// if filter is empty, it is trivially valid
+	if (Object.keys(filter).length === 0) {
+		return;
+	}
+	validateFilterKey(Object.keys(filter)[0]);
+}
+function validateFilterKey(key: string) {
+	if (!(key in FilterKeys)) {
+		throw new InsightError("Invalid filter key:" + key);
+	}
+}
+
+function validateOptions(query: object) {
 	if (!("OPTIONS" in query)) {
 		throw new InsightError("Missing OPTIONS");
 	}

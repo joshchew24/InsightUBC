@@ -11,7 +11,7 @@ import {Section, SectionPruned, SectionQuery} from "../models/ISection";
 import fs from "fs-extra";
 import {DatasetModel} from "../models/IModel";
 import {handleQuery} from "../queryScripts/PerformQuery";
-import {doesDatasetIDExist} from "./DiskUtil
+import {doesDatasetIDExist} from "./DiskUtil";
 
 /**
  * This is the main programmatic entry point for the project.
