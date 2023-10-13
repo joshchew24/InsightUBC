@@ -43,16 +43,16 @@ export interface Section {
 }
 
 export class SectionPruned {
-	public uuid:               string;
-	public id:           	string;
-	public title:            string;
-	public instructor:        string;
-	public dept:          string;
-	public year:             string;
-	public avg:              number;
-	public pass:             number;
-	public fail:             number;
-	public audit:            number;
+	public uuid: string;
+	public id: string;
+	public title: string;
+	public instructor: string;
+	public dept: string;
+	public year: number;
+	public avg: number;
+	public pass: number;
+	public fail: number;
+	public audit: number;
 
 	constructor(section: Section) {
 		this.uuid = section.id.toString();
@@ -60,7 +60,7 @@ export class SectionPruned {
 		this.title = section.Title;
 		this.instructor = section.Professor;
 		this.dept = section.Subject;
-		this.year = section.Year;
+		this.year = Number(section.Year);
 		this.avg = section.Avg;
 		this.pass = section.Pass;
 		this.fail = section.Fail;

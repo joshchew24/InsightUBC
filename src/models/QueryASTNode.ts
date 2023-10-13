@@ -1,10 +1,10 @@
 export class QueryASTNode {
-	public value: any;
+	public key: string;
 	public children: QueryASTNode[] | string | number;
 
-	constructor(key: any, value: QueryASTNode[]) {
-		this.value = key;
-		this.children = value;
+	constructor(key: any, children: QueryASTNode[] | string | number) {
+		this.key = key;
+		this.children = children;
 
 	}
 

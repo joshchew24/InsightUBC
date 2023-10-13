@@ -40,7 +40,7 @@ export function isJSON(input: unknown): boolean {
 
 function executeQuery(inputQuery: any, sectionList: SectionPruned[])  {
 	let rawResult: SectionPruned[] = [];
-	let queryTree: QueryASTNode = processQueryToAST(inputQuery);
+	let queryTree: QueryASTNode = processQueryToAST(inputQuery["WHERE"]);
 
 	// iterate through section list and add sections to unprocessed result list that pass query
 	for (let currSection of sectionList) {
