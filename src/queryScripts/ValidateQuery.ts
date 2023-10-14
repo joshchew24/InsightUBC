@@ -86,10 +86,16 @@ function validateOptions(query: object) {
 		throw new InsightError("OPTIONS missing COLUMNS");
 	}
 	let colKeys: string[] = options["COLUMNS"] as string[];
+	if (!(Array.isArray(colKeys))) {
+		throw new InsightError("COLUMNS is not an array");
+	}
 	for (let colKey of colKeys) {
 		validateQueryKey("COLUMNS", colKey);
 	}
 	let numKeys = Object.keys(options).length;
+	if (numKeys === 1) {
+		return;
+	}
 	if ((numKeys === 2 && !("ORDER" in options)) || numKeys > 2) {
 		throw new InsightError("Invalid keys in OPTIONS");
 	}
