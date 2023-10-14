@@ -133,7 +133,7 @@ export function validateQueryKey(fieldKey: string, qkey: string) {
 		throw new InsightError("Invalid key " + qkey + " in " + fieldKey);
 	}
 	// if fieldKey is in operators, we must validate the fieldType
-	if (fieldKey in Operators) {
+	if (Operators.includes(fieldKey)) {
 		let operatorType = OperatorTypeMap[fieldKey];
 		if (field in fields[operatorType]) {
 			return;
