@@ -17,6 +17,7 @@ chai.use(chaiAsPromised);
 
 let pairSections = getContentFromArchives("pair.zip");
 let singleSection = getContentFromArchives("single_valid_course.zip");
+let campusRooms = getContentFromArchives("campus.zip");
 
 type Input = unknown;
 type Output = InsightResult[];
@@ -234,23 +235,57 @@ describe("InsightFacade", function()  {
 		});
 	});
 
-	describe("addDataset invalid kind tests", function() {
-		let sections: string;
+	describe("addDataset with HTML tests", function() {
+		let rooms: string;
 		let facade: InsightFacade;
-
-		before(function() {
-			sections = singleSection;
-		});
 
 		beforeEach(function() {
 			clearDisk();
 			facade = new InsightFacade();
 		});
 
-		it("should reject dataset that is of kind 'rooms'", function() {
-			const result = facade.addDataset("1234", sections, InsightDatasetKind.Rooms);
+		it("should reject with no building files in dataset", function() {
+			rooms = getContentFromArchives("campusNoRoomFile.zip");
+			const result = facade.addDataset("1234", rooms, InsightDatasetKind.Rooms);
 			return expect(result).to.eventually.be.rejectedWith(InsightError);
 		});
+
+		it("should reject with no building table rows in index", function() {
+			rooms = getContentFromArchives("campusNoBuildingListedInTable.zip");
+			const result = facade.addDataset("1234", rooms, InsightDatasetKind.Rooms);
+			return expect(result).to.eventually.be.rejectedWith(InsightError);
+		});
+
+		it("should reject when building's html content is invalid", function() {
+			rooms = getContentFromArchives("campusInvalidBuildingContent.zip");
+			const result = facade.addDataset("1234", rooms, InsightDatasetKind.Rooms);
+			return expect(result).to.eventually.be.rejectedWith(InsightError);
+		});
+
+		it("should reject when InsightDatasetKind is sections but is given html content", function() {
+			rooms = getContentFromArchives("campus.zip");
+			const result = facade.addDataset("1234", rooms, InsightDatasetKind.Sections);
+			return expect(result).to.eventually.be.rejectedWith(InsightError);
+		});
+
+		it("should reject when InsightDatasetKind is rooms but is given json content", function() {
+			rooms = singleSection;
+			const result = facade.addDataset("1234", rooms, InsightDatasetKind.Rooms);
+			return expect(result).to.eventually.be.rejectedWith(InsightError);
+		});
+
+		it("should accept dataset that contains HTML", function() {
+			rooms = campusRooms;
+			const result = facade.addDataset("1234", rooms, InsightDatasetKind.Rooms);
+			return expect(result).to.eventually.deep.equal(["1234"]);
+		});
+
+		// it("should return valid geolocation for a building", async function() {
+		// 	rooms = getContentFromArchives("campus.zip");
+		// 	await facade.addDataset("1234", rooms, InsightDatasetKind.Rooms);
+		// 	const result = await facade.getBuildingLocation("1234", "DMP");
+		// 	return expect(result).to.deep.equal({lat: 49.26125, lon: -123.24807});
+		// });
 	});
 
 	describe("removeDataset", function() {
