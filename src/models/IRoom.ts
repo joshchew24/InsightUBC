@@ -11,3 +11,14 @@ export interface Room {
 	furniture: string;   // The room furniture.
 	href: string;        // The link to the full details online.
 }
+
+// HTML DOM nodes from parse5
+export interface DomNode {
+	nodeName: string;
+	tagName?: string;
+	value?: string;
+	attrs?: Array<{[key: string]: any}>;
+	namespaceURI: string;
+	childNodes?: DomNode[];
+	parentNode?: DomNode;
+}

@@ -245,7 +245,7 @@ describe("InsightFacade", function()  {
 		});
 
 		it("should reject with no building files in dataset", function() {
-			rooms = getContentFromArchives("campusNoRoomFile.zip");
+			rooms = getContentFromArchives("campusNoBuildingFiles.zip");
 			const result = facade.addDataset("1234", rooms, InsightDatasetKind.Rooms);
 			return expect(result).to.eventually.be.rejectedWith(InsightError);
 		});
@@ -274,11 +274,18 @@ describe("InsightFacade", function()  {
 			return expect(result).to.eventually.be.rejectedWith(InsightError);
 		});
 
+		it("should accept. has only one building (WOOD) - used for debugging purposes", function() {
+			rooms = getContentFromArchives("campusValidOnlyOneBuilding.zip");
+			const result = facade.addDataset("1234", rooms, InsightDatasetKind.Rooms);
+			return expect(result).to.eventually.deep.equal(["1234"]);
+		});
+
 		it("should accept dataset that contains HTML", function() {
 			rooms = campusRooms;
 			const result = facade.addDataset("1234", rooms, InsightDatasetKind.Rooms);
 			return expect(result).to.eventually.deep.equal(["1234"]);
 		});
+
 
 		// it("should return valid geolocation for a building", async function() {
 		// 	rooms = getContentFromArchives("campus.zip");

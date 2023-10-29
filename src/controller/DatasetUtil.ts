@@ -4,7 +4,12 @@ import {Section, SectionPruned, SectionQuery} from "../models/ISection";
 import {InsightDatasetKind, InsightError} from "./IInsightFacade";
 import {DatasetModel} from "../models/IModel";
 import fs from "fs-extra";
-import {Room} from "../models/IRoom";
+import {DomNode, Room} from "../models/IRoom";
+import {parse, parseFragment} from "parse5";
+import {ChildNode, Document} from "parse5/dist/tree-adapters/default";
+
+
+// ================$ ROOMS $=======================================
 
 export function roomLogicAndOutput(data: JSZip, id: string, kind: InsightDatasetKind): Promise<string[]>{
 	return roomProcessingPromises(data)
@@ -18,9 +23,81 @@ export function roomLogicAndOutput(data: JSZip, id: string, kind: InsightDataset
 }
 
 export function roomProcessingPromises(data: JSZip): Promise<Room[]>{
+	const roomArr: Room[] = [];
+	const fileProcessingPromises = Object.keys(data.files).map((relativePath) => {
+		return data.file(relativePath)?.async("text").then((fileContent) => {
+			// check file ends with .htm before parsing
+			if (!relativePath.endsWith(".htm")) {
+				return;
+			}
 
-	return Promise.resolve([]);
+			const parse5AST = parse(fileContent);
+			const DomNodes = parse5AST.childNodes as DomNode[];
+			// dig through child nodes recursively
+			console.log(relativePath);
+			recurseAST(DomNodes, parse5AST.childNodes.length);
+
+
+		}).catch((error) => {
+			return Promise.reject(error);
+		});
+	});
+	return Promise.all(fileProcessingPromises).then(() => {
+	// check if roomArr is empty
+		if (roomArr.length === 0) {
+			throw new InsightError("No valid rooms in dataset");
+		}
+		return roomArr.flat();
+	});
 }
+
+
+function recurseAST(childNodes: DomNode[], size: number){
+
+	if(size === 0){
+		return;
+	}
+
+	for(let i = 0; i < size; i++){
+
+
+		if(childNodes[i].nodeName === "#text" && childNodes[i].parentNode?.nodeName === "td"){
+			// console.log("entered");
+
+			const trimmed = childNodes[i].value?.trim();
+			if (trimmed !== "") {
+				console.log("attribute", getClassAttributeValue(childNodes[i].parentNode?.attrs ?? []));
+				console.log("trimmed: ", trimmed);
+			}
+		}
+
+		// console.log(childNodes);
+		// if node has child nodes,
+		// recurse
+		if(childNodes[i].childNodes !== undefined){
+			// console.log("has child nodes");
+			// console.log(childNodes[i].nodeName);
+			// console.log(childNodes[i].childNodes);
+			// console.log("abc parent: ", childNodes[i].parentNode.nodeName);
+
+
+			recurseAST(childNodes[i].childNodes ?? [], childNodes[i].childNodes?.length ?? 0);
+		}
+
+		// console.log(tableArrayStrings);
+	}
+}
+
+function getClassAttributeValue(attrs: Array<{name?: string, value?: string}>): string | null {
+	for (let attr of attrs) {
+		if (attr.name === "class") {
+			return attr.value || null;
+		}
+	}
+	return null;
+}
+
+// ================$ SECTIONS $=======================================
 
 export function sectionLogicAndOutput(data: JSZip, id: string, kind: InsightDatasetKind): Promise<string[]>{
 	return sectionFileProcessingPromises(data)
@@ -42,7 +119,7 @@ export function sectionFileProcessingPromises(data: JSZip): Promise<Section[]>{
 			}
 		// if start doesnt contain {" and the end doesnt contain "} then its not a json file
 			if (!fileContent.startsWith("{") || !fileContent.endsWith("}")) {
-				return Promise.resolve([]);
+				return;
 			}
 			const sectionQuery: SectionQuery = JSON.parse(fileContent);
 			let sections: Section[] = JSON.parse(fileContent).result;
