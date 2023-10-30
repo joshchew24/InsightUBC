@@ -274,7 +274,7 @@ describe("InsightFacade", function()  {
 			return expect(result).to.eventually.be.rejectedWith(InsightError);
 		});
 
-		it("should accept. has only one building (WOOD) - used for debugging purposes", function() {
+		it("should accept, has only one building (WOOD) - used for debugging purposes", function() {
 			rooms = getContentFromArchives("campusValidOnlyOneBuilding.zip");
 			const result = facade.addDataset("1234", rooms, InsightDatasetKind.Rooms);
 			return expect(result).to.eventually.deep.equal(["1234"]);

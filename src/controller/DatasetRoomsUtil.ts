@@ -1,5 +1,5 @@
 import JSZip from "jszip";
-import {InsightDatasetKind} from "./IInsightFacade";
+import {InsightDatasetKind, InsightError} from "./IInsightFacade";
 import {DomNode, Room} from "../models/IRoom";
 import {parse} from "parse5";
 
@@ -16,7 +16,8 @@ export function roomLogicAndOutput(data: JSZip, id: string, kind: InsightDataset
 
 export function roomProcessingPromises(data: JSZip): Promise<Room[]>{
 	const roomArr: Room[] = [];
-	const room: Room = {} as Room;
+	const masterRoomArr: Room[] = [];
+
 	const fileProcessingPromises = Object.keys(data.files).map((relativePath) => {
 		return data.file(relativePath)?.async("text").then((fileContent) => {
 			// check file ends with .htm before parsing
@@ -42,21 +43,26 @@ export function roomProcessingPromises(data: JSZip): Promise<Room[]>{
 			} else {
 				// master index of buildings
 				console.log("master index");
-				masterRecurseAST(DomNodes, parse5AST.childNodes.length, roomArr, room);
-				return;
+				masterRecurseAST(DomNodes, parse5AST.childNodes.length, masterRoomArr, {});
+				return masterRoomArr;
 			}
 
 
 			// recurse through all nodes, start populating array if buildingCode is not empty
-			recurseAST(DomNodes, parse5AST.childNodes.length, roomArr, buildingCode, room);
-
+			recurseAST(DomNodes, parse5AST.childNodes.length, roomArr, buildingCode, {});
+			return roomArr;
 
 		}).catch((error) => {
 			return Promise.reject(error);
 		});
 	});
 	return Promise.all(fileProcessingPromises).then(() => {
-		return [];
+		if (roomArr.length === 0) {
+			throw new InsightError("No valid sections in dataset");
+		}
+		const x = masterRoomArr.flat();
+		const y = roomArr.flat();
+		return Promise.resolve(roomArr.flat());
 	});
 }
 
@@ -110,11 +116,14 @@ function recurseAST(currNode: DomNode[],
 		// check if node is nested in valid table class
 		const classAttribute = getAttributeValue(currNode[i].parentNode?.attrs ?? []);
 		if(classAttribute !== null){
-			// if room number, then its nested in an "a" tag
-			if(classAttribute === "views-field views-field-field-room-number"){
-				// console.log(currNode[i]);
-				console.log("number: ", currNode[i].childNodes?.[0].value);
-				console.log("href: ", getAttributeValue(currNode[i].attrs ?? [], "href"));
+			room.shortname = buildingCode;
+			room = iterativelyPopulateRoom(classAttribute, room, currNode[i]);
+			if(room.type !== undefined){
+				// if room does not already exist in roomArr, then add it
+				if(!roomArr.includes(room)){
+					roomArr.push(room);
+				}
+				room = {} as Room;
 			}
 		}
 
@@ -164,56 +173,39 @@ function masterIterativelyPopulateRoom(attribute: string, room: Room, currNode: 
 
 function iterativelyPopulateRoom(attribute: string, room: Room, currNode: DomNode): Room {
 	switch(attribute) {
-		case "views-field views-field-title":					// fullname
-			if(currNode.childNodes?.[0].value !== undefined) {
-				const fullName = currNode.childNodes?.[0].value;
-				room.fullname = fullName;
-			}
-			break;
-		case "views-field views-field-field-building-code": 	// shortname
-			if(currNode.value?.trim() !== "") {
-				const shortName =  currNode.value?.trim();
-				if(shortName === "Code"){
-					break;
-				}
-				room.shortname = shortName;
-			}
-			break;
 		case "views-field views-field-field-room-number":	 	// number
 			if(currNode.childNodes?.[0].value !== undefined) {
 				room.number = currNode.childNodes?.[0].value ?? "";
 				room.href = getAttributeValue(currNode.attrs ?? [], "href") ?? "";
 			}
 			break;
-		// name (shortname + room number
-		case "views-field views-field-field-building-address": 	// address
+		case "views-field views-field-field-room-capacity":		// seats
 			if(currNode.value?.trim() !== "") {
-				const address = currNode.value?.trim();
-				if(address === "Address"){
+				const number = currNode.value?.trim();
+				if(number === "Capacity") {
 					break;
 				}
-				room.address = address;
-			}
-			break;
-		// latitude + longitude
-		case "views-field views-field-field-room-capacity":		// seats
-			if(currNode.childNodes?.[0].value !== undefined) {
-				room.seats = Number(currNode.childNodes?.[0].value ?? "");
+				room.seats = Number(number);
 			}
 			break;
 		case "views-field views-field-field-room-type":			// type
-			if(currNode.childNodes?.[0].value !== undefined) {
-				room.type = currNode.childNodes?.[0].value ?? "";
-			}
-		case "views-field views-field-field-room-furniture":	// furniture
-			if(currNode.childNodes?.[0].value !== undefined) {
-				room.furniture = currNode.childNodes?.[0].value ?? "";
+			if(currNode.value?.trim() !== "") {
+				const type = currNode.value?.trim();
+				if(type === "Room type") {
+					break;
+				}
+				room.type = type;
 			}
 			break;
-		// case "views-field views-field-nothing":					// href
-		// 	return room;
-		// default:
-		// 	return room;
+		case "views-field views-field-field-room-furniture":	// furniture
+			if(currNode.value?.trim() !== "") {
+				const furniture = currNode.value?.trim();
+				if(furniture === "Furniture type") {
+					break;
+				}
+				room.furniture = furniture;
+			}
+			break;
 	}
 	return room;
 }
