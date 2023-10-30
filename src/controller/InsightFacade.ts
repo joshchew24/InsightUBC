@@ -14,9 +14,9 @@ import {handleQuery} from "../queryScripts/PerformQuery";
 import {doesDatasetIDExist} from "./DiskUtil";
 import {
 	outputSectionDataset, retrieveDatasetModel,
-	roomProcessingPromises, roomLogicAndOutput,
 	sectionFileProcessingPromises, sectionLogicAndOutput
-} from "./DatasetUtil";
+} from "./DatasetSectionUtil";
+import {roomLogicAndOutput} from "./DatasetRoomsUtil";
 
 /**
  * This is the main programmatic entry point for the project.
