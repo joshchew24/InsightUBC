@@ -43,7 +43,6 @@ export function roomProcessingPromises(data: JSZip): Promise<Room[]>{
 				// master index of buildings
 				console.log("master index");
 				masterRecurseAST(DomNodes, parse5AST.childNodes.length, roomArr, room);
-				console.log(room);
 				return;
 			}
 
@@ -73,10 +72,10 @@ function masterRecurseAST(currNode: DomNode[], size: number, roomArr: Room[], ro
 		// check if node is nested in valid table class
 		const classAttribute = getAttributeValue(currNode[i].parentNode?.attrs ?? []);
 		if(classAttribute !== null){
-			room = iterativelyPopulateRoom(classAttribute, room, currNode[i]);
+			room = masterIterativelyPopulateRoom(classAttribute, room, currNode[i]);
 			// address is the last content added for each room for master index
 			if(room.address !== undefined){
-				// if room does not exist in roomArr, then add it
+				// if room does not already exist in roomArr, then add it
 				if(!roomArr.includes(room)){
 					roomArr.push(room);
 				}
@@ -111,10 +110,6 @@ function recurseAST(currNode: DomNode[],
 		// check if node is nested in valid table class
 		const classAttribute = getAttributeValue(currNode[i].parentNode?.attrs ?? []);
 		if(classAttribute !== null){
-			room = iterativelyPopulateRoom(classAttribute, room, currNode[i]);
-			console.log("attribute", classAttribute);
-			console.log("values: ", currNode[i].value?.trim());
-
 			// if room number, then its nested in an "a" tag
 			if(classAttribute === "views-field views-field-field-room-number"){
 				// console.log(currNode[i]);
@@ -134,6 +129,37 @@ function recurseAST(currNode: DomNode[],
 
 		// console.log(tableArrayStrings);
 	}
+}
+
+function masterIterativelyPopulateRoom(attribute: string, room: Room, currNode: DomNode): Room {
+	switch(attribute) {
+		case "views-field views-field-title":					// fullname
+			if(currNode.childNodes?.[0].value !== undefined) {
+				const fullName = currNode.childNodes?.[0].value;
+				room.fullname = fullName;
+			}
+			break;
+		case "views-field views-field-field-building-code": 	// shortname
+			if(currNode.value?.trim() !== "") {
+				const shortName =  currNode.value?.trim();
+				if(shortName === "Code"){
+					break;
+				}
+				room.shortname = shortName;
+			}
+			break;
+		// name (shortname + room number
+		case "views-field views-field-field-building-address": 	// address
+			if(currNode.value?.trim() !== "") {
+				const address = currNode.value?.trim();
+				if(address === "Address"){
+					break;
+				}
+				room.address = address;
+			}
+			break;
+	}
+	return room;
 }
 
 function iterativelyPopulateRoom(attribute: string, room: Room, currNode: DomNode): Room {
