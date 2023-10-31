@@ -1,6 +1,6 @@
 export interface SectionQuery {
 	result: Section[];
-	rank:   number;
+	rank: number;
 }
 
 export interface Section {
@@ -56,7 +56,7 @@ export class SectionPruned {
 
 	constructor(section: any) {
 		// passing either Section or SectionPruned; SectionPruned wouldn't have a field of Course
-		if(isSectionPruned(section)) {
+		if (isSectionPruned(section)) {
 			this.uuid = section.uuid;
 			this.id = section.id;
 			this.title = section.title;
