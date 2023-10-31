@@ -2,6 +2,7 @@ import JSZip from "jszip";
 import {InsightDatasetKind, InsightError} from "./IInsightFacade";
 import {DomNode, Room} from "../models/IRoom";
 import {parse} from "parse5";
+import {GeoResponse} from "../models/IGeoResponse";
 
 export function roomLogicAndOutput(data: JSZip, id: string, kind: InsightDatasetKind): Promise<string[]>{
 	return roomProcessingPromises(data)
@@ -14,10 +15,38 @@ export function roomLogicAndOutput(data: JSZip, id: string, kind: InsightDataset
 		});
 }
 
-export function roomProcessingPromises(data: JSZip): Promise<Room[]>{
-	const roomArr: Room[] = [];
-	const masterRoomArr: Room[] = [];
+async function combineMasterAndRoomLogic(roomArr: Room[], masterRoomArr: Room[]): Promise<Room[]> {
+	if (roomArr.length === 0) {
+		throw new InsightError("No valid sections in dataset");
+	}
+	if (masterRoomArr.length === 0 || roomArr.length === 0) {
+		throw new InsightError("No valid room in dataset");
+	}
 
+	const geoPromises = masterRoomArr.map(async (room) => {
+		try {
+			const geoData = await fetchData(room.address);
+			room.lat = geoData.lat;
+			room.lon = geoData.lon;
+			return room;
+		} catch (error) {
+			console.error(`Failed to fetch lat/lon for address: ${room.address}`, error);
+			return null;
+		}
+	});
+
+	const updatedRooms: Array<Room | null> = await Promise.all(geoPromises);
+
+	const combinedRoomArr = roomArr.map((room) => {
+		const masterRoom = updatedRooms.find((masterRoomFind) => masterRoomFind?.shortname === room.shortname);
+		return {...room, ...masterRoom};
+	}).filter((room) => room.lon !== undefined && room.lat !== undefined);
+
+	return combinedRoomArr;
+}
+
+
+function processZipContent(data: JSZip, masterRoomArr: Room[], roomArr: Room[]) {
 	const fileProcessingPromises = Object.keys(data.files).map((relativePath) => {
 		return data.file(relativePath)?.async("text").then((fileContent) => {
 			// check file ends with .htm before parsing
@@ -31,11 +60,11 @@ export function roomProcessingPromises(data: JSZip): Promise<Room[]>{
 			// dig through child nodes recursively
 
 
-			console.log("PATH: " , relativePath);
+			console.log("PATH: ", relativePath);
 
 			// check if file is in building or is master index
 			let buildingCode = "";
-			if(relativePath.includes("/buildings-and-classrooms/")){
+			if (relativePath.includes("/buildings-and-classrooms/")) {
 				buildingCode = relativePath
 					.split("/buildings-and-classrooms/")[1]
 					.split("/")[0].replace(".htm", "");
@@ -56,13 +85,15 @@ export function roomProcessingPromises(data: JSZip): Promise<Room[]>{
 			return Promise.reject(error);
 		});
 	});
+	return fileProcessingPromises;
+}
+
+export function roomProcessingPromises(data: JSZip): Promise<Room[]>{
+	const roomArr: Room[] = [];
+	const masterRoomArr: Room[] = [];
+	const fileProcessingPromises = processZipContent(data, masterRoomArr, roomArr);
 	return Promise.all(fileProcessingPromises).then(() => {
-		if (roomArr.length === 0) {
-			throw new InsightError("No valid sections in dataset");
-		}
-		const x = masterRoomArr.flat();
-		const y = roomArr.flat();
-		return Promise.resolve(roomArr.flat());
+		return combineMasterAndRoomLogic(roomArr, masterRoomArr);
 	});
 }
 
@@ -96,8 +127,6 @@ function masterRecurseAST(currNode: DomNode[], size: number, roomArr: Room[], ro
 				roomArr,
 				room);
 		}
-
-		// console.log(tableArrayStrings);
 	}
 }
 
@@ -136,22 +165,21 @@ function recurseAST(currNode: DomNode[],
 				room);
 		}
 
-		// console.log(tableArrayStrings);
 	}
 }
 
 function masterIterativelyPopulateRoom(attribute: string, room: Room, currNode: DomNode): Room {
-	switch(attribute) {
+	switch (attribute) {
 		case "views-field views-field-title":					// fullname
-			if(currNode.childNodes?.[0].value !== undefined) {
+			if (currNode.childNodes?.[0].value !== undefined) {
 				const fullName = currNode.childNodes?.[0].value;
 				room.fullname = fullName;
 			}
 			break;
 		case "views-field views-field-field-building-code": 	// shortname
-			if(currNode.value?.trim() !== "") {
-				const shortName =  currNode.value?.trim();
-				if(shortName === "Code"){
+			if (currNode.value?.trim() !== "") {
+				const shortName = currNode.value?.trim();
+				if (shortName === "Code") {
 					break;
 				}
 				room.shortname = shortName;
@@ -159,12 +187,14 @@ function masterIterativelyPopulateRoom(attribute: string, room: Room, currNode: 
 			break;
 		// name (shortname + room number
 		case "views-field views-field-field-building-address": 	// address
-			if(currNode.value?.trim() !== "") {
+			if (currNode.value?.trim() !== "") {
 				const address = currNode.value?.trim();
-				if(address === "Address"){
+				if (address === "Address" || address === undefined) {
 					break;
 				}
+
 				room.address = address;
+
 			}
 			break;
 	}
@@ -218,3 +248,29 @@ function getAttributeValue(attrs: Array<{name?: string, value?: string}>, attrKe
 	}
 	return null;
 }
+
+async function fetchData(rawAddress: string | undefined): Promise<GeoResponse> {
+	if(rawAddress === undefined || rawAddress === ""){
+		throw new InsightError("Empty address");
+	}
+	const baseURL = "http://cs310.students.cs.ubc.ca:11316/api/v1/project_team279/";
+	const encodedAddress = encodeURIComponent(rawAddress);
+	const fullURL = baseURL + encodedAddress;
+
+	return fetch(fullURL)
+		.then((response) => {
+			if (!response.ok) {
+				throw new Error("Network response was not ok");
+			}
+			return response.json();
+		})
+		.then((data) => {
+			// console.log(data);
+			return data;
+		})
+		.catch((error) => {
+			console.log("There was a problem with the fetch operation:", error.message);
+			throw error;
+		});
+}
+
