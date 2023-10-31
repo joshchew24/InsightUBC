@@ -286,13 +286,6 @@ describe("InsightFacade", function()  {
 			return expect(result).to.eventually.deep.equal(["1234"]);
 		});
 
-
-		// it("should return valid geolocation for a building", async function() {
-		// 	rooms = getContentFromArchives("campus.zip");
-		// 	await facade.addDataset("1234", rooms, InsightDatasetKind.Rooms);
-		// 	const result = await facade.getBuildingLocation("1234", "DMP");
-		// 	return expect(result).to.deep.equal({lat: 49.26125, lon: -123.24807});
-		// });
 	});
 
 	describe("removeDataset", function() {

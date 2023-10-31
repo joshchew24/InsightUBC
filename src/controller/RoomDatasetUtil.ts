@@ -4,6 +4,7 @@ import {DomNode, Room} from "../models/IRoom";
 import {parse} from "parse5";
 import {GeoResponse} from "../models/IGeoResponse";
 import {outputDataset} from "./CommonDatasetUtil";
+import {request} from "http";
 
 export function roomLogicAndOutput(data: JSZip, id: string, kind: InsightDatasetKind): Promise<string[]>{
 	return roomProcessingPromises(data)
@@ -14,83 +15,6 @@ export function roomLogicAndOutput(data: JSZip, id: string, kind: InsightDataset
 		.catch((error) => {
 			return Promise.reject(error);
 		});
-}
-
-async function combineMasterAndRoomLogic(roomArr: Room[], masterRoomArr: Room[]): Promise<Room[]> {
-	if (roomArr.length === 0) {
-		throw new InsightError("No valid sections in dataset");
-	}
-	if (masterRoomArr.length === 0 || roomArr.length === 0) {
-		throw new InsightError("No valid room in dataset");
-	}
-
-	const geoPromises = masterRoomArr.map(async (room) => {
-		try {
-			const geoData = await fetchData(room.address);
-			room.lat = geoData.lat;
-			room.lon = geoData.lon;
-			return room;
-		} catch (error) {
-			// console.error(`Failed to fetch lat/lon for address: ${room.address}`, error);
-			return null;
-		}
-	});
-
-	const updatedRooms: Array<Room | null> = await Promise.all(geoPromises);
-
-	const combinedRoomArr = roomArr.map((room) => {
-		const masterRoom = updatedRooms.find((masterRoomFind) => masterRoomFind?.shortname === room.shortname);
-		return {...room, ...masterRoom};
-	}).filter((room) => room.lon !== undefined || room.lat !== undefined);
-
-	return combinedRoomArr;
-}
-
-
-function processZipContent(data: JSZip, masterRoomArr: Room[], roomArr: Room[]) {
-	const fileProcessingPromises = Object.keys(data.files).map((relativePath) => {
-		return data.file(relativePath)?.async("text").then((fileContent) => {
-			// check file ends with .htm before parsing
-			if (!relativePath.endsWith(".htm")) {
-				return;
-			}
-
-			const parse5AST = parse(fileContent);
-			// typecast parse5 to Domnode for easier type checking
-			const DomNodes = parse5AST.childNodes as DomNode[];
-			// dig through child nodes recursively
-
-			// check if file is in building or is master index
-			let buildingCode = "";
-			if (relativePath.includes("/buildings-and-classrooms/")) {
-				buildingCode = relativePath
-					.split("/buildings-and-classrooms/")[1]
-					.split("/")[0].replace(".htm", "");
-			} else {
-				// master index of buildings
-				masterRecurseAST(DomNodes, parse5AST.childNodes.length, masterRoomArr, {});
-				return masterRoomArr;
-			}
-
-
-			// recurse through all nodes, start populating array if buildingCode is not empty
-			recurseAST(DomNodes, parse5AST.childNodes.length, roomArr, buildingCode, {});
-			return roomArr;
-
-		}).catch((error) => {
-			return Promise.reject(error);
-		});
-	});
-	return fileProcessingPromises;
-}
-
-export function roomProcessingPromises(data: JSZip): Promise<Room[]>{
-	const roomArr: Room[] = [];
-	const masterRoomArr: Room[] = [];
-	const fileProcessingPromises = processZipContent(data, masterRoomArr, roomArr);
-	return Promise.all(fileProcessingPromises).then(() => {
-		return combineMasterAndRoomLogic(roomArr, masterRoomArr);
-	});
 }
 
 // make rooms filled with fullname, shortname, and address
@@ -236,6 +160,85 @@ function iterativelyPopulateRoom(attribute: string, room: Room, currNode: DomNod
 	return room;
 }
 
+
+async function combineMasterAndRoomLogic(roomArr: Room[], masterRoomArr: Room[]): Promise<Room[]> {
+	if (roomArr.length === 0) {
+		throw new InsightError("No valid sections in dataset");
+	}
+	if (masterRoomArr.length === 0 || roomArr.length === 0) {
+		throw new InsightError("No valid room in dataset");
+	}
+
+	const geoPromises = masterRoomArr.map(async (room) => {
+		try {
+			const geoData = await fetchData(room.address);
+			room.lat = geoData.lat;
+			room.lon = geoData.lon;
+			return room;
+		} catch (error) {
+			// console.error(`Failed to fetch lat/lon for address: ${room.address}`, error);
+			return null;
+		}
+	});
+
+	const updatedRooms: Array<Room | null> = await Promise.all(geoPromises);
+
+	const combinedRoomArr = roomArr.map((room) => {
+		const masterRoom = updatedRooms.find((masterRoomFind) => masterRoomFind?.shortname === room.shortname);
+		return {...room, ...masterRoom};
+	}).filter((room) => room.lon !== undefined || room.lat !== undefined);
+
+	return combinedRoomArr;
+}
+
+
+function processZipContent(data: JSZip, masterRoomArr: Room[], roomArr: Room[]) {
+	const fileProcessingPromises = Object.keys(data.files).map((relativePath) => {
+		return data.file(relativePath)?.async("text").then((fileContent) => {
+			// check file ends with .htm before parsing
+			if (!relativePath.endsWith(".htm")) {
+				return;
+			}
+
+			const parse5AST = parse(fileContent);
+			// typecast parse5 to Domnode for easier type checking
+			const DomNodes = parse5AST.childNodes as DomNode[];
+			// dig through child nodes recursively
+
+			// check if file is in building or is master index
+			let buildingCode = "";
+			if (relativePath.includes("/buildings-and-classrooms/")) {
+				buildingCode = relativePath
+					.split("/buildings-and-classrooms/")[1]
+					.split("/")[0].replace(".htm", "");
+			} else {
+				// master index of buildings
+				masterRecurseAST(DomNodes, parse5AST.childNodes.length, masterRoomArr, {});
+				return masterRoomArr;
+			}
+
+
+			// recurse through all nodes, start populating array if buildingCode is not empty
+			recurseAST(DomNodes, parse5AST.childNodes.length, roomArr, buildingCode, {});
+			return roomArr;
+
+		}).catch((error) => {
+			return Promise.reject(error);
+		});
+	});
+	return fileProcessingPromises;
+}
+
+export function roomProcessingPromises(data: JSZip): Promise<Room[]>{
+	const roomArr: Room[] = [];
+	const masterRoomArr: Room[] = [];
+	const fileProcessingPromises = processZipContent(data, masterRoomArr, roomArr);
+	return Promise.all(fileProcessingPromises).then(() => {
+		return combineMasterAndRoomLogic(roomArr, masterRoomArr);
+	});
+}
+
+
 function getAttributeValue(attrs: Array<{name?: string, value?: string}>, attrKey = "class"): string | null {
 	for (let attr of attrs) {
 		if (attr.name === attrKey) {
@@ -246,28 +249,48 @@ function getAttributeValue(attrs: Array<{name?: string, value?: string}>, attrKe
 }
 
 async function fetchData(rawAddress: string | undefined): Promise<GeoResponse> {
-	if(rawAddress === undefined || rawAddress === ""){
+	if (rawAddress === undefined || rawAddress === "") {
 		throw new InsightError("Empty address");
 	}
 	const baseURL = "http://cs310.students.cs.ubc.ca:11316/api/v1/project_team279/";
 	const encodedAddress = encodeURIComponent(rawAddress);
-	const fullURL = baseURL + encodedAddress;
+	const fullURL = new URL(baseURL + encodedAddress);
 
-	return fetch(fullURL)
-		.then((response) => {
-			if (!response.ok) {
-				throw new Error("Network response was not ok");
-			}
-			return response.json();
-		})
-		.then((data) => {
-			// console.log(data);
-			return data;
-		})
-		.catch((error) => {
-			// console.log("There was a problem with the fetch operation:", error.message);
-			// throw error;
+	return new Promise((resolve, reject) => {
+		const requestOptions = {
+			hostname: fullURL.hostname,
+			port: fullURL.port,
+			path: fullURL.pathname,
+			method: "GET",
+		};
+
+		const req = request(requestOptions, (res) => {
+			let data = "";
+
+			res.on("data", (chunk) => {
+				data += chunk;
+			});
+
+			res.on("end", () => {
+				if (res.statusCode !== 200) {
+					reject(new Error("Network response was not ok"));
+				} else {
+					try {
+						const jsonData = JSON.parse(data);
+						resolve(jsonData);
+					} catch (error) {
+						reject(new Error("Failed to parse JSON response"));
+					}
+				}
+			});
 		});
+
+		req.on("error", (error) => {
+			reject(error);
+		});
+
+		req.end();
+	});
 }
 
 
