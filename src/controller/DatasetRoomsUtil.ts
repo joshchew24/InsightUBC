@@ -40,7 +40,7 @@ async function combineMasterAndRoomLogic(roomArr: Room[], masterRoomArr: Room[])
 	const combinedRoomArr = roomArr.map((room) => {
 		const masterRoom = updatedRooms.find((masterRoomFind) => masterRoomFind?.shortname === room.shortname);
 		return {...room, ...masterRoom};
-	}).filter((room) => room.lon !== undefined && room.lat !== undefined);
+	}).filter((room) => room.lon !== undefined || room.lat !== undefined);
 
 	return combinedRoomArr;
 }
