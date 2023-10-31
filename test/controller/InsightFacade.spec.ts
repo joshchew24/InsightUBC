@@ -282,7 +282,7 @@ describe("InsightFacade", function()  {
 
 		it("should accept dataset that contains HTML", function() {
 			rooms = campusRooms;
-			const result = facade.addDataset("124", rooms, InsightDatasetKind.Rooms);
+			const result = facade.addDataset("1234", rooms, InsightDatasetKind.Rooms);
 			return expect(result).to.eventually.deep.equal(["1234"]);
 		});
 

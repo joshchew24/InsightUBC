@@ -3,12 +3,13 @@ import {InsightDatasetKind, InsightError} from "./IInsightFacade";
 import {DomNode, Room} from "../models/IRoom";
 import {parse} from "parse5";
 import {GeoResponse} from "../models/IGeoResponse";
+import {outputDataset} from "./CommonDatasetUtil";
 
 export function roomLogicAndOutput(data: JSZip, id: string, kind: InsightDatasetKind): Promise<string[]>{
 	return roomProcessingPromises(data)
 		.then((roomArr) => {
 			// return outputRoomDataset(id, kind, roomArr);
-			return Promise.resolve([]);
+			return outputDataset(id, kind, roomArr);
 		})
 		.catch((error) => {
 			return Promise.reject(error);
@@ -30,7 +31,7 @@ async function combineMasterAndRoomLogic(roomArr: Room[], masterRoomArr: Room[])
 			room.lon = geoData.lon;
 			return room;
 		} catch (error) {
-			console.error(`Failed to fetch lat/lon for address: ${room.address}`, error);
+			// console.error(`Failed to fetch lat/lon for address: ${room.address}`, error);
 			return null;
 		}
 	});
@@ -59,19 +60,14 @@ function processZipContent(data: JSZip, masterRoomArr: Room[], roomArr: Room[]) 
 			const DomNodes = parse5AST.childNodes as DomNode[];
 			// dig through child nodes recursively
 
-
-			console.log("PATH: ", relativePath);
-
 			// check if file is in building or is master index
 			let buildingCode = "";
 			if (relativePath.includes("/buildings-and-classrooms/")) {
 				buildingCode = relativePath
 					.split("/buildings-and-classrooms/")[1]
 					.split("/")[0].replace(".htm", "");
-				console.log(buildingCode);
 			} else {
 				// master index of buildings
-				console.log("master index");
 				masterRecurseAST(DomNodes, parse5AST.childNodes.length, masterRoomArr, {});
 				return masterRoomArr;
 			}
@@ -269,8 +265,9 @@ async function fetchData(rawAddress: string | undefined): Promise<GeoResponse> {
 			return data;
 		})
 		.catch((error) => {
-			console.log("There was a problem with the fetch operation:", error.message);
-			throw error;
+			// console.log("There was a problem with the fetch operation:", error.message);
+			// throw error;
 		});
 }
+
 

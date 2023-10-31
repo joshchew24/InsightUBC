@@ -9,14 +9,12 @@ import {
 } from "./IInsightFacade";
 import {Section, SectionPruned, SectionQuery} from "../models/ISection";
 import fs from "fs-extra";
-import {DatasetModel} from "../models/IModel";
+import {DatasetModel, RoomDatasetModel, SectionDatasetModel} from "../models/IModel";
 import {handleQuery} from "../queryScripts/PerformQuery";
 import {doesDatasetIDExist} from "./DiskUtil";
-import {
-	outputSectionDataset, retrieveDatasetModel,
-	sectionFileProcessingPromises, sectionLogicAndOutput
-} from "./DatasetSectionUtil";
-import {roomLogicAndOutput} from "./DatasetRoomsUtil";
+import {sectionLogicAndOutput} from "./SectionDatasetUtil";
+import {roomLogicAndOutput} from "./RoomDatasetUtil";
+import {retrieveDatasetModel} from "./CommonDatasetUtil";
 
 /**
  * This is the main programmatic entry point for the project.
@@ -95,15 +93,34 @@ export default class InsightFacade implements IInsightFacade {
 			if (datasetArr.length === 1 && datasetArr[0].id === undefined) {
 				return Promise.resolve([]);
 			}
-			// return an array of InsightDataset objects
-			const insightDatasetArr: InsightDataset[] = datasetArr.map((dataset) => {
-				return {
-					id: dataset.id,
-					kind: InsightDatasetKind.Sections,
-					numRows: dataset.section.length,
-				};
-			});
-			return Promise.resolve(insightDatasetArr);
+
+			// check if datasetArr is empty, if so return empty array
+			if(datasetArr.length === 0){
+				return Promise.resolve(datasetArr as InsightDataset[]);
+			}
+
+			if(datasetArr[0].kind === InsightDatasetKind.Sections){
+				const sectionDatasetArr = datasetArr as SectionDatasetModel[];
+				const sectionInsightDatasetArr: InsightDataset[] = sectionDatasetArr.map((dataset) => {
+					return {
+						id: dataset.id,
+						kind: InsightDatasetKind.Sections,
+						numRows: dataset.section.length,
+					};
+				});
+				return Promise.resolve(sectionInsightDatasetArr);
+			} else if(datasetArr[0].kind === InsightDatasetKind.Rooms){
+				const roomDatasetArr = datasetArr as RoomDatasetModel[];
+				const roomInsightDatasetArr: InsightDataset[] = roomDatasetArr.map((dataset) => {
+					return {
+						id: dataset.id,
+						kind: InsightDatasetKind.Rooms,
+						numRows: dataset.room.length,
+					};
+				});
+				return Promise.resolve(roomInsightDatasetArr);
+			}
+			throw new InsightError("Invalid Dataset Kind");
 		} catch (err) {
 			return Promise.reject(err);
 		}

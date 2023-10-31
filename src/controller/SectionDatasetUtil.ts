@@ -2,17 +2,15 @@
 import JSZip from "jszip";
 import {Section, SectionPruned, SectionQuery} from "../models/ISection";
 import {InsightDatasetKind, InsightError} from "./IInsightFacade";
-import {DatasetModel} from "../models/IModel";
+import {SectionDatasetModel} from "../models/IModel";
 import fs from "fs-extra";
-import {DomNode, Room} from "../models/IRoom";
-import {parse, parseFragment} from "parse5";
-import {ChildNode, Document} from "parse5/dist/tree-adapters/default";
+import {outputDataset} from "./CommonDatasetUtil";
 
 
 export function sectionLogicAndOutput(data: JSZip, id: string, kind: InsightDatasetKind): Promise<string[]>{
 	return sectionFileProcessingPromises(data)
 		.then((sectionArr) => {
-			return outputSectionDataset(id, kind, sectionArr);
+			return outputDataset(id, kind, sectionArr);
 		})
 		.catch((error) => {
 			return Promise.reject(error);
@@ -100,41 +98,4 @@ export function isValidSection(section: Section): boolean {
 
 }
 
-export function outputSectionDataset(id: string, kind: InsightDatasetKind, sectionArr: Section[]): string[] {
 
-	// the dataset output with the pruned version of the original JSON input
-	const newDataset: DatasetModel = {
-		id: id,
-		kind: kind,
-		numRows: sectionArr.length,
-		section: sectionArr.map((section) => {
-			return new SectionPruned(section);
-		})
-	};
-	// outputs JSON file for an id
-	fs.outputFileSync(`./data/${id}.json`, JSON.stringify(newDataset, null, 4));
-	// TODO: room for potential improvement for computation speed
-	// return ids from datasetArr
-	const datasetArr: DatasetModel[] = retrieveDatasetModel();
-	return datasetArr.map((dataset) => dataset.id);
-}
-
-export function retrieveDatasetModel(): DatasetModel[] {
-	try {
-		// retrieve all JSON files from ./data if it exists
-		const files = fs.readdirSync("./data");
-		// return an array of dataset objects
-		const datasetArr: DatasetModel[] = [];
-		// iterate through all files in ./data
-		files.forEach((file) => {
-			if (file.endsWith(".json")) {
-				const data = fs.readFileSync(`./data/${file}`, "utf8");
-				const dataset: DatasetModel = JSON.parse(data);
-				datasetArr.push(dataset);
-			}
-		});
-		return datasetArr;
-	} catch (err) {
-		return [];
-	}
-}
