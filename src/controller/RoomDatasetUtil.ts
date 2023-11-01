@@ -162,9 +162,6 @@ function iterativelyPopulateRoom(attribute: string, room: Room, currNode: DomNod
 
 
 async function combineMasterAndRoomLogic(roomArr: Room[], masterRoomArr: Room[]): Promise<Room[]> {
-	if (roomArr.length === 0) {
-		throw new InsightError("No valid sections in dataset");
-	}
 	if (masterRoomArr.length === 0 || roomArr.length === 0) {
 		throw new InsightError("No valid room in dataset");
 	}
@@ -203,8 +200,6 @@ function processZipContent(data: JSZip, masterRoomArr: Room[], roomArr: Room[]) 
 			const parse5AST = parse(fileContent);
 			// typecast parse5 to Domnode for easier type checking
 			const DomNodes = parse5AST.childNodes as DomNode[];
-			// dig through child nodes recursively
-
 			// check if file is in building or is master index
 			let buildingCode = "";
 			if (relativePath.includes("/buildings-and-classrooms/")) {
@@ -212,6 +207,7 @@ function processZipContent(data: JSZip, masterRoomArr: Room[], roomArr: Room[]) 
 					.split("/buildings-and-classrooms/")[1]
 					.split("/")[0].replace(".htm", "");
 			} else {
+				// dig through child nodes recursively
 				// master index of buildings
 				masterRecurseAST(DomNodes, parse5AST.childNodes.length, masterRoomArr, {});
 				return masterRoomArr;
