@@ -10,7 +10,7 @@ enum FilterKeys {
 	"GT" = "GT",
 	"EQ" = "EQ",
 	"IS" = "IS",
-	"NOT" = "NOT"
+	"NOT" = "NOT",
 }
 
 let filterValidationMap: {[index: string]: ValidationFunction} = {
@@ -20,7 +20,7 @@ let filterValidationMap: {[index: string]: ValidationFunction} = {
 	GT: validateMComparison,
 	EQ: validateMComparison,
 	IS: validateSComparison,
-	NOT: validateNegation
+	NOT: validateNegation,
 };
 
 // filter must have one key
@@ -105,4 +105,3 @@ function validateNegation(filter: {[index: string]: object}) {
 	let toNegate = filter["NOT"];
 	validateFilter(toNegate);
 }
-

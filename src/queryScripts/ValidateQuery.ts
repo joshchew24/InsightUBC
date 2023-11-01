@@ -16,7 +16,7 @@ export function validateQuery(query: object): QueryWithID {
 	let idString: string = validateIDs(query);
 	return {
 		id: idString,
-		query: query
+		query: query,
 	};
 }
 
@@ -37,7 +37,7 @@ function validateIDs(query: object): string | never {
 	let idString = idStringList[0];
 	if (idStringList.every((id) => id === idString)) {
 		if (!doesDatasetIDExist(idString)) {
-			throw new InsightError("Referenced dataset \"" + idString + "\" not added yet");
+			throw new InsightError('Referenced dataset "' + idString + '" not added yet');
 		}
 		return idString;
 	} else {
@@ -86,7 +86,7 @@ function validateOptions(query: object) {
 		throw new InsightError("OPTIONS missing COLUMNS");
 	}
 	let colKeys: string[] = options["COLUMNS"] as string[];
-	if (!(Array.isArray(colKeys))) {
+	if (!Array.isArray(colKeys)) {
 		throw new InsightError("COLUMNS is not an array");
 	}
 	for (let colKey of colKeys) {
@@ -101,7 +101,7 @@ function validateOptions(query: object) {
 	}
 	let orderKey: string = options["ORDER"] as string;
 	validateQueryKey("ORDER", orderKey);
-	if (!(colKeys.includes(orderKey))) {
+	if (!colKeys.includes(orderKey)) {
 		throw new InsightError("ORDER key must be in COLUMNS");
 	}
 }
@@ -135,7 +135,7 @@ export function validateQueryKey(fieldKey: string, qkey: string) {
 	let id = split[0];
 	idStringList.push(id);
 	let field = split[1];
-	if (!(allFields.includes(field))) {
+	if (!allFields.includes(field)) {
 		throw new InsightError("Invalid key " + qkey + " in " + fieldKey);
 	}
 	// if fieldKey is in operators, we must validate the fieldType
