@@ -120,7 +120,9 @@ export default class InsightFacade implements IInsightFacade {
 					return Promise.resolve([]);
 				}
 				const sectionQuery: SectionQuery = JSON.parse(fileContent);
-				sectionQuery.result.forEach((section: Section) => {
+				let sections: Section[] = JSON.parse(fileContent).result;
+				let section: Section;
+				for (section of sections) {
 					// check if section is "overall"
 					if (section.Section === "overall") {
 						section.Year = "1900";
@@ -130,7 +132,9 @@ export default class InsightFacade implements IInsightFacade {
 						// throw new InsightError("Invalid JSON data in file: " + relativePath);
 						sectionArr.push(section);
 					}
-				});
+				}
+			}).catch((error) => {
+				return Promise.reject(error);
 			});
 		});
 		return Promise.all(fileProcessingPromises).then(() => {
@@ -184,8 +188,7 @@ export default class InsightFacade implements IInsightFacade {
 
 	}
 
-	private outputDataset(id: string, kind: InsightDatasetKind,
-						  sectionArr: Section[] ): string[] {
+	private outputDataset(id: string, kind: InsightDatasetKind, sectionArr: Section[]): string[] {
 
 		// the dataset output with the pruned version of the original JSON input
 		const newDataset: DatasetModel = {
