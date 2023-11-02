@@ -9,9 +9,12 @@ import {
 } from "./IInsightFacade";
 import {Section, SectionPruned, SectionQuery} from "../models/ISection";
 import fs from "fs-extra";
-import {DatasetModel} from "../models/IModel";
+import {DatasetModel, RoomDatasetModel, SectionDatasetModel} from "../models/IModel";
 import {handleQuery} from "../queryScripts/PerformQuery";
 import {doesDatasetIDExist} from "./DiskUtil";
+import {sectionLogicAndOutput} from "./SectionDatasetUtil";
+import {roomLogicAndOutput} from "./RoomDatasetUtil";
+import {retrieveDatasetModel} from "./CommonDatasetUtil";
 
 /**
  * This is the main programmatic entry point for the project.
@@ -32,10 +35,6 @@ export default class InsightFacade implements IInsightFacade {
 		if (doesDatasetIDExist(id)) {
 			return Promise.reject(new InsightError("ID already exists"));
 		}
-		// section type should Sections only
-		if (kind !== InsightDatasetKind.Sections) {
-			return Promise.reject(new InsightError("Invalid dataset kind"));
-		}
 		// checks if zip content exists
 		if (!content) {
 			return Promise.reject(new InsightError("Invalid Content"));
@@ -46,17 +45,19 @@ export default class InsightFacade implements IInsightFacade {
 			.then((data) => {
 				// data validation
 				if (!data) {
-					throw new InsightError("Invalid Dataset: Missing courses directory");
+					throw new InsightError("Invalid Dataset: Missing data directory");
 				}
 				return data;
 			})
 			.then((data) => {
-				// return an array of sections from content JSON
-				return this.fileProcessingPromises(data);
-			})
-			.then((sectionArr) => {
-				// write the dataset to disk
-				return this.outputDataset(id, kind, sectionArr);
+				if(kind === InsightDatasetKind.Sections) {
+					// return an array of sections from content JSON if kind is Sections
+					return sectionLogicAndOutput(data, id, kind);
+				} else if(kind === InsightDatasetKind.Rooms){
+					// return an array of rooms from content JSON if kind is Rooms
+					return roomLogicAndOutput(data, id, kind);
+				}
+				throw new InsightError("Invalid Dataset Kind");
 			})
 			.catch((error) => {
 				throw new InsightError(error.message);
@@ -85,147 +86,44 @@ export default class InsightFacade implements IInsightFacade {
 		return handleQuery(query);
 	}
 
+	// TODO: enable mix and match if the type checking proves to be problematic
 	public listDatasets(): Promise<InsightDataset[]> {
 		try {
-			const datasetArr: DatasetModel[] = this.retrieveDataset();
+			const datasetArr: DatasetModel[] = retrieveDatasetModel();
 			// check if datasetArr contains dataset objects, if not return empty array
 			if (datasetArr.length === 1 && datasetArr[0].id === undefined) {
 				return Promise.resolve([]);
 			}
-			// return an array of InsightDataset objects
-			const insightDatasetArr: InsightDataset[] = datasetArr.map((dataset) => {
-				return {
-					id: dataset.id,
-					kind: InsightDatasetKind.Sections,
-					numRows: dataset.section.length,
-				};
-			});
-			return Promise.resolve(insightDatasetArr);
+
+			// check if datasetArr is empty, if so return empty array
+			if(datasetArr.length === 0){
+				return Promise.resolve(datasetArr as InsightDataset[]);
+			}
+
+			if(datasetArr[0].kind === InsightDatasetKind.Sections){
+				const sectionDatasetArr = datasetArr as SectionDatasetModel[];
+				const sectionInsightDatasetArr: InsightDataset[] = sectionDatasetArr.map((dataset) => {
+					return {
+						id: dataset.id,
+						kind: InsightDatasetKind.Sections,
+						numRows: dataset.section.length,
+					};
+				});
+				return Promise.resolve(sectionInsightDatasetArr);
+			} else if(datasetArr[0].kind === InsightDatasetKind.Rooms){
+				const roomDatasetArr = datasetArr as RoomDatasetModel[];
+				const roomInsightDatasetArr: InsightDataset[] = roomDatasetArr.map((dataset) => {
+					return {
+						id: dataset.id,
+						kind: InsightDatasetKind.Rooms,
+						numRows: dataset.room.length,
+					};
+				});
+				return Promise.resolve(roomInsightDatasetArr);
+			}
+			throw new InsightError("Invalid Dataset Kind");
 		} catch (err) {
 			return Promise.reject(err);
-		}
-	}
-
-	// iterates through all files in the zip and returns an array of sections
-	private fileProcessingPromises(data: JSZip): Promise<Section[]> {
-		const sectionArr: Section[] = [];
-		const fileProcessingPromises = Object.keys(data.files).map((relativePath) => {
-			return data
-				.file(relativePath)
-				?.async("text")
-				.then((fileContent) => {
-					// check if fileContent is undefined
-					if (!fileContent) {
-						return;
-					}
-					// if start doesnt contain {" and the end doesnt contain "} then its not a json file
-					if (!fileContent.startsWith("{") || !fileContent.endsWith("}")) {
-						return Promise.resolve([]);
-					}
-					const sectionQuery: SectionQuery = JSON.parse(fileContent);
-					let sections: Section[] = JSON.parse(fileContent).result;
-					let section: Section;
-					for (section of sections) {
-						// check if section is "overall"
-						if (section.Section === "overall") {
-							section.Year = "1900";
-						}
-						// check if section is valid
-						if (this.isValidSection(section)) {
-							// throw new InsightError("Invalid JSON data in file: " + relativePath);
-							sectionArr.push(section);
-						}
-					}
-				})
-				.catch((error) => {
-					return Promise.reject(error);
-				});
-		});
-		return Promise.all(fileProcessingPromises).then(() => {
-			// check if sectionArr is empty
-			if (sectionArr.length === 0) {
-				throw new InsightError("No valid sections in dataset");
-			}
-			return sectionArr.flat();
-		});
-	}
-
-	// checks if JSON data injected the Section object with valid fields (i.e. not undefined)
-	private isValidSection(section: Section): boolean {
-		if (!section.Course) {
-			return false;
-			// throw new InsightError("Invalid Course");
-		}
-		if (!section.id) {
-			return false;
-			// throw new InsightError("Invalid id");
-		}
-		if (section.Title === undefined) {
-			return false;
-			// throw new InsightError("Invalid Title");
-		}
-		if (section.Professor === undefined) {
-			return false;
-			// throw new InsightError("Invalid Professor");
-		}
-		if (section.Subject === undefined) {
-			return false;
-			// throw new InsightError("Invalid Subject");
-		}
-		if (!section.Year) {
-			return false;
-			// throw new InsightError("Invalid Year");
-		}
-		if (section.Avg === undefined || section.Avg < 0) {
-			return false;
-			// throw new InsightError("Invalid Avg");
-		}
-		if (section.Pass === undefined || section.Pass < 0) {
-			return false;
-			// throw new InsightError("Invalid Pass");
-		}
-		if (section.Fail === undefined || section.Fail < 0) {
-			return false;
-			// throw new InsightError("Invalid Fail");
-		}
-		return !(section.Audit === undefined || section.Audit < 0);
-	}
-
-	private outputDataset(id: string, kind: InsightDatasetKind, sectionArr: Section[]): string[] {
-		// the dataset output with the pruned version of the original JSON input
-		const newDataset: DatasetModel = {
-			id: id,
-			kind: kind,
-			numRows: sectionArr.length,
-			section: sectionArr.map((section) => {
-				return new SectionPruned(section);
-			}),
-		};
-		// outputs JSON file for an id
-		fs.outputFileSync(`./data/${id}.json`, JSON.stringify(newDataset, null, 4));
-		// TODO: room for potential improvement for computation speed
-		// return ids from datasetArr
-		const datasetArr: DatasetModel[] = this.retrieveDataset();
-		return datasetArr.map((dataset) => dataset.id);
-	}
-
-	private retrieveDataset(): DatasetModel[] {
-		try {
-			// retrieve all JSON files from ./data if it exists
-			const files = fs.readdirSync("./data");
-			// return an array of dataset objects
-			const datasetArr: DatasetModel[] = [];
-			// iterate through all files in ./data
-			files.forEach((file) => {
-				if (file.endsWith(".json")) {
-					const data = fs.readFileSync(`./data/${file}`, "utf8");
-					const dataset: DatasetModel = JSON.parse(data);
-					datasetArr.push(dataset);
-				}
-			});
-			return datasetArr;
-		} catch (err) {
-			return [];
 		}
 	}
 }
