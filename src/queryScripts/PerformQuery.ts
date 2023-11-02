@@ -15,6 +15,7 @@ export function handleQuery(query: unknown): Promise<InsightResult[]> {
 	return Promise.resolve(query as object)
 		.then((queryToValidate) => {
 			let queryWithID: QueryWithID;
+			// TODO: This try catch block is unnecessary, errors should propagate to the promise chain catch
 			try {
 				queryWithID = validateQuery(queryToValidate);
 			} catch (error) {
