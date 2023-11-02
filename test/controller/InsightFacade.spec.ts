@@ -295,7 +295,7 @@ describe("InsightFacade", function () {
 		// let rooms: string;
 		let facade: InsightFacade;
 
-		this.beforeEach(() => {
+		beforeEach(() => {
 			clearDisk();
 			facade = new InsightFacade();
 		});
