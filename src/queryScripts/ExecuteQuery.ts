@@ -2,7 +2,6 @@ import {SectionPruned} from "../models/ISection";
 import {QueryASTNode} from "../models/QueryASTNode";
 import {InsightResult} from "../controller/IInsightFacade";
 
-
 export function processQueryToAST(queryItem: any) {
 	if (Object.keys(queryItem).length === 0) {
 		// node with dummy key and no children should automatically pass PassesQuery
@@ -14,19 +13,19 @@ export function processQueryToAST(queryItem: any) {
 
 	/* if the current query item has a value that isn't a list we've reached our base case (comparison with key : value)
 	   else we iterate through list to make a new node for each child */
-	if (queryItemKey === "NOT"){
+	if (queryItemKey === "NOT") {
 		let notNode = new QueryASTNode(queryItemKey, []);
 		let childNode = processQueryToAST(itemChildren);
 		notNode.addChild(childNode);
 		return notNode;
-	} else if(!Array.isArray(itemChildren)) {
+	} else if (!Array.isArray(itemChildren)) {
 		// make final node with key:value, add to list of MCOMPARISON/SCOMPARISON node
 		let leafItemKey = Object.keys(itemChildren)[0];
 		let leaf = new QueryASTNode(leafItemKey, itemChildren[leafItemKey]);
 		return new QueryASTNode(queryItemKey, [leaf]);
 	} else {
 		let currRoot = new QueryASTNode(queryItemKey, []);
-		for(let childItem of itemChildren) {
+		for (let childItem of itemChildren) {
 			currRoot.addChild(processQueryToAST(childItem));
 		}
 		return currRoot;
@@ -42,12 +41,12 @@ export function passesQuery(currSection: SectionPruned, query: QueryASTNode): bo
 	switch (queryNodeKey) {
 		case "AND":
 			includeSection = true;
-			for(const child of query.children as QueryASTNode[]) {
+			for (const child of query.children as QueryASTNode[]) {
 				includeSection = includeSection && passesQuery(currSection, child);
 			}
 			return includeSection;
 		case "OR":
-			for(const child of queryChildren) {
+			for (const child of queryChildren) {
 				includeSection = includeSection || passesQuery(currSection, child);
 			}
 			return includeSection;
@@ -73,10 +72,10 @@ export function passesQuery(currSection: SectionPruned, query: QueryASTNode): bo
 
 export function transformColumns(rawResult: SectionPruned[], columns: string[]) {
 	let transformedResult: InsightResult[] = [];
-	for(const section of rawResult) {
+	for (const section of rawResult) {
 		let transformedSection: InsightResult = {};
-		for(const column of columns) {
-			if(!(column in transformedSection)) {
+		for (const column of columns) {
+			if (!(column in transformedSection)) {
 				let fieldName = column.split("_")[1];
 				transformedSection[column] = section.getField(fieldName);
 			}
@@ -99,14 +98,13 @@ export function orderRows(result: InsightResult[], order: string) {
 	});
 }
 
-
 // HELPER FUNCTIONS
 
 function passesMComparator(section: SectionPruned, mComparison: QueryASTNode, mComparator: string) {
 	let fieldName = mComparison.key.split("_")[1];
 	let mValue: number = mComparison.children as number;
 	let sectionField: number = section.getField(fieldName) as number;
-	switch(mComparator) {
+	switch (mComparator) {
 		case "LT":
 			return sectionField < mValue;
 		case "GT":
@@ -123,11 +121,11 @@ function matchesSField(section: SectionPruned, sComparison: QueryASTNode) {
 	let sValue: string = sComparison.children as string;
 	let field: string = section.getField(fieldName) as string;
 
-	if(sValue === "*" || sValue === "**") {
+	if (sValue === "*" || sValue === "**") {
 		return true;
 	}
 
-	if(field === "" && sValue !== "") {
+	if (field === "" && sValue !== "") {
 		return false;
 	}
 
