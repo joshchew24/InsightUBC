@@ -3,6 +3,7 @@ import {Room} from "../models/IRoom";
 import {RoomDatasetModel, SectionDatasetModel} from "../models/IModel";
 import fs from "fs-extra";
 import {Section, SectionPruned} from "../models/ISection";
+import {retrieveAllDatasetIds, retrieveDataset} from "./DiskUtil";
 
 // Type guard for Room
 function isRoom(obj: any): obj is Room {
@@ -40,8 +41,9 @@ export function outputDataset(id: string, kind: InsightDatasetKind, arr: any[]):
 	}
 
 	fs.outputFileSync(`./data/${id}.json`, JSON.stringify(newDataset, null, 4));
-	const datasetArr = retrieveDatasetModel<typeof newDataset>();
-	return datasetArr.map((dataset: any) => dataset.id);
+	// const datasetArr = retrieveDatasetModel<typeof newDataset>();
+	// return datasetArr.map((dataset: any) => dataset.id);
+	return retrieveAllDatasetIds();
 }
 
 export function retrieveDatasetModel<T>(): T[] {

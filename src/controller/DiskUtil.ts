@@ -14,3 +14,11 @@ export function retrieveDataset(id: string): SectionPruned[] {
 	const dataset: SectionDatasetModel = JSON.parse(data);
 	return dataset.section;
 }
+
+export function retrieveAllDatasetIds(): string[] {
+	let ids: string[] = [];
+	fs.readdirSync("./data/").forEach((file) => {
+		ids.push(file.split(".")[0]);
+	});
+	return ids;
+}
