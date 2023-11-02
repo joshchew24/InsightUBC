@@ -87,11 +87,14 @@ function validateOptions(query: object) {
 	}
 	let colKeys: string[] = options["COLUMNS"] as string[];
 	if (!Array.isArray(colKeys)) {
-		throw new InsightError("COLUMNS is not an array");
+		throw new InsightError("COLUMNS must be a non-empty array");
 	}
 	for (let colKey of colKeys) {
 		validateQueryKey("COLUMNS", colKey);
 	}
+	// numKeys is number of keys in Options object.
+	// 1 key means we should only have a COLUMN object
+	// 2 keys means we should only have a COLUMN and ORDER object
 	let numKeys = Object.keys(options).length;
 	if (numKeys === 1) {
 		return;

@@ -28,6 +28,7 @@ export function handleQuery(query: unknown): Promise<InsightResult[]> {
 			let validQuery = queryWithID.query;
 			// TODO: refactor to make this async
 			sectionList = retrieveDataset(queryWithID.id);
+			// TODO: validate dataset kind matches query kind
 			return Promise.resolve(executeQuery(validQuery, sectionList));
 		})
 		.catch((error) => {
