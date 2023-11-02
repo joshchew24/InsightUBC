@@ -22,11 +22,11 @@ export function handleQuery(query: unknown): Promise<InsightResult[]> {
 			}
 			return queryWithID;
 		})
-		.then((queryWithID) => {
+		.then((queryWithID: QueryWithID) => {
 			// construct tree and process the query
-			let validQuery = (queryWithID as QueryWithID).query;
+			let validQuery = queryWithID.query;
 			// TODO: refactor to make this async
-			sectionList = retrieveDataset((queryWithID as QueryWithID).id);
+			sectionList = retrieveDataset(queryWithID.id);
 			return Promise.resolve(executeQuery(validQuery, sectionList));
 		})
 		.catch((error) => {
