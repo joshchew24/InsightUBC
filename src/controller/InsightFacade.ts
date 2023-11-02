@@ -22,7 +22,6 @@ import {retrieveDatasetModel} from "./CommonDatasetUtil";
  *
  */
 export default class InsightFacade implements IInsightFacade {
-
 	constructor() {
 		// console.log("InsightFacadeImpl::init()");
 	}
@@ -41,7 +40,8 @@ export default class InsightFacade implements IInsightFacade {
 			return Promise.reject(new InsightError("Invalid Content"));
 		}
 		const zip = new JSZip();
-		return zip.loadAsync(content, {base64: true})
+		return zip
+			.loadAsync(content, {base64: true})
 			.then((data) => {
 				// data validation
 				if (!data) {
@@ -71,7 +71,7 @@ export default class InsightFacade implements IInsightFacade {
 				throw new InsightError("Invalid ID");
 			}
 			// check if id exists in dataset, else stop execution
-			if(!doesDatasetIDExist(id)){
+			if (!doesDatasetIDExist(id)) {
 				throw new NotFoundError("ID not found");
 			}
 			// remove the dataset from disk
@@ -125,8 +125,4 @@ export default class InsightFacade implements IInsightFacade {
 			return Promise.reject(err);
 		}
 	}
-
-
 }
-
-
