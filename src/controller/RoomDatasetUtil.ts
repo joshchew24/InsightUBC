@@ -92,6 +92,14 @@ function masterIterativelyPopulateRoom(attribute: string, room: Room, currNode: 
 	switch (attribute) {
 		case "views-field views-field-title":					// fullname
 			if (currNode.childNodes?.[0].value !== undefined) {
+				// Matches anything between the last '/' and '.htm'
+				const hrefVal = currNode.attrs?.[0].value;
+				const regex: RegExp = /([^/]+)\.htm$/;
+				const match: RegExpExecArray | null = regex.exec(hrefVal);
+				const namePart: string = match ? match[1] : "";
+				if(namePart !== room.shortname){
+					break;
+				}
 				const fullName = currNode.childNodes?.[0].value;
 				room.fullname = fullName;
 			}
@@ -105,16 +113,13 @@ function masterIterativelyPopulateRoom(attribute: string, room: Room, currNode: 
 				room.shortname = shortName;
 			}
 			break;
-		// name (shortname + room number
 		case "views-field views-field-field-building-address": 	// address
 			if (currNode.value?.trim() !== "") {
 				const address = currNode.value?.trim();
 				if (address === "Address" || address === undefined) {
 					break;
 				}
-
 				room.address = address;
-
 			}
 			break;
 	}
@@ -160,7 +165,6 @@ function iterativelyPopulateRoom(attribute: string, room: Room, currNode: DomNod
 	return room;
 }
 
-
 async function combineMasterAndRoomLogic(roomArr: Room[], masterRoomArr: Room[]): Promise<Room[]> {
 	if (masterRoomArr.length === 0 || roomArr.length === 0) {
 		throw new InsightError("No valid room in dataset");
@@ -182,12 +186,21 @@ async function combineMasterAndRoomLogic(roomArr: Room[], masterRoomArr: Room[])
 
 	const combinedRoomArr = roomArr.map((room) => {
 		const masterRoom = updatedRooms.find((masterRoomFind) => masterRoomFind?.shortname === room.shortname);
-		return {...room, ...masterRoom};
-	}).filter((room) => room.lon !== undefined || room.lat !== undefined);
+		return {...room, ...masterRoom, name: masterRoom?.shortname + " " + room.number};
+	}).filter((room) => isRoomValid(room));
 
 	return combinedRoomArr;
 }
 
+function isRoomValid(room: Room): boolean {
+	if (room.fullname === undefined || room.shortname === undefined || room.number === undefined ||
+		room.name === undefined || room.address === undefined || room.lat === undefined ||
+		room.lon === undefined || room.seats === undefined || room.type === undefined ||
+		room.furniture === undefined || room.href === undefined) {
+		return false;
+	}
+	return true;
+}
 
 function processZipContent(data: JSZip, masterRoomArr: Room[], roomArr: Room[]) {
 	const fileProcessingPromises = Object.keys(data.files).map((relativePath) => {
@@ -213,7 +226,6 @@ function processZipContent(data: JSZip, masterRoomArr: Room[], roomArr: Room[]) 
 				return masterRoomArr;
 			}
 
-
 			// recurse through all nodes, start populating array if buildingCode is not empty
 			recurseAST(DomNodes, parse5AST.childNodes.length, roomArr, buildingCode, {});
 			return roomArr;
@@ -233,7 +245,6 @@ export function roomProcessingPromises(data: JSZip): Promise<Room[]>{
 		return combineMasterAndRoomLogic(roomArr, masterRoomArr);
 	});
 }
-
 
 function getAttributeValue(attrs: Array<{name?: string, value?: string}>, attrKey = "class"): string | null {
 	for (let attr of attrs) {
@@ -259,7 +270,6 @@ async function fetchData(rawAddress: string | undefined): Promise<GeoResponse> {
 			path: fullURL.pathname,
 			method: "GET",
 		};
-
 		const req = request(requestOptions, (res) => {
 			let data = "";
 
@@ -280,11 +290,9 @@ async function fetchData(rawAddress: string | undefined): Promise<GeoResponse> {
 				}
 			});
 		});
-
 		req.on("error", (error) => {
 			reject(error);
 		});
-
 		req.end();
 	});
 }
