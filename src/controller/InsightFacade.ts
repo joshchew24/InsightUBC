@@ -86,6 +86,7 @@ export default class InsightFacade implements IInsightFacade {
 		return handleQuery(query);
 	}
 
+	// TODO: enable mix and match if the type checking proves to be problematic
 	public listDatasets(): Promise<InsightDataset[]> {
 		try {
 			const datasetArr: DatasetModel[] = retrieveDatasetModel();
