@@ -20,10 +20,23 @@ export function validateQuery(query: object): QueryWithID {
 	};
 }
 
-// check if BODY (WHERE) and OPTIONS are the only keys present
-// check if all IDs in query are the same
+// check if BODY (WHERE), OPTIONS, and optionally TRANSFORMATIONS are the only keys present
 function validateRootStructure(query: object) {
-	if (Object.keys(query).length !== 2) {
+	let rootKeys = Object.keys(query);
+	let numKeys = rootKeys.length;
+	if (numKeys < 1) {
+		throw new InsightError("Invalid query string");
+	}
+	if (rootKeys[0] !== "WHERE") {
+		throw new InsightError("Missing WHERE");
+	}
+	if (numKeys < 2 || rootKeys[1] !== "OPTIONS") {
+		throw new InsightError("Missing OPTIONS");
+	}
+	if (numKeys === 2) {
+		return;
+	}
+	if (numKeys !== 3 || rootKeys[2] !== "TRANSFORMATIONS") {
 		throw new InsightError("Excess keys in query");
 	}
 }
