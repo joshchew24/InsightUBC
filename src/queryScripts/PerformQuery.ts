@@ -84,16 +84,15 @@ function executeQuery(inputQuery: any, currDataset: SectionDatasetModel | RoomDa
 		}
 	}
 
-
+	if (inputQuery["TRANSFORMATIONS"]) {
+		rawResult = transformResult(inputQuery["TRANSFORMATIONS"], rawResult);
+	}
+	// TODO: might need to check that implementation is okay with transformations
 	// should transform result sections to object containing just the columns given
 	let processedResult = mapColumns(rawResult, inputQuery["OPTIONS"]["COLUMNS"]);
 	// will order transformed results if order key is given, else return unordered result
 	if (inputQuery["OPTIONS"]["ORDER"]) {
-		processedResult = orderRows(processedResult, inputQuery["OPTIONS"]["ORDER"]);
-	}
-
-	if (inputQuery["TRANSFORMATIONS"]) {
-		return transformResult(inputQuery["TRANSFORMATIONS"], processedResult);
+		return  orderRows(processedResult, inputQuery["OPTIONS"]["ORDER"]);
 	} else {
 		return processedResult;
 	}

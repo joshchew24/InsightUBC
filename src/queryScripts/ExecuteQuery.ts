@@ -71,7 +71,6 @@ export function passesQuery(currClass: SectionPruned | Room, query: QueryASTNode
 	}
 }
 
-// TODO: need to refactor name (transform means something different in C2)
 export function mapColumns(rawResult: any, columns: string[]) {
 	let transformedResult: InsightResult[] = [];
 	for (const currClass of rawResult) {
@@ -87,18 +86,34 @@ export function mapColumns(rawResult: any, columns: string[]) {
 	return transformedResult;
 }
 
-// TODO: adjust to include direction, and take multiple keys (can be an array instead of one item)
-export function orderRows(result: InsightResult[], order: string) {
-	return result.sort((section1, section2) => {
-		if (section1[order] < section2[order]) {
-			return -1;
-		}
-		if (section1[order] > section2[order]) {
-			return 1;
+export function orderRows(result: InsightResult[], order: any): InsightResult[] {
+	let undirectedResult;
+	let orderKeys: string[];
+	if(typeof order === "string") {
+		orderKeys = [order];
+	} else {
+		orderKeys = order["keys"];
+	}
+	undirectedResult = result.sort((class1, class2) => {
+		for(let key of orderKeys) {
+			// will return something if a tiebreak for the key exists
+			if (class1[key] < class2[key]) {
+				return -1;
+			}
+			if (class1[key] > class2[key]) {
+				return 1;
+			}
 		}
 		// keep order as is
 		return 0;
 	});
+
+	// by default, we are already sorting in ascending order; then reverse list if direction is DOWN
+	if(order["dir"] && order["dir"] === "DOWN") {
+		return undirectedResult.reverse();
+	} else {
+		return undirectedResult;
+	}
 }
 
 // HELPER FUNCTIONS
@@ -151,6 +166,6 @@ function matchesSField(currClass: SectionPruned | Room, sComparison: QueryASTNod
 }
 
 // TODO: finish
-export function transformResult(inputQueryElement: string, processedResult: InsightResult[]) {
+export function transformResult(inputQueryElement: string, processedResult: any): InsightResult[] {
 	return [];
 }
