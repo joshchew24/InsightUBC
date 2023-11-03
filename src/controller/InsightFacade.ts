@@ -100,28 +100,30 @@ export default class InsightFacade implements IInsightFacade {
 				return Promise.resolve(datasetArr as InsightDataset[]);
 			}
 
-			if (datasetArr[0].kind === InsightDatasetKind.Sections) {
-				const sectionDatasetArr = datasetArr as SectionDatasetModel[];
-				const sectionInsightDatasetArr: InsightDataset[] = sectionDatasetArr.map((dataset) => {
-					return {
-						id: dataset.id,
+			// check if datasetArr is Room or Section, can be mixed
+
+			const insightDatasetArr: InsightDataset[] = [];
+			for (const datasetModel of datasetArr) {
+				if(datasetModel.kind === InsightDatasetKind.Sections){
+					const sectionDatasetArr = datasetModel as SectionDatasetModel;
+					const sectionInsightDatasetArr: InsightDataset = {
+						id: sectionDatasetArr.id,
 						kind: InsightDatasetKind.Sections,
-						numRows: dataset.section.length,
+						numRows: sectionDatasetArr.section.length,
 					};
-				});
-				return Promise.resolve(sectionInsightDatasetArr);
-			} else if (datasetArr[0].kind === InsightDatasetKind.Rooms) {
-				const roomDatasetArr = datasetArr as RoomDatasetModel[];
-				const roomInsightDatasetArr: InsightDataset[] = roomDatasetArr.map((dataset) => {
-					return {
-						id: dataset.id,
+					insightDatasetArr.push(sectionInsightDatasetArr);
+				} else if(datasetModel.kind === InsightDatasetKind.Rooms){
+					const roomDatasetArr = datasetModel as RoomDatasetModel;
+					const roomInsightDatasetArr: InsightDataset = {
+						id: roomDatasetArr.id,
 						kind: InsightDatasetKind.Rooms,
-						numRows: dataset.room.length,
+						numRows: roomDatasetArr.room.length,
 					};
-				});
-				return Promise.resolve(roomInsightDatasetArr);
+					insightDatasetArr.push(roomInsightDatasetArr);
+				}
 			}
-			throw new InsightError("Invalid Dataset Kind");
+			return Promise.resolve(insightDatasetArr);
+
 		} catch (err) {
 			return Promise.reject(err);
 		}

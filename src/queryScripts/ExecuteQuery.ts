@@ -1,6 +1,7 @@
 import {SectionPruned} from "../models/ISection";
 import {QueryASTNode} from "../models/QueryASTNode";
 import {InsightResult} from "../controller/IInsightFacade";
+import {Room} from "../models/IRoom";
 
 export function processQueryToAST(queryItem: any) {
 	if (Object.keys(queryItem).length === 0) {
@@ -32,59 +33,61 @@ export function processQueryToAST(queryItem: any) {
 	}
 }
 
-export function passesQuery(currSection: SectionPruned, query: QueryASTNode): boolean {
-	// if section doesn't pass any of the query execution return false; will only return true if query works
-	let includeSection = false;
+export function passesQuery(currClass: SectionPruned | Room, query: QueryASTNode): boolean {
+	// if class doesn't pass any of the query execution return false; will only return true if query works
+	let includeClass = false;
 	let queryNodeKey = query.key;
 	let queryChildren = query.children as QueryASTNode[];
 
 	switch (queryNodeKey) {
 		case "AND":
-			includeSection = true;
+			includeClass = true;
 			for (const child of query.children as QueryASTNode[]) {
-				includeSection = includeSection && passesQuery(currSection, child);
+				includeClass = includeClass && passesQuery(currClass, child);
 			}
-			return includeSection;
+			return includeClass;
 		case "OR":
 			for (const child of queryChildren) {
-				includeSection = includeSection || passesQuery(currSection, child);
+				includeClass = includeClass || passesQuery(currClass, child);
 			}
-			return includeSection;
+			return includeClass;
 		case "LT":
-			return passesMComparator(currSection, queryChildren[0], "LT");
+			return passesMComparator(currClass, queryChildren[0], "LT");
 		case "GT":
-			return passesMComparator(currSection, queryChildren[0], "GT");
+			return passesMComparator(currClass, queryChildren[0], "GT");
 		case "EQ":
-			return passesMComparator(currSection, queryChildren[0], "EQ");
+			return passesMComparator(currClass, queryChildren[0], "EQ");
 		case "NOT": {
-			return !passesQuery(currSection, queryChildren[0]);
+			return !passesQuery(currClass, queryChildren[0]);
 		}
 		case "IS": {
-			return matchesSField(currSection, queryChildren[0]);
+			return matchesSField(currClass, queryChildren[0]);
 		}
 		case "no_filter": {
 			return true;
 		}
 		default:
-			return includeSection;
+			return includeClass;
 	}
 }
 
-export function transformColumns(rawResult: SectionPruned[], columns: string[]) {
+// TODO: need to refactor name (transform means something different in C2)
+export function mapColumns(rawResult: any, columns: string[]) {
 	let transformedResult: InsightResult[] = [];
-	for (const section of rawResult) {
-		let transformedSection: InsightResult = {};
+	for (const currClass of rawResult) {
+		let transformedClass: InsightResult = {};
 		for (const column of columns) {
-			if (!(column in transformedSection)) {
+			if (!(column in transformedClass)) {
 				let fieldName = column.split("_")[1];
-				transformedSection[column] = section.getField(fieldName);
+				transformedClass[column] = currClass.getField(fieldName);
 			}
 		}
-		transformedResult.push(transformedSection);
+		transformedResult.push(transformedClass);
 	}
 	return transformedResult;
 }
 
+// TODO: adjust to include direction, and take multiple keys (can be an array instead of one item)
 export function orderRows(result: InsightResult[], order: string) {
 	return result.sort((section1, section2) => {
 		if (section1[order] < section2[order]) {
@@ -100,26 +103,32 @@ export function orderRows(result: InsightResult[], order: string) {
 
 // HELPER FUNCTIONS
 
-function passesMComparator(section: SectionPruned, mComparison: QueryASTNode, mComparator: string) {
+function passesMComparator(currClass: SectionPruned | Room, mComparison: QueryASTNode, mComparator: string) {
 	let fieldName = mComparison.key.split("_")[1];
 	let mValue: number = mComparison.children as number;
-	let sectionField: number = section.getField(fieldName) as number;
+	let classField: number = 0;
+	if(currClass.getField) {
+		classField = currClass.getField(fieldName) as number;
+	}
 	switch (mComparator) {
 		case "LT":
-			return sectionField < mValue;
+			return classField < mValue;
 		case "GT":
-			return sectionField > mValue;
+			return classField > mValue;
 		case "EQ":
-			return sectionField === mValue;
+			return classField === mValue;
 		default:
 			return true;
 	}
 }
 
-function matchesSField(section: SectionPruned, sComparison: QueryASTNode) {
+function matchesSField(currClass: SectionPruned | Room, sComparison: QueryASTNode) {
 	let fieldName = sComparison.key.split("_")[1];
 	let sValue: string = sComparison.children as string;
-	let field: string = section.getField(fieldName) as string;
+	let field: string = "";
+	if(currClass.getField) {
+		field = currClass.getField(fieldName) as string;
+	}
 
 	if (sValue === "*" || sValue === "**") {
 		return true;
@@ -139,4 +148,9 @@ function matchesSField(section: SectionPruned, sComparison: QueryASTNode) {
 	} else {
 		return sValue === field;
 	}
+}
+
+// TODO: finish
+export function transformResult(inputQueryElement: string, processedResult: InsightResult[]) {
+	return [];
 }
