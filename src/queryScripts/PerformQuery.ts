@@ -68,9 +68,10 @@ function executeQuery(inputQuery: any, currDataset: SectionDatasetModel | RoomDa
 	}
 
 	// check if result > 5000 after transfomration is done now
-	if(rawResult.length > 5000) {
-		throw new ResultTooLargeError("The result is too big." +
-			"Only queries with a maximum of 5000 results are supported.");
+	if (rawResult.length > 5000) {
+		throw new ResultTooLargeError(
+			"The result is too big." + "Only queries with a maximum of 5000 results are supported."
+		);
 	}
 
 	// should transform result sections to object containing just the columns given no transformation
