@@ -50,10 +50,10 @@ export default class InsightFacade implements IInsightFacade {
 				return data;
 			})
 			.then((data) => {
-				if(kind === InsightDatasetKind.Sections) {
+				if (kind === InsightDatasetKind.Sections) {
 					// return an array of sections from content JSON if kind is Sections
 					return sectionLogicAndOutput(data, id, kind);
-				} else if(kind === InsightDatasetKind.Rooms){
+				} else if (kind === InsightDatasetKind.Rooms) {
 					// return an array of rooms from content JSON if kind is Rooms
 					return roomLogicAndOutput(data, id, kind);
 				}
@@ -96,11 +96,11 @@ export default class InsightFacade implements IInsightFacade {
 			}
 
 			// check if datasetArr is empty, if so return empty array
-			if(datasetArr.length === 0){
+			if (datasetArr.length === 0) {
 				return Promise.resolve(datasetArr as InsightDataset[]);
 			}
 
-			if(datasetArr[0].kind === InsightDatasetKind.Sections){
+			if (datasetArr[0].kind === InsightDatasetKind.Sections) {
 				const sectionDatasetArr = datasetArr as SectionDatasetModel[];
 				const sectionInsightDatasetArr: InsightDataset[] = sectionDatasetArr.map((dataset) => {
 					return {
@@ -110,7 +110,7 @@ export default class InsightFacade implements IInsightFacade {
 					};
 				});
 				return Promise.resolve(sectionInsightDatasetArr);
-			} else if(datasetArr[0].kind === InsightDatasetKind.Rooms){
+			} else if (datasetArr[0].kind === InsightDatasetKind.Rooms) {
 				const roomDatasetArr = datasetArr as RoomDatasetModel[];
 				const roomInsightDatasetArr: InsightDataset[] = roomDatasetArr.map((dataset) => {
 					return {
