@@ -118,7 +118,7 @@ export function orderRows(result: InsightResult[], order: any): InsightResult[] 
 }
 
 export function transformResult(inputQueryElement: any, processedResult: any): InsightResult[] {
-	let transformedResult: Map<any[],any[]> = groupResult(inputQueryElement["GROUP"],processedResult);
+	let transformedResult: Map<string,any[]> = groupResult(inputQueryElement["GROUP"],processedResult);
 	return applyResult(inputQueryElement["APPLY"], transformedResult);
 }
 
@@ -172,36 +172,34 @@ function matchesSField(currClass: SectionPruned | Room, sComparison: QueryASTNod
 }
 
 function groupResult(groupKeys: any, processedResult: SectionPruned[] | Room[]) {
-	let mappedResult: Map<any[], any[]> = new Map();
+	let mappedResult: Map<string, any[]> = new Map();
 	for (let result of processedResult) {
 		let mapGroupKey = [];
 		for (let groupKey of groupKeys) {
-			let fieldName = groupKey.key.split("_")[1];
-			let field = result.getField?.(fieldName);
-			mapGroupKey.push({groupKey: field});
+			let fieldName = groupKey.split("_")[1];
+			mapGroupKey.push(result.getField?.(fieldName));
 		}
-		if(mappedResult.has(mapGroupKey)) {
-			mappedResult.get(mapGroupKey)?.push(result);
+		let mapKey = mapGroupKey.toString();
+		if(mappedResult.has(mapKey)) {
+			mappedResult.get(mapKey)?.push(result);
 		} else {
 			let newGroupList = [result];
-			mappedResult.set(mapGroupKey, newGroupList);
+			mappedResult.set(mapKey, newGroupList);
 		}
 	}
 	return mappedResult;
 }
 
-function applyResult(applyRuleList: any, groupedResult: Map<any[],any[]>) {
+function applyResult(applyRuleList: any, groupedResult: Map<string,any[]>) {
 	let resultMapKeys = groupedResult.keys();
 	let appliedResult: InsightResult[] = [];
 	let aggregatedResult: InsightResult = {};
 	for(let groupKey of resultMapKeys) {
-		// each group key contains same field : value in group
-		for(let keyValue of groupKey) {
-			let currKey = Object.keys(keyValue)[0];
-			aggregatedResult[currKey] = keyValue[currKey];
-		}
-
 		let resultGroup: any[] = groupedResult.get(groupKey) as any[];
+
+		// all have the same group keys so pick first one
+		aggregatedResult = resultGroup[0] as InsightResult;
+
 		for(let applyRule of applyRuleList) {
 			let applyKey = Object.keys(applyRule)[0];
 			let applyKeyValue = applyRule[applyKey];
