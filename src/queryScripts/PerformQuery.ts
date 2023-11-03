@@ -43,21 +43,13 @@ export function isJSON(input: unknown): boolean {
 function executeQuery(inputQuery: any, currDataset: SectionDatasetModel | RoomDatasetModel) {
 	let rawResult = [];
 	let queryTree: QueryASTNode = processQueryToAST(inputQuery["WHERE"]);
-	let resultSize = 0;
 
 	if (currDataset.kind === InsightDatasetKind.Rooms) {
 		let roomDataset = currDataset as RoomDatasetModel;
 		for (let room of roomDataset.room) {
 			let currRoom = new Room(room);
 			if (passesQuery(currRoom, queryTree)) {
-				if (resultSize <= 5000) {
-					rawResult.push(currRoom);
-					resultSize++;
-				} else {
-					throw new ResultTooLargeError(
-						"The result is too big. " + "Only queries with a maximum of 5000 results are supported."
-					);
-				}
+				rawResult.push(currRoom);
 			}
 		}
 	} else if (currDataset.kind === InsightDatasetKind.Sections) {
@@ -66,27 +58,27 @@ function executeQuery(inputQuery: any, currDataset: SectionDatasetModel | RoomDa
 		for (let section of sectionDataset.section) {
 			let currSection = new SectionPruned(section);
 			if (passesQuery(currSection, queryTree)) {
-				if (resultSize <= 5000) {
-					rawResult.push(currSection);
-					resultSize++;
-				} else {
-					throw new ResultTooLargeError(
-						"The result is too big. " + "Only queries with a maximum of 5000 results are supported."
-					);
-				}
+				rawResult.push(currSection);
 			}
 		}
 	}
 
-	// should transform result sections to object containing just the columns given
-	let processedResult = mapColumns(rawResult, inputQuery["OPTIONS"]["COLUMNS"]);
-	// will order transformed results if order key is given, else return unordered result
-	if (inputQuery["OPTIONS"]["ORDER"]) {
-		processedResult = orderRows(processedResult, inputQuery["OPTIONS"]["ORDER"]);
+	if (inputQuery["TRANSFORMATIONS"]) {
+		rawResult = transformResult(inputQuery["TRANSFORMATIONS"], rawResult);
 	}
 
-	if (inputQuery["TRANSFORMATIONS"]) {
-		return transformResult(inputQuery["TRANSFORMATIONS"], processedResult);
+	// check if result > 5000 after transfomration is done now
+	if(rawResult.length > 5000) {
+		throw new ResultTooLargeError("The result is too big." +
+			"Only queries with a maximum of 5000 results are supported.");
+	}
+
+	// should transform result sections to object containing just the columns given no transformation
+	let processedResult = mapColumns(rawResult, inputQuery["OPTIONS"]["COLUMNS"]);
+
+	// will order transformed results if order key is given, else return unordered result
+	if (inputQuery["OPTIONS"]["ORDER"]) {
+		return orderRows(processedResult, inputQuery["OPTIONS"]["ORDER"]);
 	} else {
 		return processedResult;
 	}
