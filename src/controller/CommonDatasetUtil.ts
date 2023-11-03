@@ -22,14 +22,14 @@ export function outputDataset(id: string, kind: InsightDatasetKind, arr: any[]):
 		throw new InsightError("Empty dataset");
 	}
 
-	if (isRoom(arr[0])) {
+	if (kind === InsightDatasetKind.Rooms) {
 		newDataset = {
 			id: id,
 			kind: kind,
 			numRows: arr.length,
 			room: arr,
 		} as RoomDatasetModel;
-	} else if (isSection(arr[0])) {
+	} else if (kind === InsightDatasetKind.Sections)  {
 		newDataset = {
 			id: id,
 			kind: kind,

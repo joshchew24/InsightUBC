@@ -113,6 +113,20 @@ describe("InsightFacade", function () {
 			const result = facade.addDataset("rooms", rooms, InsightDatasetKind.Rooms);
 			return expect(result).to.eventually.have.deep.members(["rooms"]);
 		});
+
+		// comment this out before making a PR
+		// it("should accept MAUD and NIT and ORCH", () => {
+		// 	let rooms = getContentFromArchives(ROOMS_PATH + "campusMAUDandNIT.zip");
+		// 	const result = facade.addDataset("rooms", rooms, InsightDatasetKind.Rooms);
+		// 	return expect(result).to.eventually.have.deep.members(["rooms"]);
+		// });
+
+		// comment this out before making a PR
+		// it("should accept, has only one building (WOOD) - used for debugging purposes", function() {
+		// 	let rooms = getContentFromArchives(ROOMS_PATH + "campusValidOnlyOneBuilding.zip");
+		// 	const result = facade.addDataset("1234", rooms, InsightDatasetKind.Rooms);
+		// 	return expect(result).to.eventually.deep.equal(["1234"]);
+		// });
 	});
 
 	describe("addDataset invalid ID tests", function () {
@@ -359,12 +373,7 @@ describe("InsightFacade", function () {
 			const result = facade.addDataset("1234", rooms, InsightDatasetKind.Rooms);
 			return expect(result).to.eventually.be.rejectedWith(InsightError);
 		});
-		// comment this out before making a PR
-		// it("should accept, has only one building (WOOD) - used for debugging purposes", function() {
-		// 	let rooms = getContentFromArchives(ROOMS_PATH + "campusValidOnlyOneBuilding.zip");
-		// 	const result = facade.addDataset("1234", rooms, InsightDatasetKind.Rooms);
-		// 	return expect(result).to.eventually.deep.equal(["1234"]);
-		// });
+
 	});
 
 	describe("removeDataset", function () {
