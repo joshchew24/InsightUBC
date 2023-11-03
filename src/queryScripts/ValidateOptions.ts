@@ -40,12 +40,14 @@ export function validateOptions(query: object) {
 	return colKeys;
 }
 
+// TODO: need to check presence of colKeys in group and apply
 function validateColumns(colKeys: string[]) {
 	for (let colKey of colKeys) {
 		// intelliJ wrongly thinks this check is unnecessary
 		if (typeof colKey !== "string") {
 			throw new InsightError("Invalid query string");
 		}
+		// TODO: could use a regex check instead?
 		if (colKey.includes("_")) {
 			validateQueryKey("COLUMNS", colKey);
 		}
