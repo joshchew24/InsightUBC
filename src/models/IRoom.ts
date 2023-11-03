@@ -12,7 +12,7 @@ export interface Room {
 	href: string;        // The link to the full details online.
 }
 
-// HTML DOM nodes from parse5
+// // HTML DOM nodes from parse5
 export interface DomNode {
 	nodeName: string;
 	tagName?: string;
