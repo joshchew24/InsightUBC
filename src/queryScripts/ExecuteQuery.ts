@@ -107,7 +107,7 @@ function passesMComparator(currClass: SectionPruned | Room, mComparison: QueryAS
 	let fieldName = mComparison.key.split("_")[1];
 	let mValue: number = mComparison.children as number;
 	let classField: number = 0;
-	if(currClass.getField) {
+	if (currClass.getField) {
 		classField = currClass.getField(fieldName) as number;
 	}
 	switch (mComparator) {
@@ -126,7 +126,7 @@ function matchesSField(currClass: SectionPruned | Room, sComparison: QueryASTNod
 	let fieldName = sComparison.key.split("_")[1];
 	let sValue: string = sComparison.children as string;
 	let field: string = "";
-	if(currClass.getField) {
+	if (currClass.getField) {
 		field = currClass.getField(fieldName) as string;
 	}
 

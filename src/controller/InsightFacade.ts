@@ -104,7 +104,7 @@ export default class InsightFacade implements IInsightFacade {
 
 			const insightDatasetArr: InsightDataset[] = [];
 			for (const datasetModel of datasetArr) {
-				if(datasetModel.kind === InsightDatasetKind.Sections){
+				if (datasetModel.kind === InsightDatasetKind.Sections) {
 					const sectionDatasetArr = datasetModel as SectionDatasetModel;
 					const sectionInsightDatasetArr: InsightDataset = {
 						id: sectionDatasetArr.id,
@@ -112,7 +112,7 @@ export default class InsightFacade implements IInsightFacade {
 						numRows: sectionDatasetArr.section.length,
 					};
 					insightDatasetArr.push(sectionInsightDatasetArr);
-				} else if(datasetModel.kind === InsightDatasetKind.Rooms){
+				} else if (datasetModel.kind === InsightDatasetKind.Rooms) {
 					const roomDatasetArr = datasetModel as RoomDatasetModel;
 					const roomInsightDatasetArr: InsightDataset = {
 						id: roomDatasetArr.id,
@@ -123,7 +123,6 @@ export default class InsightFacade implements IInsightFacade {
 				}
 			}
 			return Promise.resolve(insightDatasetArr);
-
 		} catch (err) {
 			return Promise.reject(err);
 		}

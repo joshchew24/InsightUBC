@@ -50,11 +50,11 @@ function executeQuery(inputQuery: any, currDataset: SectionDatasetModel | RoomDa
 	let queryTree: QueryASTNode = processQueryToAST(inputQuery["WHERE"]);
 	let resultSize = 0;
 
-	if(currDataset.kind === InsightDatasetKind.Rooms) {
+	if (currDataset.kind === InsightDatasetKind.Rooms) {
 		let roomDataset = currDataset as RoomDatasetModel;
 		for (let room of roomDataset.room) {
 			let currRoom = new Room(room);
-			if(passesQuery(currRoom, queryTree)) {
+			if (passesQuery(currRoom, queryTree)) {
 				if (resultSize <= 5000) {
 					rawResult.push(currRoom);
 					resultSize++;
@@ -65,8 +65,7 @@ function executeQuery(inputQuery: any, currDataset: SectionDatasetModel | RoomDa
 				}
 			}
 		}
-
-	} else if(currDataset.kind === InsightDatasetKind.Sections) {
+	} else if (currDataset.kind === InsightDatasetKind.Sections) {
 		let sectionDataset = currDataset as SectionDatasetModel;
 		// iterate through section list and add sections to unprocessed result list that pass query
 		for (let section of sectionDataset.section) {
@@ -83,7 +82,6 @@ function executeQuery(inputQuery: any, currDataset: SectionDatasetModel | RoomDa
 			}
 		}
 	}
-
 
 	// should transform result sections to object containing just the columns given
 	let processedResult = mapColumns(rawResult, inputQuery["OPTIONS"]["COLUMNS"]);

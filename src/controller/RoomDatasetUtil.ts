@@ -96,7 +96,7 @@ function masterIterativelyPopulateRoom(attribute: string, room: Room, currNode: 
 				if (shortName === "Code") {
 					break;
 				}
-				room.shortname = shortName || "" ;
+				room.shortname = shortName || "";
 			}
 			break;
 		case "views-field views-field-field-building-address": // address
@@ -210,29 +210,30 @@ function processZipContent(data: JSZip, masterRoomArr: Room[], roomArr: Room[]) 
 					return;
 				}
 
-			const parse5AST = parse(fileContent);
-			// typecast parse5 to Domnode for easier type checking
-			const DomNodes = parse5AST.childNodes as DomNode[];
-			// check if file is in building or is master index
-			let buildingCode = "";
-			if (relativePath.includes("/buildings-and-classrooms/")) {
-				buildingCode = relativePath
-					.split("/buildings-and-classrooms/")[1]
-					.split("/")[0].replace(".htm", "");
-			} else {
-				// dig through child nodes recursively
-				// master index of buildings
-				masterRecurseAST(DomNodes, parse5AST.childNodes.length, masterRoomArr, {} as Room);
-				return masterRoomArr;
-			}
+				const parse5AST = parse(fileContent);
+				// typecast parse5 to Domnode for easier type checking
+				const DomNodes = parse5AST.childNodes as DomNode[];
+				// check if file is in building or is master index
+				let buildingCode = "";
+				if (relativePath.includes("/buildings-and-classrooms/")) {
+					buildingCode = relativePath
+						.split("/buildings-and-classrooms/")[1]
+						.split("/")[0]
+						.replace(".htm", "");
+				} else {
+					// dig through child nodes recursively
+					// master index of buildings
+					masterRecurseAST(DomNodes, parse5AST.childNodes.length, masterRoomArr, {} as Room);
+					return masterRoomArr;
+				}
 
-			// recurse through all nodes, start populating array if buildingCode is not empty
-			recurseAST(DomNodes, parse5AST.childNodes.length, roomArr, buildingCode, {} as Room);
-			return roomArr;
-
-		}).catch((error) => {
-			return Promise.reject(error);
-		});
+				// recurse through all nodes, start populating array if buildingCode is not empty
+				recurseAST(DomNodes, parse5AST.childNodes.length, roomArr, buildingCode, {} as Room);
+				return roomArr;
+			})
+			.catch((error) => {
+				return Promise.reject(error);
+			});
 	});
 	return fileProcessingPromises;
 }

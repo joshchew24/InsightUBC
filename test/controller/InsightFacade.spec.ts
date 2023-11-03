@@ -432,7 +432,6 @@ describe("InsightFacade", function () {
 			facade = new InsightFacade();
 		});
 
-
 		it("should return an empty list when there are no datasets to list", function () {
 			return expect(facade.listDatasets()).to.eventually.be.deep.equal([]);
 		});
@@ -496,7 +495,7 @@ describe("InsightFacade", function () {
 			return expect(facade.listDatasets()).to.eventually.be.deep.equal(expected);
 		});
 
-		it("should succeed when Rooms are added then Sections are added, and list Room and Section", function() {
+		it("should succeed when Rooms are added then Sections are added, and list Room and Section", function () {
 			let rooms = getContentFromArchives(ROOMS_PATH + "campus.zip");
 			return facade.addDataset("rooms", rooms, InsightDatasetKind.Rooms).then(() => {
 				return facade.addDataset("sections", sections, InsightDatasetKind.Sections).then(() => {
@@ -515,8 +514,6 @@ describe("InsightFacade", function () {
 				});
 			});
 		});
-
-
 	});
 	describe("performQuery", function () {
 		let facade: InsightFacade;

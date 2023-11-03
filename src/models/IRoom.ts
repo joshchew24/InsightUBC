@@ -1,15 +1,15 @@
 export class Room {
-	public fullname: string;    // Full building name.
-	public shortname: string;   // Short building name.
-	public number: string;      // The room number. Not always a number so represented as a string.
-	public name: string;        // The room id. Should be rooms_shortname + "_" + rooms_number.
-	public address: string;     // The building address.
-	public lat: number;         // The latitude of the building.
-	public lon: number;         // The longitude of the building.
-	public seats: number;       // The number of seats in the room.
-	public type: string;        // The room type.
-	public furniture: string;   // The room furniture.
-	public href: string;        // The link to the full details online.
+	public fullname: string; // Full building name.
+	public shortname: string; // Short building name.
+	public number: string; // The room number. Not always a number so represented as a string.
+	public name: string; // The room id. Should be rooms_shortname + "_" + rooms_number.
+	public address: string; // The building address.
+	public lat: number; // The latitude of the building.
+	public lon: number; // The longitude of the building.
+	public seats: number; // The number of seats in the room.
+	public type: string; // The room type.
+	public furniture: string; // The room furniture.
+	public href: string; // The link to the full details online.
 
 	constructor(room: any) {
 		this.fullname = room.fullname;
