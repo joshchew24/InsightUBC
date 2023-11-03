@@ -53,7 +53,7 @@ TODO: contains big chunk of duplicate code. abstractValidate() is a weak attempt
 but causes some ts lint errors or something.
  */
 function validateApplyRule(applyRule: object) {
-	if (!(typeof applyRule !== "object") || applyRule === null || Array.isArray(applyRule)) {
+	if (typeof applyRule !== "object" || applyRule === null || Array.isArray(applyRule)) {
 		throw new InsightError("Invalid query string");
 	}
 	let applyRuleKeys = Object.keys(applyRule);
@@ -62,10 +62,8 @@ function validateApplyRule(applyRule: object) {
 		throw new InsightError("Apply rule should only have 1 key, has " + numKeys);
 	}
 	let applyAlias = applyRuleKeys[0];
-	let applyBody = applyRule[applyAlias];
-
-	// validate applyBody
-	if (!(typeof applyBody !== "object") || applyBody === null || Array.isArray(applyBody)) {
+	let applyBody = Object.values(applyRule)[0];
+	if (typeof applyBody !== "object" || applyBody === null || Array.isArray(applyBody)) {
 		throw new InsightError("Invalid query string");
 	}
 	let applyBodyKeys = Object.keys(applyBody);

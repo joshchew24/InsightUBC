@@ -6,7 +6,7 @@ export function doesDatasetIDExist(id: string): boolean {
 	return fs.existsSync("./data/" + id + ".json");
 }
 
-// TODO: make this async async
+// TODO: make this async
 // retrieve dataset with given ID
 export function retrieveDataset(id: string): SectionDatasetModel | RoomDatasetModel {
 	const data = fs.readFileSync("./data/" + id + ".json", "utf8");
