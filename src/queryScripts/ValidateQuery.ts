@@ -16,7 +16,9 @@ export function validateQuery(query: object): QueryWithID {
 	validateRootStructure(query);
 	validateBody(query);
 	colKeys = validateOptions(query);
-	validateTransformations(query);
+	if (Object.keys(query).length === 3) {
+		validateTransformations(query);
+	}
 	let idString: string = validateIDs(query);
 	return {
 		id: idString,
