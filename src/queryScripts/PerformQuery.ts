@@ -72,6 +72,7 @@ function executeQuery(inputQuery: any, currDataset: SectionDatasetModel | RoomDa
 		throw new ResultTooLargeError("The result is too big." +
 			"Only queries with a maximum of 5000 results are supported.");
 	}
+
 	// should transform result sections to object containing just the columns given no transformation
 	let processedResult = mapColumns(rawResult, inputQuery["OPTIONS"]["COLUMNS"]);
 
