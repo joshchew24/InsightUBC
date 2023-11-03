@@ -79,7 +79,11 @@ export function mapColumns(rawResult: any, columns: string[]) {
 		for (const column of columns) {
 			if (!(column in transformedClass)) {
 				let fieldName = column.split("_")[1];
-				transformedClass[column] = currClass.getField(fieldName);
+				if(fieldName) {
+					transformedClass[column] = currClass.getField(fieldName);
+				} else {
+					transformedClass[column] = currClass[column];
+				}
 			}
 		}
 		transformedResult.push(transformedClass);
