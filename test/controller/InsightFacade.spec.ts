@@ -360,11 +360,29 @@ describe("InsightFacade", function () {
 			return expect(result).to.eventually.be.rejectedWith(InsightError);
 		});
 
-		it("should accept, has only one building (WOOD) - used for debugging purposes", function() {
-			let rooms = getContentFromArchives(ROOMS_PATH + "campusValidOnlyOneBuilding.zip");
+		it("should reject when building's html content is invalid", function() {
+			let rooms = getContentFromArchives(ROOMS_PATH + "campusInvalidBuildingContent.zip");
 			const result = facade.addDataset("1234", rooms, InsightDatasetKind.Rooms);
-			return expect(result).to.eventually.deep.equal(["1234"]);
+			return expect(result).to.eventually.be.rejectedWith(InsightError);
 		});
+
+		it("should succeed when Rooms are added then Sections are added", function() {
+			let rooms = getContentFromArchives(ROOMS_PATH + "campus.zip");
+			const result = facade.addDataset("1234", rooms, InsightDatasetKind.Rooms);
+			return expect(result).to.eventually.be.deep.equal(["1234"]).then(function() {
+				let sections = singleSection;
+				const result2 = facade.addDataset("1235", sections, InsightDatasetKind.Sections);
+				return expect(result2).to.eventually.be.deep.equal(["1234", "1235"]);
+			});
+		});
+
+
+		// comment this out before making a PR
+		// it("should accept, has only one building (WOOD) - used for debugging purposes", function() {
+		// 	let rooms = getContentFromArchives(ROOMS_PATH + "campusValidOnlyOneBuilding.zip");
+		// 	const result = facade.addDataset("1234", rooms, InsightDatasetKind.Rooms);
+		// 	return expect(result).to.eventually.deep.equal(["1234"]);
+		// });
 	});
 
 	describe("removeDataset", function () {
