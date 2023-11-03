@@ -110,7 +110,7 @@ function masterIterativelyPopulateRoom(attribute: string, room: Room, currNode: 
 				if (shortName === "Code") {
 					break;
 				}
-				room.shortname = shortName;
+				room.shortname = shortName || "" ;
 			}
 			break;
 		case "views-field views-field-field-building-address": 	// address
@@ -149,7 +149,7 @@ function iterativelyPopulateRoom(attribute: string, room: Room, currNode: DomNod
 				if(type === "Room type") {
 					break;
 				}
-				room.type = type;
+				room.type = type || "";
 			}
 			break;
 		case "views-field views-field-field-room-furniture":	// furniture
@@ -158,7 +158,7 @@ function iterativelyPopulateRoom(attribute: string, room: Room, currNode: DomNod
 				if(furniture === "Furniture type") {
 					break;
 				}
-				room.furniture = furniture;
+				room.furniture = furniture || "";
 			}
 			break;
 	}
@@ -173,8 +173,8 @@ async function combineMasterAndRoomLogic(roomArr: Room[], masterRoomArr: Room[])
 	const geoPromises = masterRoomArr.map(async (room) => {
 		try {
 			const geoData = await fetchData(room.address);
-			room.lat = geoData.lat;
-			room.lon = geoData.lon;
+			room.lat = geoData.lat ?? 0;
+			room.lon = geoData.lon ?? 0;
 			return room;
 		} catch (error) {
 			// console.error(`Failed to fetch lat/lon for address: ${room.address}`, error);
@@ -222,12 +222,12 @@ function processZipContent(data: JSZip, masterRoomArr: Room[], roomArr: Room[]) 
 			} else {
 				// dig through child nodes recursively
 				// master index of buildings
-				masterRecurseAST(DomNodes, parse5AST.childNodes.length, masterRoomArr, {});
+				masterRecurseAST(DomNodes, parse5AST.childNodes.length, masterRoomArr, {} as Room);
 				return masterRoomArr;
 			}
 
 			// recurse through all nodes, start populating array if buildingCode is not empty
-			recurseAST(DomNodes, parse5AST.childNodes.length, roomArr, buildingCode, {});
+			recurseAST(DomNodes, parse5AST.childNodes.length, roomArr, buildingCode, {} as Room);
 			return roomArr;
 
 		}).catch((error) => {

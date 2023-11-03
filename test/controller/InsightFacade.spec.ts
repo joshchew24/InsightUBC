@@ -360,11 +360,19 @@ describe("InsightFacade", function () {
 			return expect(result).to.eventually.be.rejectedWith(InsightError);
 		});
 
-		it("should accept, has only one building (WOOD) - used for debugging purposes", function() {
-			let rooms = getContentFromArchives(ROOMS_PATH + "campusValidOnlyOneBuilding.zip");
+		it("should reject when building's html content is invalid", function() {
+			let rooms = getContentFromArchives(ROOMS_PATH + "campusInvalidBuildingContent.zip");
 			const result = facade.addDataset("1234", rooms, InsightDatasetKind.Rooms);
-			return expect(result).to.eventually.deep.equal(["1234"]);
+			return expect(result).to.eventually.be.rejectedWith(InsightError);
 		});
+
+
+		// comment this out before making a PR
+		// it("should accept, has only one building (WOOD) - used for debugging purposes", function() {
+		// 	let rooms = getContentFromArchives(ROOMS_PATH + "campusValidOnlyOneBuilding.zip");
+		// 	const result = facade.addDataset("1234", rooms, InsightDatasetKind.Rooms);
+		// 	return expect(result).to.eventually.deep.equal(["1234"]);
+		// });
 	});
 
 	describe("removeDataset", function () {
@@ -432,6 +440,7 @@ describe("InsightFacade", function () {
 			facade = new InsightFacade();
 		});
 
+
 		it("should return an empty list when there are no datasets to list", function () {
 			return expect(facade.listDatasets()).to.eventually.be.deep.equal([]);
 		});
@@ -494,6 +503,28 @@ describe("InsightFacade", function () {
 			expected.pop();
 			return expect(facade.listDatasets()).to.eventually.be.deep.equal(expected);
 		});
+
+		it("should succeed when Rooms are added then Sections are added, and list Room and Section", function() {
+			let rooms = getContentFromArchives(ROOMS_PATH + "campus.zip");
+			return facade.addDataset("rooms", rooms, InsightDatasetKind.Rooms).then(() => {
+				return facade.addDataset("sections", sections, InsightDatasetKind.Sections).then(() => {
+					return expect(facade.listDatasets()).to.eventually.be.deep.equal([
+						{
+							id: "rooms",
+							kind: InsightDatasetKind.Rooms,
+							numRows: 363,
+						},
+						{
+							id: "sections",
+							kind: InsightDatasetKind.Sections,
+							numRows: 1,
+						},
+					]);
+				});
+			});
+		});
+
+
 	});
 	describe("performQuery", function () {
 		let facade: InsightFacade;
