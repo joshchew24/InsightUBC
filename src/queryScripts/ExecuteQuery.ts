@@ -2,6 +2,7 @@ import {SectionPruned} from "../models/ISection";
 import {QueryASTNode} from "../models/QueryASTNode";
 import {InsightResult} from "../controller/IInsightFacade";
 import {Room} from "../models/IRoom";
+import Decimal from "decimal.js";
 
 export function processQueryToAST(queryItem: any) {
 	if (Object.keys(queryItem).length === 0) {
@@ -116,13 +117,18 @@ export function orderRows(result: InsightResult[], order: any): InsightResult[] 
 	}
 }
 
+export function transformResult(inputQueryElement: any, processedResult: any): InsightResult[] {
+	let transformedResult: Map<any[],any[]> = groupResult(inputQueryElement["GROUP"],processedResult);
+	return applyResult(inputQueryElement["APPLY"], transformedResult);
+}
+
 // HELPER FUNCTIONS
 
 function passesMComparator(currClass: SectionPruned | Room, mComparison: QueryASTNode, mComparator: string) {
 	let fieldName = mComparison.key.split("_")[1];
 	let mValue: number = mComparison.children as number;
 	let classField: number = 0;
-	if(currClass.getField) {
+	if (currClass.getField) {
 		classField = currClass.getField(fieldName) as number;
 	}
 	switch (mComparator) {
@@ -141,7 +147,7 @@ function matchesSField(currClass: SectionPruned | Room, sComparison: QueryASTNod
 	let fieldName = sComparison.key.split("_")[1];
 	let sValue: string = sComparison.children as string;
 	let field: string = "";
-	if(currClass.getField) {
+	if (currClass.getField) {
 		field = currClass.getField(fieldName) as string;
 	}
 
@@ -165,7 +171,116 @@ function matchesSField(currClass: SectionPruned | Room, sComparison: QueryASTNod
 	}
 }
 
-// TODO: finish
-export function transformResult(inputQueryElement: string, processedResult: any): InsightResult[] {
-	return [];
+function groupResult(groupKeys: any, processedResult: SectionPruned[] | Room[]) {
+	let mappedResult: Map<any[], any[]> = new Map();
+	for (let result of processedResult) {
+		let mapGroupKey = [];
+		for (let groupKey of groupKeys) {
+			let fieldName = groupKey.key.split("_")[1];
+			let field = result.getField?.(fieldName);
+			mapGroupKey.push({groupKey: field});
+		}
+		if(mappedResult.has(mapGroupKey)) {
+			mappedResult.get(mapGroupKey)?.push(result);
+		} else {
+			let newGroupList = [result];
+			mappedResult.set(mapGroupKey, newGroupList);
+		}
+	}
+	return mappedResult;
 }
+
+function applyResult(applyRuleList: any, groupedResult: Map<any[],any[]>) {
+	let resultMapKeys = groupedResult.keys();
+	let appliedResult: InsightResult[] = [];
+	let aggregatedResult: InsightResult = {};
+	for(let groupKey of resultMapKeys) {
+		// each group key contains same field : value in group
+		for(let keyValue of groupKey) {
+			let currKey = Object.keys(keyValue)[0];
+			aggregatedResult[currKey] = keyValue[currKey];
+		}
+
+		let resultGroup: any[] = groupedResult.get(groupKey) as any[];
+		for(let applyRule of applyRuleList) {
+			let applyKey = Object.keys(applyRule)[0];
+			let applyKeyValue = applyRule[applyKey];
+			let applyToken = Object.keys(applyKeyValue)[0];
+			let keyField = applyKeyValue[applyToken].split("_")[1];
+
+			aggregatedResult[applyKey] = applyCurrRule(resultGroup, applyToken, keyField);
+		}
+		appliedResult.push(aggregatedResult);
+	}
+	return appliedResult;
+}
+
+// Apply Helper Functions
+function applyCurrRule(resultGroup: Room[] | SectionPruned[] , applyToken: string, keyField: any) {
+	switch(applyToken){
+		case "MAX":
+			return getMaxResult(resultGroup, keyField);
+		case "MIN":
+			return getMinResult(resultGroup, keyField);
+		case "AVG":
+			return getAvgResult(resultGroup, keyField);
+		case "SUM":
+			return sumGroupKeyField(resultGroup, keyField);
+		case "COUNT":
+			return countUniqueFieldOccurence(resultGroup, keyField);
+		default:
+			return 0;
+	}
+}
+
+function getMaxResult(resultGroup: Room[] | SectionPruned[], keyField: string) {
+	let maxResult = 0;
+	for(let result of resultGroup) {
+		let fieldValue = Number(result.getField?.(keyField));
+		if(maxResult < fieldValue) {
+			maxResult = fieldValue;
+		}
+	}
+	return maxResult;
+}
+
+function getMinResult(resultGroup: Room[] | SectionPruned[], keyField: string) {
+	let minResult = Number(resultGroup[0].getField?.(keyField));
+	for(let result of resultGroup) {
+		let fieldValue = Number(result.getField?.(keyField));
+		if(minResult > fieldValue) {
+			minResult = fieldValue;
+		}
+	}
+	return minResult;
+}
+
+function getAvgResult(resultGroup: Room[] | SectionPruned[], keyField: string) {
+	let sum = new Decimal(0);
+	for(let result of resultGroup) {
+		sum = sum.add(new Decimal(Number(result.getField?.(keyField))));
+	}
+	let avg = sum.toNumber() / resultGroup.length;
+	return Number(avg.toFixed(2));
+}
+
+function sumGroupKeyField(resultGroup: Room[] | SectionPruned[], keyField: string) {
+	let sum = new Decimal(0);
+	for(let result of resultGroup) {
+		sum = sum.add(new Decimal(Number(result.getField?.(keyField))));
+	}
+	return Number(sum.toFixed(2));
+}
+
+function countUniqueFieldOccurence(resultGroup: Room[] | SectionPruned[], keyField: any) {
+	// prevents duplicates
+	let uniqueFields = new Set();
+
+	for(let result of resultGroup) {
+		uniqueFields.add(result.getField?.(keyField));
+	}
+
+	return uniqueFields.size;
+}
+
+

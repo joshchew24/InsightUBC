@@ -4,7 +4,7 @@ import {retrieveDataset} from "../controller/DiskUtil";
 import {mapColumns, orderRows, passesQuery, processQueryToAST, transformResult} from "./ExecuteQuery";
 import {QueryASTNode} from "../models/QueryASTNode";
 import {validateQuery} from "./ValidateQuery";
-import {QueryWithID} from "../models/IQuery";
+import {MetaQuery} from "../models/IQuery";
 import {Room} from "../models/IRoom";
 import {RoomDatasetModel, SectionDatasetModel} from "../models/IModel";
 
@@ -16,20 +16,15 @@ export function handleQuery(query: unknown): Promise<InsightResult[]> {
 
 	return Promise.resolve(query as object)
 		.then((queryToValidate) => {
-			let queryWithID: QueryWithID;
-			// TODO: This try catch block is unnecessary, errors should propagate to the promise chain catch
-			try {
-				queryWithID = validateQuery(queryToValidate);
-			} catch (error) {
-				return Promise.reject(error);
-			}
-			return queryWithID;
+			return validateQuery(queryToValidate);
 		})
-		.then((queryWithID: QueryWithID) => {
+		.then((metaQuery: MetaQuery) => {
+			let validQuery = metaQuery.query;
+			currDataset = retrieveDataset(metaQuery.id);
+			if (metaQuery.kind !== currDataset.kind) {
+				throw new InsightError("Used " + metaQuery.kind + " query fields on " + currDataset.kind + " dataset.");
+			}
 			// construct tree and process the query
-			let validQuery = queryWithID.query;
-			// TODO: refactor to make this async
-			currDataset = retrieveDataset(queryWithID.id);
 			return Promise.resolve(executeQuery(validQuery, currDataset));
 		})
 		.catch((error) => {
@@ -50,11 +45,11 @@ function executeQuery(inputQuery: any, currDataset: SectionDatasetModel | RoomDa
 	let queryTree: QueryASTNode = processQueryToAST(inputQuery["WHERE"]);
 	let resultSize = 0;
 
-	if(currDataset.kind === InsightDatasetKind.Rooms) {
+	if (currDataset.kind === InsightDatasetKind.Rooms) {
 		let roomDataset = currDataset as RoomDatasetModel;
 		for (let room of roomDataset.room) {
 			let currRoom = new Room(room);
-			if(passesQuery(currRoom, queryTree)) {
+			if (passesQuery(currRoom, queryTree)) {
 				if (resultSize <= 5000) {
 					rawResult.push(currRoom);
 					resultSize++;
@@ -65,8 +60,7 @@ function executeQuery(inputQuery: any, currDataset: SectionDatasetModel | RoomDa
 				}
 			}
 		}
-
-	} else if(currDataset.kind === InsightDatasetKind.Sections) {
+	} else if (currDataset.kind === InsightDatasetKind.Sections) {
 		let sectionDataset = currDataset as SectionDatasetModel;
 		// iterate through section list and add sections to unprocessed result list that pass query
 		for (let section of sectionDataset.section) {
@@ -84,15 +78,15 @@ function executeQuery(inputQuery: any, currDataset: SectionDatasetModel | RoomDa
 		}
 	}
 
-	if (inputQuery["TRANSFORMATIONS"]) {
-		rawResult = transformResult(inputQuery["TRANSFORMATIONS"], rawResult);
-	}
-	// TODO: might need to check that implementation is okay with transformations
 	// should transform result sections to object containing just the columns given
 	let processedResult = mapColumns(rawResult, inputQuery["OPTIONS"]["COLUMNS"]);
 	// will order transformed results if order key is given, else return unordered result
 	if (inputQuery["OPTIONS"]["ORDER"]) {
-		return  orderRows(processedResult, inputQuery["OPTIONS"]["ORDER"]);
+		processedResult = orderRows(processedResult, inputQuery["OPTIONS"]["ORDER"]);
+	}
+
+	if (inputQuery["TRANSFORMATIONS"]) {
+		return transformResult(inputQuery["TRANSFORMATIONS"], processedResult);
 	} else {
 		return processedResult;
 	}

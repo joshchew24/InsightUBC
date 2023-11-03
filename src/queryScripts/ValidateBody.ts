@@ -23,8 +23,32 @@ let filterValidationMap: {[index: string]: ValidationFunction} = {
 	NOT: validateNegation,
 };
 
+export function validateBody(query: object) {
+	// TODO: redundant check, suppresses warnings when directly indexing query by "WHERE"
+	if (!("WHERE" in query)) {
+		throw new InsightError("Missing WHERE");
+	}
+	// TODO: can WHERE have undefined?
+	if (!isJSON(query["WHERE"])) {
+		throw new InsightError("WHERE must be object");
+	}
+	validateWhere(query["WHERE"] as object);
+}
+
+function validateWhere(filter: object) {
+	// if filter is empty, it is trivially valid
+	let numKeys = Object.keys(filter).length;
+	if (numKeys === 0) {
+		return;
+	}
+	if (numKeys > 1) {
+		throw new InsightError("WHERE should only have 1 key, has " + numKeys);
+	}
+	validateFilter(filter);
+}
+
 // filter must have one key
-export function validateFilter(filter: {[index: string]: any}) {
+function validateFilter(filter: {[index: string]: any}) {
 	let key = Object.keys(filter)[0];
 	validateFilterKey(key);
 	// double check this behaviour

@@ -50,10 +50,10 @@ export default class InsightFacade implements IInsightFacade {
 				return data;
 			})
 			.then((data) => {
-				if(kind === InsightDatasetKind.Sections) {
+				if (kind === InsightDatasetKind.Sections) {
 					// return an array of sections from content JSON if kind is Sections
 					return sectionLogicAndOutput(data, id, kind);
-				} else if(kind === InsightDatasetKind.Rooms){
+				} else if (kind === InsightDatasetKind.Rooms) {
 					// return an array of rooms from content JSON if kind is Rooms
 					return roomLogicAndOutput(data, id, kind);
 				}
@@ -96,7 +96,7 @@ export default class InsightFacade implements IInsightFacade {
 			}
 
 			// check if datasetArr is empty, if so return empty array
-			if(datasetArr.length === 0 ){
+			if (datasetArr.length === 0) {
 				return Promise.resolve(datasetArr as InsightDataset[]);
 			}
 
@@ -104,7 +104,7 @@ export default class InsightFacade implements IInsightFacade {
 
 			const insightDatasetArr: InsightDataset[] = [];
 			for (const datasetModel of datasetArr) {
-				if(datasetModel.kind === InsightDatasetKind.Sections){
+				if (datasetModel.kind === InsightDatasetKind.Sections) {
 					const sectionDatasetArr = datasetModel as SectionDatasetModel;
 					const sectionInsightDatasetArr: InsightDataset = {
 						id: sectionDatasetArr.id,
@@ -112,7 +112,7 @@ export default class InsightFacade implements IInsightFacade {
 						numRows: sectionDatasetArr.section.length,
 					};
 					insightDatasetArr.push(sectionInsightDatasetArr);
-				} else if(datasetModel.kind === InsightDatasetKind.Rooms){
+				} else if (datasetModel.kind === InsightDatasetKind.Rooms) {
 					const roomDatasetArr = datasetModel as RoomDatasetModel;
 					const roomInsightDatasetArr: InsightDataset = {
 						id: roomDatasetArr.id,
@@ -123,7 +123,6 @@ export default class InsightFacade implements IInsightFacade {
 				}
 			}
 			return Promise.resolve(insightDatasetArr);
-
 		} catch (err) {
 			return Promise.reject(err);
 		}
