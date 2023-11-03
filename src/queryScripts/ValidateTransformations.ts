@@ -1,6 +1,5 @@
 import {InsightError} from "../controller/IInsightFacade";
-import {Transform} from "stream";
-import {validateQuery} from "./ValidateQuery";
+import {validateQueryKey} from "./ValidateQuery";
 
 export function validateTransformations(query: object) {
 	if (!("TRANSFORMATIONS" in query)) {
@@ -34,9 +33,59 @@ export function validateTransformations(query: object) {
 }
 
 function validateGroup(group: string[]) {
-	return;
+	for (let key of group) {
+		validateQueryKey("GROUP", key);
+	}
 }
 
 function validateApply(apply: object[]) {
-	return;
+	if (apply.length === 0) {
+		return;
+	}
+	for (let applyRule of apply) {
+		validateApplyRule(applyRule);
+	}
+}
+/*
+TODO: contains big chunk of duplicate code. abstractValidate() is a weak attempt at extracting this functionality,
+but causes some ts lint errors or something.
+ */
+function validateApplyRule(applyRule: object) {
+	if ((!(typeof applyRule !== "object")) || applyRule === null || Array.isArray(applyRule)) {
+		throw new InsightError("Invalid query string");
+	}
+	let applyRuleKeys = Object.keys(applyRule);
+	let numKeys = applyRuleKeys.length;
+	if (numKeys !== 1) {
+		throw new InsightError("Apply rule should only have 1 key, has " + numKeys);
+	}
+	let applyAlias = applyRuleKeys[0];
+	let applyBody = applyRule[applyAlias];
+	// validate(applyAlias);
+
+	// validate applyBody
+	if ((!(typeof applyBody !== "object")) || applyBody === null || Array.isArray(applyBody)) {
+		throw new InsightError("Invalid query string");
+	}
+	let applyBodyKeys = Object.keys(applyBody);
+	numKeys = applyBodyKeys.length;
+	if (numKeys !== 1) {
+		throw new InsightError("Apply body should only have 1 key, has " + numKeys);
+	}
+	let applyToken: string = applyBodyKeys[0];
+	let applyKey: string = applyBody[applyToken];
+	// TODO: validate alias, token, key
+
+}
+// returns singular key of object being validated
+function abstractValidate(toValidate: object, type: string) {
+	if ((!(typeof toValidate !== "object")) || toValidate === null || Array.isArray(toValidate)) {
+		throw new InsightError("Invalid query string");
+	}
+	let toValidateKeys = Object.keys(toValidate);
+	let numKeys = toValidateKeys.length;
+	if (numKeys !== 1) {
+		throw new InsightError("Apply " + type + " should only have 1 key, has " + numKeys);
+	}
+	return toValidateKeys[0];
 }
