@@ -1,18 +1,20 @@
-import {InsightError} from "../controller/IInsightFacade";
-import {QueryWithID} from "../models/IQuery";
+import {InsightDatasetKind, InsightError} from "../controller/IInsightFacade";
+import {MetaQuery} from "../models/IQuery";
 import {validateBody} from "./ValidateBody";
-import {isJSON} from "./PerformQuery";
 import {doesDatasetIDExist} from "../controller/DiskUtil";
 import {validateOptions} from "./ValidateOptions";
 import {validateTransformations} from "./ValidateTransformations";
 
 let idStringList: string[] = [];
 let colKeys: string[];
+let predictedKind: string;
 
 // if query is valid, returns id_string, else false
-export function validateQuery(query: object): QueryWithID {
+export function validateQuery(query: object): MetaQuery {
 	// reset the idStringList whenever we validate a new query.
 	idStringList = [];
+	// reset predictedKind whenever we validate a new query.
+	predictedKind = "";
 	validateRootStructure(query);
 	validateBody(query);
 	colKeys = validateOptions(query);
@@ -22,6 +24,7 @@ export function validateQuery(query: object): QueryWithID {
 	let idString: string = validateIDs(query);
 	return {
 		id: idString,
+		kind: predictedKind as InsightDatasetKind,
 		query: query,
 	};
 }
@@ -47,16 +50,29 @@ function validateRootStructure(query: object) {
 	}
 }
 
-const Operators = ["LT", "GT", "EQ", "IS"];
+const Operators = ["LT", "GT", "EQ", "IS", "MAX", "MIN", "AVG", "SUM", "COUNT"];
 const OperatorTypeMap: {[index: string]: number} = {
 	LT: 0,
 	GT: 0,
 	EQ: 0,
 	IS: 1,
+	MAX: 0,
+	MIN: 0,
+	AVG: 0,
+	SUM: 0,
+	COUNT: 1,
 };
-const MathFields = ["avg", "pass", "fail", "audit", "year"];
-const StringFields = ["dept", "id", "instructor", "title", "uuid"];
-const allFields = ["avg", "pass", "fail", "audit", "year", "dept", "id", "instructor", "title", "uuid"];
+const SectionsMathFields = ["avg", "pass", "fail", "audit", "year"];
+const SectionsStringFields = ["dept", "id", "instructor", "title", "uuid"];
+const RoomsMathFields = ["lat", "lon", "seats"];
+const RoomsStringFields = ["fullname", "shortname", "number", "name", "address", "type", "furniture", "href"];
+
+const SectionsFields = SectionsMathFields.concat(SectionsStringFields);
+const RoomsFields = RoomsMathFields.concat(RoomsStringFields);
+
+const MathFields = SectionsMathFields.concat(RoomsMathFields);
+const StringFields = SectionsStringFields.concat(RoomsStringFields);
+const allFields = MathFields.concat(StringFields);
 // lol this is so hacky but whatever
 const fields = [MathFields, StringFields];
 const oppositeFields = [StringFields, MathFields];
@@ -78,6 +94,14 @@ export function validateQueryKey(fieldKey: string, qkey: string) {
 	let field = split[1];
 	if (!allFields.includes(field)) {
 		throw new InsightError("Invalid key " + qkey + " in " + fieldKey);
+	}
+	if (predictedKind === "") {
+		predictedKind = SectionsFields.includes(field) ? InsightDatasetKind.Sections : InsightDatasetKind.Rooms;
+	} else {
+		let currKind = SectionsFields.includes(field) ? InsightDatasetKind.Sections : InsightDatasetKind.Rooms;
+		if (currKind !== predictedKind) {
+			throw new InsightError("Invalid key " + qkey + " in " + fieldKey);
+		}
 	}
 	// if fieldKey is in operators, we must validate the fieldType
 	if (Operators.includes(fieldKey)) {

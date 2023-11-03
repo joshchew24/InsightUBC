@@ -1,5 +1,8 @@
-export interface QueryWithID {
+import {InsightDatasetKind} from "../controller/IInsightFacade";
+
+export interface MetaQuery {
 	id: string;
+	kind: InsightDatasetKind;
 	query: object;
 }
 

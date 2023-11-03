@@ -4,7 +4,7 @@ import {retrieveDataset} from "../controller/DiskUtil";
 import {mapColumns, orderRows, passesQuery, processQueryToAST, transformResult} from "./ExecuteQuery";
 import {QueryASTNode} from "../models/QueryASTNode";
 import {validateQuery} from "./ValidateQuery";
-import {QueryWithID} from "../models/IQuery";
+import {MetaQuery} from "../models/IQuery";
 import {Room} from "../models/IRoom";
 import {RoomDatasetModel, SectionDatasetModel} from "../models/IModel";
 
@@ -16,16 +16,16 @@ export function handleQuery(query: unknown): Promise<InsightResult[]> {
 
 	return Promise.resolve(query as object)
 		.then((queryToValidate) => {
-			let queryWithID: QueryWithID;
+			let metaQuery: MetaQuery;
 			// TODO: This try catch block is unnecessary, errors should propagate to the promise chain catch
 			try {
-				queryWithID = validateQuery(queryToValidate);
+				metaQuery = validateQuery(queryToValidate);
 			} catch (error) {
 				return Promise.reject(error);
 			}
-			return queryWithID;
+			return metaQuery;
 		})
-		.then((queryWithID: QueryWithID) => {
+		.then((queryWithID: MetaQuery) => {
 			// construct tree and process the query
 			let validQuery = queryWithID.query;
 			// TODO: refactor to make this async
