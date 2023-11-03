@@ -1,18 +1,16 @@
 import fs from "fs-extra";
-import {SectionPruned} from "../models/ISection";
-import {SectionDatasetModel} from "../models/IModel";
+import {RoomDatasetModel, SectionDatasetModel} from "../models/IModel";
 
 // TODO: make this async
 export function doesDatasetIDExist(id: string): boolean {
 	return fs.existsSync("./data/" + id + ".json");
 }
 
-// TODO: make this async async
+// TODO: make this async
 // retrieve dataset with given ID
-export function retrieveDataset(id: string): SectionPruned[] {
+export function retrieveDataset(id: string): SectionDatasetModel | RoomDatasetModel {
 	const data = fs.readFileSync("./data/" + id + ".json", "utf8");
-	const dataset: SectionDatasetModel = JSON.parse(data);
-	return dataset.section;
+	return JSON.parse(data);
 }
 
 export function retrieveAllDatasetIds(): string[] {

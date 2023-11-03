@@ -342,31 +342,23 @@ describe("InsightFacade", function () {
 			);
 		});
 
-		it("should reject with no building files in dataset", function() {
+		it("should reject with no building files in dataset", function () {
 			let rooms = getContentFromArchives(ROOMS_PATH + "campusNoBuildingFiles.zip");
 			const result = facade.addDataset("1234", rooms, InsightDatasetKind.Rooms);
 			return expect(result).to.eventually.be.rejectedWith(InsightError);
 		});
 
-		it("should reject with no building table rows in index", function() {
+		it("should reject with no building table rows in index", function () {
 			let rooms = getContentFromArchives(ROOMS_PATH + "campusNoBuildingListedInTable.zip");
 			const result = facade.addDataset("1234", rooms, InsightDatasetKind.Rooms);
 			return expect(result).to.eventually.be.rejectedWith(InsightError);
 		});
 
-		it("should reject when building's html content is invalid", function() {
+		it("should reject when building's html content is invalid", function () {
 			let rooms = getContentFromArchives(ROOMS_PATH + "campusInvalidBuildingContent.zip");
 			const result = facade.addDataset("1234", rooms, InsightDatasetKind.Rooms);
 			return expect(result).to.eventually.be.rejectedWith(InsightError);
 		});
-
-		it("should reject when building's html content is invalid", function() {
-			let rooms = getContentFromArchives(ROOMS_PATH + "campusInvalidBuildingContent.zip");
-			const result = facade.addDataset("1234", rooms, InsightDatasetKind.Rooms);
-			return expect(result).to.eventually.be.rejectedWith(InsightError);
-		});
-
-
 		// comment this out before making a PR
 		// it("should accept, has only one building (WOOD) - used for debugging purposes", function() {
 		// 	let rooms = getContentFromArchives(ROOMS_PATH + "campusValidOnlyOneBuilding.zip");
@@ -440,7 +432,6 @@ describe("InsightFacade", function () {
 			facade = new InsightFacade();
 		});
 
-
 		it("should return an empty list when there are no datasets to list", function () {
 			return expect(facade.listDatasets()).to.eventually.be.deep.equal([]);
 		});
@@ -504,7 +495,7 @@ describe("InsightFacade", function () {
 			return expect(facade.listDatasets()).to.eventually.be.deep.equal(expected);
 		});
 
-		it("should succeed when Rooms are added then Sections are added, and list Room and Section", function() {
+		it("should succeed when Rooms are added then Sections are added, and list Room and Section", function () {
 			let rooms = getContentFromArchives(ROOMS_PATH + "campus.zip");
 			return facade.addDataset("rooms", rooms, InsightDatasetKind.Rooms).then(() => {
 				return facade.addDataset("sections", sections, InsightDatasetKind.Sections).then(() => {
@@ -523,17 +514,29 @@ describe("InsightFacade", function () {
 				});
 			});
 		});
-
-
 	});
 	describe("performQuery", function () {
 		let facade: InsightFacade;
 
-		before(async function () {
+		before(function () {
+			console.info(`Before: ${this.test?.parent?.title}`);
 			clearDisk();
 			facade = new InsightFacade();
-			await facade.addDataset("sections", pairSections, InsightDatasetKind.Sections);
-			await facade.addDataset("single", singleSection, InsightDatasetKind.Sections);
+
+			// Load the datasets specified in datasetsToQuery and add them to InsightFacade.
+			// Will *fail* if there is a problem reading ANY dataset.
+			const loadDatasetPromises = [
+				facade.addDataset("sections", pairSections, InsightDatasetKind.Sections),
+				facade.addDataset("single", singleSection, InsightDatasetKind.Sections),
+				facade.addDataset("rooms", campusRooms, InsightDatasetKind.Rooms),
+			];
+
+			return Promise.all(loadDatasetPromises);
+		});
+
+		after(function () {
+			console.info(`After: ${this.test?.parent?.title}`);
+			clearDisk();
 		});
 
 		function target(input: Input): Promise<Output> {

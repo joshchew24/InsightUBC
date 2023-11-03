@@ -1,34 +1,31 @@
-import {InsightError, InsightResult, ResultTooLargeError} from "../controller/IInsightFacade";
+import {InsightDatasetKind, InsightError, InsightResult, ResultTooLargeError} from "../controller/IInsightFacade";
 import {SectionPruned} from "../models/ISection";
 import {retrieveDataset} from "../controller/DiskUtil";
-import {passesQuery, transformColumns, orderRows, processQueryToAST} from "./ExecuteQuery";
+import {mapColumns, orderRows, passesQuery, processQueryToAST, transformResult} from "./ExecuteQuery";
 import {QueryASTNode} from "../models/QueryASTNode";
 import {validateQuery} from "./ValidateQuery";
-import {QueryWithID} from "../models/IQuery";
+import {MetaQuery} from "../models/IQuery";
+import {Room} from "../models/IRoom";
+import {RoomDatasetModel, SectionDatasetModel} from "../models/IModel";
 
 export function handleQuery(query: unknown): Promise<InsightResult[]> {
-	let sectionList: SectionPruned[] = [];
+	let currDataset: SectionDatasetModel | RoomDatasetModel;
 	if (!isJSON) {
 		return Promise.reject(new InsightError("Invalid query string"));
 	}
 
 	return Promise.resolve(query as object)
 		.then((queryToValidate) => {
-			let queryWithID: QueryWithID;
-			// TODO: This try catch block is unnecessary, errors should propagate to the promise chain catch
-			try {
-				queryWithID = validateQuery(queryToValidate);
-			} catch (error) {
-				return Promise.reject(error);
-			}
-			return queryWithID;
+			return validateQuery(queryToValidate);
 		})
-		.then((queryWithID: QueryWithID) => {
+		.then((metaQuery: MetaQuery) => {
+			let validQuery = metaQuery.query;
+			currDataset = retrieveDataset(metaQuery.id);
+			if (metaQuery.kind !== currDataset.kind) {
+				throw new InsightError("Used " + metaQuery.kind + " query fields on " + currDataset.kind + " dataset.");
+			}
 			// construct tree and process the query
-			let validQuery = queryWithID.query;
-			// TODO: refactor to make this async
-			sectionList = retrieveDataset(queryWithID.id);
-			return Promise.resolve(executeQuery(validQuery, sectionList));
+			return Promise.resolve(executeQuery(validQuery, currDataset));
 		})
 		.catch((error) => {
 			return Promise.reject(error);
@@ -42,30 +39,54 @@ export function isJSON(input: unknown): boolean {
 	return input !== null && input !== undefined && typeof input === "object" && !Array.isArray(input);
 }
 
-function executeQuery(inputQuery: any, sectionList: SectionPruned[]) {
-	let rawResult: SectionPruned[] = [];
+// TODO: need to refactor to take into account rooms
+function executeQuery(inputQuery: any, currDataset: SectionDatasetModel | RoomDatasetModel) {
+	let rawResult = [];
 	let queryTree: QueryASTNode = processQueryToAST(inputQuery["WHERE"]);
 	let resultSize = 0;
 
-	// iterate through section list and add sections to unprocessed result list that pass query
-	for (let section of sectionList) {
-		let currSection = new SectionPruned(section);
-		if (passesQuery(currSection, queryTree)) {
-			if (resultSize <= 5000) {
-				rawResult.push(currSection);
-				resultSize++;
-			} else {
-				throw new ResultTooLargeError(
-					"The result is too big. " + "Only queries with a maximum of 5000 results are supported."
-				);
+	if (currDataset.kind === InsightDatasetKind.Rooms) {
+		let roomDataset = currDataset as RoomDatasetModel;
+		for (let room of roomDataset.room) {
+			let currRoom = new Room(room);
+			if (passesQuery(currRoom, queryTree)) {
+				if (resultSize <= 5000) {
+					rawResult.push(currRoom);
+					resultSize++;
+				} else {
+					throw new ResultTooLargeError(
+						"The result is too big. " + "Only queries with a maximum of 5000 results are supported."
+					);
+				}
+			}
+		}
+	} else if (currDataset.kind === InsightDatasetKind.Sections) {
+		let sectionDataset = currDataset as SectionDatasetModel;
+		// iterate through section list and add sections to unprocessed result list that pass query
+		for (let section of sectionDataset.section) {
+			let currSection = new SectionPruned(section);
+			if (passesQuery(currSection, queryTree)) {
+				if (resultSize <= 5000) {
+					rawResult.push(currSection);
+					resultSize++;
+				} else {
+					throw new ResultTooLargeError(
+						"The result is too big. " + "Only queries with a maximum of 5000 results are supported."
+					);
+				}
 			}
 		}
 	}
+
 	// should transform result sections to object containing just the columns given
-	let processedResult = transformColumns(rawResult, inputQuery["OPTIONS"]["COLUMNS"]);
+	let processedResult = mapColumns(rawResult, inputQuery["OPTIONS"]["COLUMNS"]);
 	// will order transformed results if order key is given, else return unordered result
 	if (inputQuery["OPTIONS"]["ORDER"]) {
-		return orderRows(processedResult, inputQuery["OPTIONS"]["ORDER"]);
+		processedResult = orderRows(processedResult, inputQuery["OPTIONS"]["ORDER"]);
+	}
+
+	if (inputQuery["TRANSFORMATIONS"]) {
+		return transformResult(inputQuery["TRANSFORMATIONS"], processedResult);
 	} else {
 		return processedResult;
 	}

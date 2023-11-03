@@ -27,14 +27,14 @@ export function outputDataset(id: string, kind: InsightDatasetKind, arr: any[]):
 			id: id,
 			kind: kind,
 			numRows: arr.length,
-			room: arr
+			room: arr,
 		} as RoomDatasetModel;
 	} else if (isSection(arr[0])) {
 		newDataset = {
 			id: id,
 			kind: kind,
 			numRows: arr.length,
-			section: arr.map((section: any) => new SectionPruned(section))
+			section: arr.map((section: any) => new SectionPruned(section)),
 		} as SectionDatasetModel;
 	} else {
 		throw new InsightError("Invalid dataset type");
