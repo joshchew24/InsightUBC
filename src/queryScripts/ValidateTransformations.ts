@@ -69,6 +69,9 @@ function validateApplyRule(applyRule: object) {
 		throw new InsightError("Apply rule should only have 1 key, has " + numKeys);
 	}
 	let applyAlias = applyRuleKeys[0];
+	if (applyKeys.includes(applyAlias)) {
+		throw new InsightError("Duplicate APPLY key " + applyAlias);
+	}
 	let applyBody = Object.values(applyRule)[0];
 	if (typeof applyBody !== "object" || applyBody === null || Array.isArray(applyBody)) {
 		throw new InsightError("Invalid query string");
