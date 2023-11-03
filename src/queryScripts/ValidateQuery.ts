@@ -75,7 +75,7 @@ const OperatorTypeMap: {[index: string]: number} = {
 	MIN: 0,
 	AVG: 0,
 	SUM: 0,
-	COUNT: 1,
+	COUNT: 2,
 };
 const SectionsMathFields = ["avg", "pass", "fail", "audit", "year"];
 const SectionsStringFields = ["dept", "id", "instructor", "title", "uuid"];
@@ -87,10 +87,10 @@ const RoomsFields = RoomsMathFields.concat(RoomsStringFields);
 
 const MathFields = SectionsMathFields.concat(RoomsMathFields);
 const StringFields = SectionsStringFields.concat(RoomsStringFields);
-const allFields = MathFields.concat(StringFields);
+const AllFields = MathFields.concat(StringFields);
 // lol this is so hacky but whatever
-const fields = [MathFields, StringFields];
-const oppositeFields = [StringFields, MathFields];
+const fields = [MathFields, StringFields, AllFields];
+const oppositeFields = [StringFields, MathFields, []];
 // takes operator (oneof GT, LT, EQ, IS) and the qkey (idstring_field) and validates
 // a valid qkey must be formatted properly, and field must be correct type based on operator
 // updates the idStringList
@@ -107,7 +107,7 @@ export function validateQueryKey(fieldKey: string, qkey: string) {
 	let id = split[0];
 	idStringList.push(id);
 	let field = split[1];
-	if (!allFields.includes(field)) {
+	if (!AllFields.includes(field)) {
 		throw new InsightError("Invalid key " + qkey + " in " + fieldKey);
 	}
 	if (predictedKind === "") {
