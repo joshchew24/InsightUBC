@@ -46,12 +46,14 @@ function validateApply(apply: object[]) {
 		validateApplyRule(applyRule);
 	}
 }
+
+const applyTokens = ["MAX", "MIN", "AVG", "SUM", "COUNT"];
 /*
 TODO: contains big chunk of duplicate code. abstractValidate() is a weak attempt at extracting this functionality,
 but causes some ts lint errors or something.
  */
 function validateApplyRule(applyRule: object) {
-	if ((!(typeof applyRule !== "object")) || applyRule === null || Array.isArray(applyRule)) {
+	if (!(typeof applyRule !== "object") || applyRule === null || Array.isArray(applyRule)) {
 		throw new InsightError("Invalid query string");
 	}
 	let applyRuleKeys = Object.keys(applyRule);
@@ -61,10 +63,9 @@ function validateApplyRule(applyRule: object) {
 	}
 	let applyAlias = applyRuleKeys[0];
 	let applyBody = applyRule[applyAlias];
-	// validate(applyAlias);
 
 	// validate applyBody
-	if ((!(typeof applyBody !== "object")) || applyBody === null || Array.isArray(applyBody)) {
+	if (!(typeof applyBody !== "object") || applyBody === null || Array.isArray(applyBody)) {
 		throw new InsightError("Invalid query string");
 	}
 	let applyBodyKeys = Object.keys(applyBody);
@@ -74,12 +75,19 @@ function validateApplyRule(applyRule: object) {
 	}
 	let applyToken: string = applyBodyKeys[0];
 	let applyKey: string = applyBody[applyToken];
-	// TODO: validate alias, token, key
-
+	const regex = /^[^_]+$/g;
+	if (!regex.test(applyAlias)) {
+		throw new InsightError("Cannot have underscore in applyKey");
+	}
+	if (!applyTokens.includes(applyToken)) {
+		throw new InsightError("Invalid transformation operator");
+	}
+	// TODO: verify that applyKey type matches applyToken type
+	validateQueryKey(applyToken, applyKey);
 }
 // returns singular key of object being validated
 function abstractValidate(toValidate: object, type: string) {
-	if ((!(typeof toValidate !== "object")) || toValidate === null || Array.isArray(toValidate)) {
+	if (!(typeof toValidate !== "object") || toValidate === null || Array.isArray(toValidate)) {
 		throw new InsightError("Invalid query string");
 	}
 	let toValidateKeys = Object.keys(toValidate);
