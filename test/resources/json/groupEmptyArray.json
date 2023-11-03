@@ -1,29 +1,15 @@
 {
 	"title": "group empty array",
 	"input": {
-		"WHERE": {
-			"AND": [
-				{
-					"IS": {
-						"rooms_furniture": "*Tables*"
-					}
-				},
-				{
-					"GT": {
-						"rooms_seats": 300
-					}
-				}
-			]
-		},
+		"WHERE": {},
 		"OPTIONS": {
 			"COLUMNS": [
-				"rooms_shortname",
-				"maxSeats"
+				"maxAvg"
 			],
 			"ORDER": {
 				"dir": "DOWN",
 				"keys": [
-					"maxSeats"
+					"maxAvg"
 				]
 			}
 		},
@@ -31,8 +17,8 @@
 			"GROUP": [],
 			"APPLY": [
 				{
-					"maxSeats": {
-						"MAX": "rooms_seats"
+					"maxAvg": {
+						"MAX": "sections_avg"
 					}
 				}
 			]

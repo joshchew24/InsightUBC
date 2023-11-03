@@ -373,7 +373,6 @@ describe("InsightFacade", function () {
 			const result = facade.addDataset("1234", rooms, InsightDatasetKind.Rooms);
 			return expect(result).to.eventually.be.rejectedWith(InsightError);
 		});
-
 	});
 
 	describe("removeDataset", function () {
@@ -570,6 +569,57 @@ describe("InsightFacade", function () {
 			}
 
 			folderTest<Input, Output, Error>("performQuery tests", target, "./test/resources/json", {
+				errorValidator,
+				assertOnError,
+				assertOnResult,
+			});
+		});
+
+		describe("Ordered", () => {
+			let facade: InsightFacade;
+
+			before(function () {
+				console.info(`Before: ${this.test?.parent?.title}`);
+				clearDisk();
+				facade = new InsightFacade();
+
+				// Load the datasets specified in datasetsToQuery and add them to InsightFacade.
+				// Will *fail* if there is a problem reading ANY dataset.
+				const loadDatasetPromises = [
+					facade.addDataset("sections", pairSections, InsightDatasetKind.Sections),
+					facade.addDataset("single", singleSection, InsightDatasetKind.Sections),
+					facade.addDataset("rooms", campusRooms, InsightDatasetKind.Rooms),
+				];
+
+				return Promise.all(loadDatasetPromises);
+			});
+
+			after(function () {
+				console.info(`After: ${this.test?.parent?.title}`);
+				clearDisk();
+			});
+
+			function target(input: Input): Promise<Output> {
+				return facade.performQuery(input);
+			}
+
+			function errorValidator(error: any): error is Error {
+				return error === "InsightError" || error === "ResultTooLargeError";
+			}
+
+			function assertOnResult(actual: any, expected: Output): void {
+				expect(actual).to.have.deep.equal(expected);
+			}
+
+			function assertOnError(actual: any, expected: Error): void {
+				if (expected === "InsightError") {
+					expect(actual).to.be.an.instanceOf(InsightError);
+				} else {
+					expect(actual).to.be.an.instanceOf(ResultTooLargeError);
+				}
+			}
+
+			folderTest<Input, Output, Error>("performQuery tests", target, "./test/resources/json/order", {
 				errorValidator,
 				assertOnError,
 				assertOnResult,
