@@ -16,20 +16,15 @@ export function handleQuery(query: unknown): Promise<InsightResult[]> {
 
 	return Promise.resolve(query as object)
 		.then((queryToValidate) => {
-			let metaQuery: MetaQuery;
-			// TODO: This try catch block is unnecessary, errors should propagate to the promise chain catch
-			try {
-				metaQuery = validateQuery(queryToValidate);
-			} catch (error) {
-				return Promise.reject(error);
-			}
-			return metaQuery;
+			return validateQuery(queryToValidate);
 		})
-		.then((queryWithID: MetaQuery) => {
+		.then((metaQuery: MetaQuery) => {
+			let validQuery = metaQuery.query;
+			currDataset = retrieveDataset(metaQuery.id);
+			if (metaQuery.kind !== currDataset.kind) {
+				throw new InsightError("Used " + metaQuery.kind + " query fields on " + currDataset.kind + " dataset.");
+			}
 			// construct tree and process the query
-			let validQuery = queryWithID.query;
-			// TODO: refactor to make this async
-			currDataset = retrieveDataset(queryWithID.id);
 			return Promise.resolve(executeQuery(validQuery, currDataset));
 		})
 		.catch((error) => {
