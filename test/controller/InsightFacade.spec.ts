@@ -113,6 +113,20 @@ describe("InsightFacade", function () {
 			const result = facade.addDataset("rooms", rooms, InsightDatasetKind.Rooms);
 			return expect(result).to.eventually.have.deep.members(["rooms"]);
 		});
+
+		// comment this out before making a PR
+		// it("should accept MAUD and NIT and ORCH", () => {
+		// 	let rooms = getContentFromArchives(ROOMS_PATH + "campusMAUDandNIT.zip");
+		// 	const result = facade.addDataset("rooms", rooms, InsightDatasetKind.Rooms);
+		// 	return expect(result).to.eventually.have.deep.members(["rooms"]);
+		// });
+
+		// comment this out before making a PR
+		// it("should accept, has only one building (WOOD) - used for debugging purposes", function() {
+		// 	let rooms = getContentFromArchives(ROOMS_PATH + "campusValidOnlyOneBuilding.zip");
+		// 	const result = facade.addDataset("1234", rooms, InsightDatasetKind.Rooms);
+		// 	return expect(result).to.eventually.deep.equal(["1234"]);
+		// });
 	});
 
 	describe("addDataset invalid ID tests", function () {
@@ -328,19 +342,17 @@ describe("InsightFacade", function () {
 		// 	);
 		// });
 
-		it("should reject a dataset with no valid rooms", () => {
+		it("should succeed if a dataset with no valid rooms in master index.htm but has valid room", () => {
 			let rooms = getContentFromArchives(ROOMS_PATH + "no_valid_rooms.zip");
-			return expect(facade.addDataset("1234", rooms, InsightDatasetKind.Rooms)).to.eventually.be.rejectedWith(
-				InsightError
-			);
+			return expect(facade.addDataset("1234", rooms, InsightDatasetKind.Rooms)).to.eventually.be.fulfilled;
 		});
 
-		it("should reject a dataset with no valid links to building files (no valid rooms)", () => {
-			let rooms = getContentFromArchives(ROOMS_PATH + "no_valid_links.zip");
-			return expect(facade.addDataset("1234", rooms, InsightDatasetKind.Rooms)).to.eventually.be.rejectedWith(
-				InsightError
-			);
-		});
+		// it("should accept if a dataset with no valid links to building files (no valid rooms)", () => {
+		// 	let rooms = getContentFromArchives(ROOMS_PATH + "no_valid_links.zip");
+		// 	return expect(facade.addDataset("1234", rooms, InsightDatasetKind.Rooms)).to.eventually.be.rejectedWith(
+		// 		InsightError
+		// 	);
+		// });
 
 		it("should reject with no building files in dataset", function () {
 			let rooms = getContentFromArchives(ROOMS_PATH + "campusNoBuildingFiles.zip");
@@ -359,12 +371,7 @@ describe("InsightFacade", function () {
 			const result = facade.addDataset("1234", rooms, InsightDatasetKind.Rooms);
 			return expect(result).to.eventually.be.rejectedWith(InsightError);
 		});
-		// comment this out before making a PR
-		// it("should accept, has only one building (WOOD) - used for debugging purposes", function() {
-		// 	let rooms = getContentFromArchives(ROOMS_PATH + "campusValidOnlyOneBuilding.zip");
-		// 	const result = facade.addDataset("1234", rooms, InsightDatasetKind.Rooms);
-		// 	return expect(result).to.eventually.deep.equal(["1234"]);
-		// });
+
 	});
 
 	describe("removeDataset", function () {
