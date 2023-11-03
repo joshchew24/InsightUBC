@@ -528,7 +528,7 @@ describe("InsightFacade", function () {
 			const loadDatasetPromises = [
 				facade.addDataset("sections", pairSections, InsightDatasetKind.Sections),
 				facade.addDataset("single", singleSection, InsightDatasetKind.Sections),
-				facade.addDataset("rooms", campusRooms, InsightDatasetKind.Rooms)
+				facade.addDataset("rooms", campusRooms, InsightDatasetKind.Rooms),
 			];
 
 			return Promise.all(loadDatasetPromises);

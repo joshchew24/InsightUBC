@@ -7,6 +7,8 @@ import {validateTransformations} from "./ValidateTransformations";
 
 let idStringList: string[] = [];
 let colKeys: string[];
+let groupKeys: string[];
+let applyKeys: string[];
 let predictedKind: string;
 
 // if query is valid, returns id_string, else false
@@ -19,7 +21,20 @@ export function validateQuery(query: object): MetaQuery {
 	validateBody(query);
 	colKeys = validateOptions(query);
 	if (Object.keys(query).length === 3) {
-		validateTransformations(query);
+		let transformationKeys = validateTransformations(query);
+		groupKeys = transformationKeys[0];
+		applyKeys = transformationKeys[1];
+		for (let colKey of colKeys) {
+			if (colKey.includes("_")) {
+				if (!groupKeys.includes(colKey)) {
+					throw new InsightError("Keys in COLUMNS must be in GROUP or APPLY when TRANSFORMATIONS is present");
+				}
+			} else {
+				if (!applyKeys.includes(colKey)) {
+					throw new InsightError("Keys in COLUMNS must be in GROUP or APPLY when TRANSFORMATIONS is present");
+				}
+			}
+		}
 	}
 	let idString: string = validateIDs(query);
 	return {

@@ -1,7 +1,12 @@
 import {InsightError} from "../controller/IInsightFacade";
 import {validateQueryKey} from "./ValidateQuery";
 
+let groupKeys: string[];
+let applyKeys: string[];
 export function validateTransformations(query: object) {
+	// clear key arrays when validating a new query
+	groupKeys = [];
+	applyKeys = [];
 	if (!("TRANSFORMATIONS" in query)) {
 		throw new InsightError("Excess keys in query");
 	}
@@ -30,11 +35,13 @@ export function validateTransformations(query: object) {
 		throw new InsightError("APPLY must be an array");
 	}
 	validateApply(apply);
+	return [groupKeys, applyKeys];
 }
 
 function validateGroup(group: string[]) {
 	for (let key of group) {
 		validateQueryKey("GROUP", key);
+		groupKeys.push(key);
 	}
 }
 
@@ -82,6 +89,7 @@ function validateApplyRule(applyRule: object) {
 	}
 	// TODO: verify that applyKey type matches applyToken type
 	validateQueryKey(applyToken, applyKey);
+	applyKeys.push(applyAlias);
 }
 // returns singular key of object being validated
 function abstractValidate(toValidate: object, type: string) {
