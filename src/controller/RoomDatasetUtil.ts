@@ -113,11 +113,6 @@ function iterativelyPopulateRoom(attribute: string, room: Room, currNode: DomNod
 				room.address = fullAddress;
 			}
 			break;
-		case "field-content":
-			if(room.fullname === undefined){
-				room.fullname = currNode.value ?? "";
-			}
-			break;
 		case "views-field views-field-field-room-number": // number
 			if (currNode.childNodes?.[0].value !== undefined) {
 				room.number = currNode.childNodes?.[0].value ?? "";
@@ -158,17 +153,6 @@ async function combineMasterAndRoomLogic(roomArr: Room[], masterRoomArr: Room[])
 	if (masterRoomArr.length === 0 || roomArr.length === 0) {
 		throw new InsightError("No valid room in dataset");
 	}
-
-	// add valid room if shortname from roomArr is not in masterRoomArr
-	for (let room of roomArr) {
-		if (!masterRoomArr.some((masterRoom) => masterRoom.shortname === room.shortname)) {
-			masterRoomArr.push({
-				shortname: room.shortname,
-				address: room.address,
-				fullname: room.fullname
-			} as Room );
-		}
-	}
 	const geoPromises = masterRoomArr.map(async (room) => {
 		try {
 			const geoData = await fetchData(room.address);
@@ -196,11 +180,16 @@ async function combineMasterAndRoomLogic(roomArr: Room[], masterRoomArr: Room[])
 }
 function isRoomValid(room: Room): boolean {
 	if (
-		room.fullname === undefined || room.shortname === undefined ||
-		room.number === undefined || room.name === undefined ||
-		room.address === undefined || room.lat === undefined ||
-		room.lon === undefined || room.seats === undefined ||
-		room.type === undefined || room.furniture === undefined ||
+		room.fullname === undefined ||
+		room.shortname === undefined ||
+		room.number === undefined ||
+		room.name === undefined ||
+		room.address === undefined ||
+		room.lat === undefined ||
+		room.lon === undefined ||
+		room.seats === undefined ||
+		room.type === undefined ||
+		room.furniture === undefined ||
 		room.href === undefined
 	) {
 		return false;

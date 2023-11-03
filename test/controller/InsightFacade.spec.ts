@@ -342,17 +342,19 @@ describe("InsightFacade", function () {
 		// 	);
 		// });
 
-		it("should succeed if a dataset with no valid rooms in master index.htm but has valid room", () => {
+		it("should reject a dataset with no valid rooms", () => {
 			let rooms = getContentFromArchives(ROOMS_PATH + "no_valid_rooms.zip");
-			return expect(facade.addDataset("1234", rooms, InsightDatasetKind.Rooms)).to.eventually.be.fulfilled;
+			return expect(facade.addDataset("1234", rooms, InsightDatasetKind.Rooms)).to.eventually.be.rejectedWith(
+				InsightError
+			);
 		});
 
-		// it("should accept if a dataset with no valid links to building files (no valid rooms)", () => {
-		// 	let rooms = getContentFromArchives(ROOMS_PATH + "no_valid_links.zip");
-		// 	return expect(facade.addDataset("1234", rooms, InsightDatasetKind.Rooms)).to.eventually.be.rejectedWith(
-		// 		InsightError
-		// 	);
-		// });
+		it("should reject a dataset with no valid links to building files (no valid rooms)", () => {
+			let rooms = getContentFromArchives(ROOMS_PATH + "no_valid_links.zip");
+			return expect(facade.addDataset("1234", rooms, InsightDatasetKind.Rooms)).to.eventually.be.rejectedWith(
+				InsightError
+			);
+		});
 
 		it("should reject with no building files in dataset", function () {
 			let rooms = getContentFromArchives(ROOMS_PATH + "campusNoBuildingFiles.zip");
