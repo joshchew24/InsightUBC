@@ -114,6 +114,7 @@ export function orderRows(result: InsightResult[], order: any): InsightResult[] 
 		return undirectedResult.reverse();
 	} else {
 		return undirectedResult;
+
 	}
 }
 
