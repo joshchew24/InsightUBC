@@ -21,25 +21,26 @@ export function validateOptions(query: object) {
 		throw new InsightError("OPTIONS missing COLUMNS");
 	}
 	let colKeys = options["COLUMNS"] as string[];
+	if (!Array.isArray(colKeys)) {
+		throw new InsightError("COLUMNS must be a non-empty array");
+	}
 	validateColumns(colKeys);
 
 	// numKeys is number of keys in Options object.
 	let numKeys = Object.keys(options).length;
 	// 1 key means we should only have a COLUMN object
 	if (numKeys === 1) {
-		return;
+		return colKeys;
 	}
 	// 2 keys means we should only have a COLUMN and ORDER object
 	if ((numKeys === 2 && !("ORDER" in options)) || numKeys > 2) {
 		throw new InsightError("Invalid keys in OPTIONS");
 	}
 	validateOrder(options["ORDER"], colKeys);
+	return colKeys;
 }
 
 function validateColumns(colKeys: string[]) {
-	if (!Array.isArray(colKeys)) {
-		throw new InsightError("COLUMNS must be a non-empty array");
-	}
 	for (let colKey of colKeys) {
 		// intelliJ wrongly thinks this check is unnecessary
 		if (typeof colKey !== "string") {

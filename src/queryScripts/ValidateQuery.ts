@@ -7,6 +7,7 @@ import {validateOptions} from "./ValidateOptions";
 import {validateTransformations} from "./ValidateTransformations";
 
 let idStringList: string[] = [];
+let colKeys: string[];
 
 // if query is valid, returns id_string, else false
 export function validateQuery(query: object): QueryWithID {
@@ -14,7 +15,7 @@ export function validateQuery(query: object): QueryWithID {
 	idStringList = [];
 	validateRootStructure(query);
 	validateBody(query);
-	validateOptions(query);
+	colKeys = validateOptions(query);
 	validateTransformations(query);
 	let idString: string = validateIDs(query);
 	return {
