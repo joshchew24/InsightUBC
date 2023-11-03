@@ -518,11 +518,25 @@ describe("InsightFacade", function () {
 	describe("performQuery", function () {
 		let facade: InsightFacade;
 
-		before(async function () {
+		before(function () {
+			console.info(`Before: ${this.test?.parent?.title}`);
 			clearDisk();
 			facade = new InsightFacade();
-			await facade.addDataset("sections", pairSections, InsightDatasetKind.Sections);
-			await facade.addDataset("single", singleSection, InsightDatasetKind.Sections);
+
+			// Load the datasets specified in datasetsToQuery and add them to InsightFacade.
+			// Will *fail* if there is a problem reading ANY dataset.
+			const loadDatasetPromises = [
+				facade.addDataset("sections", pairSections, InsightDatasetKind.Sections),
+				facade.addDataset("single", singleSection, InsightDatasetKind.Sections),
+				facade.addDataset("rooms", campusRooms, InsightDatasetKind.Rooms)
+			];
+
+			return Promise.all(loadDatasetPromises);
+		});
+
+		after(function () {
+			console.info(`After: ${this.test?.parent?.title}`);
+			clearDisk();
 		});
 
 		function target(input: Input): Promise<Output> {
