@@ -26,7 +26,7 @@ export function validateTransformations(query: object) {
 	}
 
 	let group = transformations["GROUP"];
-	if (!Array.isArray(group)) {
+	if (!Array.isArray(group) || group.length === 0) {
 		throw new InsightError("GROUP must be a non-empty array");
 	}
 	validateGroup(group);

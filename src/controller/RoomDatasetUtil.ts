@@ -108,7 +108,7 @@ function masterIterativelyPopulateRoom(attribute: string, room: Room, currNode: 
 function iterativelyPopulateRoom(attribute: string, room: Room, currNode: DomNode): Room {
 	switch (attribute) {
 		case "building-field":
-			if(room.address === undefined && currNode.childNodes?.[0].value !== undefined){
+			if (room.address === undefined && currNode.childNodes?.[0].value !== undefined) {
 				const fullAddress = currNode.childNodes?.[0].value;
 				room.address = fullAddress;
 			}
@@ -156,7 +156,7 @@ async function combineMasterAndRoomLogic(roomArr: Room[], masterRoomArr: Room[])
 	const geoPromises = masterRoomArr.map(async (room) => {
 		try {
 			const geoData = await fetchData(room.address);
-			if(geoData.lat === undefined || geoData.lon === undefined){
+			if (geoData.lat === undefined || geoData.lon === undefined) {
 				throw new InsightError("Failed to fetch lat/lon for address: " + room.address);
 			}
 			room.lat = geoData.lat;

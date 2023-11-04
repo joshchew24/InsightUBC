@@ -29,7 +29,7 @@ export function outputDataset(id: string, kind: InsightDatasetKind, arr: any[]):
 			numRows: arr.length,
 			room: arr,
 		} as RoomDatasetModel;
-	} else if (kind === InsightDatasetKind.Sections)  {
+	} else if (kind === InsightDatasetKind.Sections) {
 		newDataset = {
 			id: id,
 			kind: kind,

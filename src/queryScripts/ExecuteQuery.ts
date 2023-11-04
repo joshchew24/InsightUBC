@@ -79,7 +79,7 @@ export function mapColumns(rawResult: any, columns: string[]) {
 		for (const column of columns) {
 			if (!(column in transformedClass)) {
 				let fieldName = column.split("_")[1];
-				if(fieldName) {
+				if (fieldName) {
 					transformedClass[column] = currClass.getField(fieldName);
 				} else {
 					transformedClass[column] = currClass[column];
@@ -94,13 +94,13 @@ export function mapColumns(rawResult: any, columns: string[]) {
 export function orderRows(result: InsightResult[], order: any): InsightResult[] {
 	let undirectedResult;
 	let orderKeys: string[];
-	if(typeof order === "string") {
+	if (typeof order === "string") {
 		orderKeys = [order];
 	} else {
 		orderKeys = order["keys"];
 	}
 	undirectedResult = result.sort((class1, class2) => {
-		for(let key of orderKeys) {
+		for (let key of orderKeys) {
 			// will return something if a tiebreak for the key exists
 			if (class1[key] < class2[key]) {
 				return -1;
@@ -114,16 +114,15 @@ export function orderRows(result: InsightResult[], order: any): InsightResult[] 
 	});
 
 	// by default, we are already sorting in ascending order; then reverse list if direction is DOWN
-	if(order["dir"] && order["dir"] === "DOWN") {
+	if (order["dir"] && order["dir"] === "DOWN") {
 		return undirectedResult.reverse();
 	} else {
 		return undirectedResult;
-
 	}
 }
 
 export function transformResult(inputQueryElement: any, processedResult: any): InsightResult[] {
-	let transformedResult: Map<string,any[]> = groupResult(inputQueryElement["GROUP"],processedResult);
+	let transformedResult: Map<string, any[]> = groupResult(inputQueryElement["GROUP"], processedResult);
 	return applyResult(inputQueryElement["APPLY"], transformedResult);
 }
 
@@ -185,7 +184,7 @@ function groupResult(groupKeys: any, processedResult: SectionPruned[] | Room[]) 
 			mapGroupKey.push(result.getField?.(fieldName));
 		}
 		let mapKey = mapGroupKey.toString();
-		if(mappedResult.has(mapKey)) {
+		if (mappedResult.has(mapKey)) {
 			mappedResult.get(mapKey)?.push(result);
 		} else {
 			let newGroupList = [result];
@@ -195,17 +194,17 @@ function groupResult(groupKeys: any, processedResult: SectionPruned[] | Room[]) 
 	return mappedResult;
 }
 
-function applyResult(applyRuleList: any, groupedResult: Map<string,any[]>) {
+function applyResult(applyRuleList: any, groupedResult: Map<string, any[]>) {
 	let resultMapKeys = groupedResult.keys();
 	let appliedResult: InsightResult[] = [];
 	let aggregatedResult: InsightResult = {};
-	for(let groupKey of resultMapKeys) {
+	for (let groupKey of resultMapKeys) {
 		let resultGroup: any[] = groupedResult.get(groupKey) as any[];
 
 		// all have the same group keys so pick first one
 		aggregatedResult = resultGroup[0] as InsightResult;
 
-		for(let applyRule of applyRuleList) {
+		for (let applyRule of applyRuleList) {
 			let applyKey = Object.keys(applyRule)[0];
 			let applyKeyValue = applyRule[applyKey];
 			let applyToken = Object.keys(applyKeyValue)[0];
@@ -219,8 +218,8 @@ function applyResult(applyRuleList: any, groupedResult: Map<string,any[]>) {
 }
 
 // Apply Helper Functions
-function applyCurrRule(resultGroup: Room[] | SectionPruned[] , applyToken: string, keyField: any) {
-	switch(applyToken){
+function applyCurrRule(resultGroup: Room[] | SectionPruned[], applyToken: string, keyField: any) {
+	switch (applyToken) {
 		case "MAX":
 			return getMaxResult(resultGroup, keyField);
 		case "MIN":
@@ -238,9 +237,9 @@ function applyCurrRule(resultGroup: Room[] | SectionPruned[] , applyToken: strin
 
 function getMaxResult(resultGroup: Room[] | SectionPruned[], keyField: string) {
 	let maxResult = 0;
-	for(let result of resultGroup) {
+	for (let result of resultGroup) {
 		let fieldValue = Number(result.getField?.(keyField));
-		if(maxResult < fieldValue) {
+		if (maxResult < fieldValue) {
 			maxResult = fieldValue;
 		}
 	}
@@ -249,9 +248,9 @@ function getMaxResult(resultGroup: Room[] | SectionPruned[], keyField: string) {
 
 function getMinResult(resultGroup: Room[] | SectionPruned[], keyField: string) {
 	let minResult = Number(resultGroup[0].getField?.(keyField));
-	for(let result of resultGroup) {
+	for (let result of resultGroup) {
 		let fieldValue = Number(result.getField?.(keyField));
-		if(minResult > fieldValue) {
+		if (minResult > fieldValue) {
 			minResult = fieldValue;
 		}
 	}
@@ -260,7 +259,7 @@ function getMinResult(resultGroup: Room[] | SectionPruned[], keyField: string) {
 
 function getAvgResult(resultGroup: Room[] | SectionPruned[], keyField: string) {
 	let sum = new Decimal(0);
-	for(let result of resultGroup) {
+	for (let result of resultGroup) {
 		sum = sum.add(new Decimal(Number(result.getField?.(keyField))));
 	}
 	let avg = sum.toNumber() / resultGroup.length;
@@ -269,7 +268,7 @@ function getAvgResult(resultGroup: Room[] | SectionPruned[], keyField: string) {
 
 function sumGroupKeyField(resultGroup: Room[] | SectionPruned[], keyField: string) {
 	let sum = new Decimal(0);
-	for(let result of resultGroup) {
+	for (let result of resultGroup) {
 		sum = sum.add(new Decimal(Number(result.getField?.(keyField))));
 	}
 	return Number(sum.toFixed(2));
@@ -279,11 +278,9 @@ function countUniqueFieldOccurence(resultGroup: Room[] | SectionPruned[], keyFie
 	// prevents duplicates
 	let uniqueFields = new Set();
 
-	for(let result of resultGroup) {
+	for (let result of resultGroup) {
 		uniqueFields.add(result.getField?.(keyField));
 	}
 
 	return uniqueFields.size;
 }
-
-

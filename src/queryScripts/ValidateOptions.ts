@@ -21,7 +21,7 @@ export function validateOptions(query: object) {
 		throw new InsightError("OPTIONS missing COLUMNS");
 	}
 	let colKeys = options["COLUMNS"] as string[];
-	if (!Array.isArray(colKeys)) {
+	if (!Array.isArray(colKeys) || colKeys.length === 0) {
 		throw new InsightError("COLUMNS must be a non-empty array");
 	}
 	validateColumns(colKeys);
@@ -57,7 +57,9 @@ function validateColumns(colKeys: string[]) {
 // {[index: string]: string | string[]} | string
 function validateOrder(order: unknown, colKeys: string[]) {
 	if (typeof order === "string") {
-		validateQueryKey("ORDER", order);
+		if (order.includes("_")) {
+			validateQueryKey("ORDER", order);
+		}
 		if (!colKeys.includes(order)) {
 			throw new InsightError("ORDER key must be in COLUMNS");
 		}
