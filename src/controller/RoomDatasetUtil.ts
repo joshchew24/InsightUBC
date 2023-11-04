@@ -107,12 +107,6 @@ function masterIterativelyPopulateRoom(attribute: string, room: Room, currNode: 
 }
 function iterativelyPopulateRoom(attribute: string, room: Room, currNode: DomNode): Room {
 	switch (attribute) {
-		case "building-field":
-			if (room.address === undefined && currNode.childNodes?.[0].value !== undefined) {
-				const fullAddress = currNode.childNodes?.[0].value;
-				room.address = fullAddress;
-			}
-			break;
 		case "views-field views-field-field-room-number": // number
 			if (currNode.childNodes?.[0].value !== undefined) {
 				room.number = currNode.childNodes?.[0].value ?? "";
