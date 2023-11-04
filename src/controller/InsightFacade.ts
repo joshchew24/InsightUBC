@@ -27,43 +27,41 @@ export default class InsightFacade implements IInsightFacade {
 	}
 
 	public addDataset(id: string, content: string, kind: InsightDatasetKind): Promise<string[]> {
-		// // id data validation
-		// if (!id || /^\s*$/.test(id) || id.includes("_")) {
-		// 	return Promise.reject(new InsightError("Invalid ID"));
-		// }
-		// // check if id already exists in dataset
-		// if (doesDatasetIDExist(id)) {
-		// 	return Promise.reject(new InsightError("ID already exists"));
-		// }
-		// // checks if zip content exists
-		// if (!content) {
-		// 	return Promise.reject(new InsightError("Invalid Content"));
-		// }
-		// const zip = new JSZip();
-		// return zip
-		// 	.loadAsync(content, {base64: true})
-		// 	.then((data) => {
-		// 		// data validation
-		// 		if (!data) {
-		// 			throw new InsightError("Invalid Dataset: Missing data directory");
-		// 		}
-		// 		return data;
-		// 	})
-		// 	.then((data) => {
-		// 		if (kind === InsightDatasetKind.Sections) {
-		// 			// return an array of sections from content JSON if kind is Sections
-		// 			return sectionLogicAndOutput(data, id, kind);
-		// 		} else if (kind === InsightDatasetKind.Rooms) {
-		// 			// return an array of rooms from content JSON if kind is Rooms
-		// 			return roomLogicAndOutput(data, id, kind);
-		// 		}
-		// 		throw new InsightError("Invalid Dataset Kind");
-		// 	})
-		// 	.catch((error) => {
-		// 		throw new InsightError(error.message);
-		// 	});
-		let val: any;
-		return val;
+		// id data validation
+		if (!id || /^\s*$/.test(id) || id.includes("_")) {
+			return Promise.reject(new InsightError("Invalid ID"));
+		}
+		// check if id already exists in dataset
+		if (doesDatasetIDExist(id)) {
+			return Promise.reject(new InsightError("ID already exists"));
+		}
+		// checks if zip content exists
+		if (!content) {
+			return Promise.reject(new InsightError("Invalid Content"));
+		}
+		const zip = new JSZip();
+		return zip
+			.loadAsync(content, {base64: true})
+			.then((data) => {
+				// data validation
+				if (!data) {
+					throw new InsightError("Invalid Dataset: Missing data directory");
+				}
+				return data;
+			})
+			.then((data) => {
+				if (kind === InsightDatasetKind.Sections) {
+					// return an array of sections from content JSON if kind is Sections
+					return sectionLogicAndOutput(data, id, kind);
+				} else if (kind === InsightDatasetKind.Rooms) {
+					// return an array of rooms from content JSON if kind is Rooms
+					return roomLogicAndOutput(data, id, kind);
+				}
+				throw new InsightError("Invalid Dataset Kind");
+			})
+			.catch((error) => {
+				throw new InsightError(error.message);
+			});
 	}
 
 	public removeDataset(id: string): Promise<string> {
