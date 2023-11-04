@@ -608,7 +608,7 @@ describe("InsightFacade", function () {
 			}
 
 			function assertOnResult(actual: any, expected: Output): void {
-				expect(actual).to.have.deep.equal(expected);
+				expect(actual).to.deep.equal(expected);
 			}
 
 			function assertOnError(actual: any, expected: Error): void {
