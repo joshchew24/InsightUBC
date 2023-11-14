@@ -220,7 +220,7 @@ describe("InsightFacade", function () {
 			return expect(result).to.eventually.be.rejectedWith(InsightError);
 		});
 
-		it("should reject dataset that contains invalid section (missing Professor field)", function () {
+		it("should reject dataset that contains invalid section (missing Search field)", function () {
 			sections = getContentFromArchives("missing_Professor.zip");
 			const result = facade.addDataset("1234", sections, InsightDatasetKind.Sections);
 			return expect(result).to.eventually.be.rejectedWith(InsightError);
