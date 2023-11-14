@@ -1,9 +1,9 @@
 import {NavigationBar} from "../component/NavigationBar";
 import {
-	Autocomplete,
+	Autocomplete, Button,
 	FormControl,
 	FormControlLabel,
-	FormLabel,
+	FormLabel, Grid,
 	Paper,
 	Radio,
 	RadioGroup,
@@ -66,9 +66,12 @@ export function Search() {
 					padding: 1
 				}}
 			>
+				<Grid>
+					<Grid item>
 				<FormControl>
 					<FormLabel id="search-type">Search Type</FormLabel>
 					<RadioGroup
+						row
 						aria-labelledby="search-type"
 						name="controlled-radio-buttons-group"
 						value={searchType}
@@ -78,7 +81,9 @@ export function Search() {
 						<FormControlLabel value="department" control={<Radio />} label="Department" />
 					</RadioGroup>
 				</FormControl>
+					</Grid>
 
+					<Grid item container>
 			<Autocomplete
 				disablePortal
 				id="combo-box-demo"
@@ -88,9 +93,18 @@ export function Search() {
 				}
 				sx={{ width: 300 }}
 				renderInput={(params) =>
-					<TextField {...params} label={searchType == "" ? "Choose Type" : searchType } />}
+					<TextField {...params} label={searchType == "" ? "Choose Search Type" : searchType } />}
 				disabled={searchType === ""}
 			/>
+
+				<Button
+					variant="contained"
+					disabled={searchType === ""}
+					sx={{
+					padding: "15px"
+				}} > Search </Button>
+					</Grid>
+				</Grid>
 			</Paper>
 		</div>
 	)
