@@ -7,7 +7,7 @@ export function NavigationBar() {
 			<a href="/">Home</a>
 			</Grid>
 			<Grid item>
-			<a href="/search">Professor</a>
+			<a href="/search">Search</a>
 			</Grid>
 
 		</Grid>
