@@ -101,31 +101,31 @@ export function orderRows(result: InsightResult[], order: any): InsightResult[] 
 		orderKeys = order["keys"];
 	}
 
-	// for(let key of orderKeys) {
-	// 	directedResult = directedResult.sort((class1, class2) => {
-	// 		if (class1[key] < class2[key]) {
-	// 			return -1;
-	// 		}
-	// 		if (class1[key] > class2[key]) {
-	// 			return 1;
-	// 		}
-	//
-	// 		return 0;
-	// 	});
-	// }
-
-	directedResult = result.sort((class1, class2) => {
-		for (let key of orderKeys) {
-			// will return something if a tiebreak for the key exists
+	for(let key of orderKeys) {
+		directedResult = directedResult.sort((class1, class2) => {
 			if (class1[key] < class2[key]) {
 				return -1;
 			}
 			if (class1[key] > class2[key]) {
 				return 1;
 			}
-		}
-		return 0;
-	});
+
+			return 0;
+		});
+	}
+
+	// directedResult = result.sort((class1, class2) => {
+	// 	for (let key of orderKeys) {
+	// 		// will return something if a tiebreak for the key exists
+	// 		if (class1[key] < class2[key]) {
+	// 			return -1;
+	// 		}
+	// 		if (class1[key] > class2[key]) {
+	// 			return 1;
+	// 		}
+	// 	}
+	// 	return 0;
+	// });
 
 	// by default, we are already sorting in ascending order; then reverse list if direction is DOWN
 	if (order["dir"] && order["dir"] === "DOWN") {
