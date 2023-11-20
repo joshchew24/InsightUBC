@@ -7,14 +7,14 @@ import {
 	InsightResult,
 	NotFoundError,
 } from "./IInsightFacade";
-import {Section, SectionPruned, SectionQuery} from "../models/ISection";
 import fs from "fs-extra";
 import {DatasetModel, RoomDatasetModel, SectionDatasetModel} from "../models/IModel";
 import {handleQuery} from "../queryScripts/PerformQuery";
-import {doesDatasetIDExist} from "./DiskUtil";
+import * as DiskUtil from "./DiskUtil";
 import {sectionLogicAndOutput} from "./SectionDatasetUtil";
 import {roomLogicAndOutput} from "./RoomDatasetUtil";
 import {retrieveDatasetModel} from "./CommonDatasetUtil";
+// import * as DatasetProcessor from "./DatasetProcessor";
 
 /**
  * This is the main programmatic entry point for the project.
@@ -32,12 +32,12 @@ export default class InsightFacade implements IInsightFacade {
 			return Promise.reject(new InsightError("Invalid ID"));
 		}
 		// check if id already exists in dataset
-		if (doesDatasetIDExist(id)) {
+		if (DiskUtil.doesDatasetIDExist(id)) {
 			return Promise.reject(new InsightError("ID already exists"));
 		}
 		// checks if zip content exists
 		if (!content) {
-			return Promise.reject(new InsightError("Invalid Content"));
+			return Promise.reject(new InsightError("Content was empty"));
 		}
 		const zip = new JSZip();
 		return zip
@@ -64,6 +64,34 @@ export default class InsightFacade implements IInsightFacade {
 			});
 	}
 
+	// /*
+	//  validate ID
+	//
+	//  */
+	// public addDataset(id: string, content: string, kind: InsightDatasetKind): Promise<string[]> {
+	// 	// id must be non-null, contain non-whitespace, and not contain underscore
+	// 	if (!id || !id.trim() || id.includes("_")) {
+	// 		return Promise.reject(new InsightError("Invalid ID"));
+	// 	}
+	// 	// check if id already exists in dataset
+	// 	if (DiskUtil.doesDatasetIDExist(id)) {
+	// 		return Promise.reject(new InsightError("Dataset ID already exists"));
+	// 	}
+	// 	// checks if zip content exists
+	// 	if (!content) {
+	// 		return Promise.reject(new InsightError("Content parameter is empty"));
+	// 	}
+	// 	const zip = new JSZip();
+	// 	return zip
+	// 		.loadAsync(content, {base64: true})
+	// 		.then((data) => {
+	// 			return DatasetProcessor.processFileContents(id, zip, kind);
+	// 		})
+	// 		.catch((error) => {
+	// 			throw new InsightError(error.message);
+	// 		});
+	// }
+
 	public removeDataset(id: string): Promise<string> {
 		try {
 			// id data validation
@@ -71,7 +99,7 @@ export default class InsightFacade implements IInsightFacade {
 				throw new InsightError("Invalid ID");
 			}
 			// check if id exists in dataset, else stop execution
-			if (!doesDatasetIDExist(id)) {
+			if (!DiskUtil.doesDatasetIDExist(id)) {
 				throw new NotFoundError("ID not found");
 			}
 			// remove the dataset from disk
