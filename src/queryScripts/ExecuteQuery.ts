@@ -91,15 +91,30 @@ export function mapColumns(rawResult: any, columns: string[]) {
 	return transformedResult;
 }
 
+// TODO: fix sorting
 export function orderRows(result: InsightResult[], order: any): InsightResult[] {
-	let undirectedResult;
+	let directedResult = result;
 	let orderKeys: string[];
 	if (typeof order === "string") {
 		orderKeys = [order];
 	} else {
 		orderKeys = order["keys"];
 	}
-	undirectedResult = result.sort((class1, class2) => {
+
+	// for(let key of orderKeys) {
+	// 	directedResult = directedResult.sort((class1, class2) => {
+	// 		if (class1[key] < class2[key]) {
+	// 			return -1;
+	// 		}
+	// 		if (class1[key] > class2[key]) {
+	// 			return 1;
+	// 		}
+	//
+	// 		return 0;
+	// 	});
+	// }
+
+	directedResult = result.sort((class1, class2) => {
 		for (let key of orderKeys) {
 			// will return something if a tiebreak for the key exists
 			if (class1[key] < class2[key]) {
@@ -109,15 +124,14 @@ export function orderRows(result: InsightResult[], order: any): InsightResult[] 
 				return 1;
 			}
 		}
-		// keep order as is
 		return 0;
 	});
 
 	// by default, we are already sorting in ascending order; then reverse list if direction is DOWN
 	if (order["dir"] && order["dir"] === "DOWN") {
-		return undirectedResult.reverse();
+		return directedResult.reverse();
 	} else {
-		return undirectedResult;
+		return directedResult;
 	}
 }
 
@@ -236,7 +250,7 @@ function applyCurrRule(resultGroup: Room[] | SectionPruned[], applyToken: string
 }
 
 function getMaxResult(resultGroup: Room[] | SectionPruned[], keyField: string) {
-	let maxResult = 0;
+	let maxResult = Number(resultGroup[0].getField?.(keyField));
 	for (let result of resultGroup) {
 		let fieldValue = Number(result.getField?.(keyField));
 		if (maxResult < fieldValue) {
