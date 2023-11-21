@@ -91,34 +91,46 @@ export function mapColumns(rawResult: any, columns: string[]) {
 	return transformedResult;
 }
 
+// TODO: fix sorting
 export function orderRows(result: InsightResult[], order: any): InsightResult[] {
-	let undirectedResult;
 	let orderKeys: string[];
 	if (typeof order === "string") {
 		orderKeys = [order];
 	} else {
 		orderKeys = order["keys"];
 	}
-	undirectedResult = result.sort((class1, class2) => {
+
+	let less = -1;
+	let greater = 1;
+
+	if (order["dir"] && order["dir"] === "DOWN") {
+		less *= -1;
+		greater *= -1;
+	}
+
+	// for(let key of orderKeys) {
+	// 	directedResult = directedResult.sort((class1, class2) => {
+	// 		if (class1[key] < class2[key]) {
+	// 			return less;
+	// 		} else if (class1[key] > class2[key]) {
+	// 			return greater;
+	// 		} else {
+	// 			return 0;
+	// 		}
+	// 	});
+	// }
+
+	return result.sort((class1, class2) => {
 		for (let key of orderKeys) {
 			// will return something if a tiebreak for the key exists
 			if (class1[key] < class2[key]) {
-				return -1;
-			}
-			if (class1[key] > class2[key]) {
-				return 1;
+				return less;
+			} else if (class1[key] > class2[key]) {
+				return greater;
 			}
 		}
-		// keep order as is
-		return 0;
+		return 1;
 	});
-
-	// by default, we are already sorting in ascending order; then reverse list if direction is DOWN
-	if (order["dir"] && order["dir"] === "DOWN") {
-		return undirectedResult.reverse();
-	} else {
-		return undirectedResult;
-	}
 }
 
 export function transformResult(inputQueryElement: any, processedResult: any): InsightResult[] {
@@ -229,14 +241,14 @@ function applyCurrRule(resultGroup: Room[] | SectionPruned[], applyToken: string
 		case "SUM":
 			return sumGroupKeyField(resultGroup, keyField);
 		case "COUNT":
-			return countUniqueFieldOccurence(resultGroup, keyField);
+			return countUniqueFieldOccurrence(resultGroup, keyField);
 		default:
 			return 0;
 	}
 }
 
 function getMaxResult(resultGroup: Room[] | SectionPruned[], keyField: string) {
-	let maxResult = 0;
+	let maxResult = Number(resultGroup[0].getField?.(keyField));
 	for (let result of resultGroup) {
 		let fieldValue = Number(result.getField?.(keyField));
 		if (maxResult < fieldValue) {
@@ -274,13 +286,11 @@ function sumGroupKeyField(resultGroup: Room[] | SectionPruned[], keyField: strin
 	return Number(sum.toFixed(2));
 }
 
-function countUniqueFieldOccurence(resultGroup: Room[] | SectionPruned[], keyField: any) {
+function countUniqueFieldOccurrence(resultGroup: Room[] | SectionPruned[], keyField: any) {
 	// prevents duplicates
 	let uniqueFields = new Set();
-
 	for (let result of resultGroup) {
 		uniqueFields.add(result.getField?.(keyField));
 	}
-
 	return uniqueFields.size;
 }

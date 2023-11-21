@@ -7,6 +7,9 @@ import fs from "fs-extra";
 import {outputDataset} from "./CommonDatasetUtil";
 
 export function sectionLogicAndOutput(data: JSZip, id: string, kind: InsightDatasetKind): Promise<string[]> {
+	if(Object.keys(data.files)[0] !== "courses/") {
+		return Promise.reject(new InsightError("No root directory 'courses' in given dataset"));
+	}
 	return sectionFileProcessingPromises(data)
 		.then((sectionArr) => {
 			return outputDataset(id, kind, sectionArr);
