@@ -607,13 +607,40 @@ describe("InsightFacade", function () {
 				return error === "InsightError" || error === "ResultTooLargeError";
 			}
 
-			// TODO: checked with piazza and solution iterates over the result rather than using deep.equals
 			function assertOnResult(actual: any, expected: Output): void {
-				let resultSize = actual.size;
-				// for(let i = 0; i < resultSize; i++) {
-				//
-				// }
+				let isEqual = true;
+				for (let i = 0; i < actual.length; i++) {
+					const actualObj = actual[i];
+					const expectedObj = expected[i];
+
+					if (!isObjectEqual(actualObj, expectedObj)) {
+						isEqual = false;
+						console.log(`Objects at index ${i} are different. Expected:
+						${JSON.stringify(expectedObj)}, Actual: ${JSON.stringify(actualObj)}`);
+					}
+				}
+				if(!isEqual) {
+					throw new InsightError();
+				}
 			}
+
+			function isObjectEqual(obj1: any, obj2: any): boolean {
+				const keys1 = Object.keys(obj1);
+				const keys2 = Object.keys(obj2);
+
+				if (keys1.length !== keys2.length) {
+					return false;
+				}
+
+				for (const key of keys1) {
+					if (obj1[key] !== obj2[key]) {
+						return false;
+					}
+				}
+
+				return true;
+			}
+
 
 			function assertOnError(actual: any, expected: Error): void {
 				if (expected === "InsightError") {
