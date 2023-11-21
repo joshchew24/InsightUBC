@@ -612,13 +612,13 @@ describe("InsightFacade", function () {
 	// 		function assertOnResult(actual: any, expected: Output): void {
 	// 			let isEqual = true;
 	// 			for (let i = 0; i < actual.length; i++) {
-	// 				const actualObj = actual[i];
-	// 				const expectedObj = expected[i];
+	// 				const actualInsightResult = actual[i];
+	// 				const expectedInsightResult = expected[i];
 	//
-	// 				if (!isObjectEqual(actualObj, expectedObj)) {
+	// 				if (!isInsightResultEqual(actualInsightResult, expectedInsightResult)) {
 	// 					isEqual = false;
 	// 					console.log(`InsightResult at index ${i} are different. Expected:
-	// 					${JSON.stringify(expectedObj)}, Actual: ${JSON.stringify(actualObj)}`);
+	// 					${JSON.stringify(expectedInsightResult)}, Actual: ${JSON.stringify(actualInsightResult)}`);
 	// 				}
 	// 			}
 	// 			if(!isEqual) {
@@ -626,16 +626,16 @@ describe("InsightFacade", function () {
 	// 			}
 	// 		}
 	//
-	// 		function isObjectEqual(obj1: any, obj2: any): boolean {
-	// 			const keys1 = Object.keys(obj1);
-	// 			const keys2 = Object.keys(obj2);
+	// 		function isInsightResultEqual(actualResult: any, expectedResult: any): boolean {
+	// 			const keys1 = Object.keys(actualResult);
+	// 			const keys2 = Object.keys(expectedResult);
 	//
 	// 			if (keys1.length !== keys2.length) {
 	// 				return false;
 	// 			}
 	//
 	// 			for (const key of keys1) {
-	// 				if (obj1[key] !== obj2[key]) {
+	// 				if (actualResult[key] !== expectedResult[key]) {
 	// 					return false;
 	// 				}
 	// 			}
