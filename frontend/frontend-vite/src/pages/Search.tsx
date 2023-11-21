@@ -3,13 +3,13 @@ import {
 	Autocomplete, Button, Divider,
 	FormControl,
 	FormControlLabel,
-	FormLabel, Grid,
+	FormLabel, Grid, InputLabel, MenuItem,
 	Paper,
 	Radio,
-	RadioGroup,
-	TextField
+	RadioGroup, Select,
+	TextField, Typography
 } from "@mui/material";
-import {useEffect, useState} from "react";
+import {Fragment, useEffect, useState} from "react";
 import professorData from "../mockJson/professor.json";
 import departmentData from "../mockJson/department.json";
 
@@ -78,33 +78,65 @@ const groupedDepartmentData = groupByDepartment(departmentData);
 export function Search() {
 
 	const [searchType, setSearchType] = useState("");
-	const [deptYear, setDeptYear] = useState<string | null>(null);
+	const [deptYear, setDeptYear] = useState<string | null>("All");
 	const [userInput, setUserInput] = useState<string | null>(null);
 	const [searchedData, setSearchedData] = useState<Section[] | null>(null);
+	const [isError, setIsError] = useState(false);
+	const [courseSelected, setCourseSelected] = useState<string | null>("all");
 
 	const handleChange = (event: React.ChangeEvent<HTMLInputElement>) => {
 		setSearchType((event.target as HTMLInputElement).value);
+		setUserInput(null);
+		setSearchedData(null);
+		setIsError(false);
+		setCourseSelected("all");
 	};
 
 	const handleSearch = () => {
+		let foundData = null;
+
 		if (searchType === "professor") {
 			groupedProfessorData.forEach((professor) => {
 				if (professor.label === userInput) {
-					setSearchedData(professor.value);
+					foundData = professor.value;
 				}
 			});
 		} else if (searchType === "department") {
 			groupedDepartmentData.forEach((department) => {
 				if (department.label === userInput) {
-					setSearchedData(department.value);
+					foundData = department.value;
 				}
 			});
 		}
+
+		console.log(foundData)
+
+		setSearchedData(foundData);
+
+		// Set isError to true if no data is found (i.e., foundData is null)
+		setIsError(foundData === null && userInput !== null);
 	}
 
 	useEffect(() => {
-		document.body.style.background = `url(fire.jpg)`
-	}, []);
+		if(isError) {
+			document.body.style.background = `url(popo.gif)`
+		} else {
+			switch (searchType) {
+				case "department":
+					document.body.style.background = `url(hotwheels.jpg)`
+					break;
+				case "professor":
+					document.body.style.background = `url(fire2.jpg)`
+					break;
+
+				default:
+					document.body.style.background = `url(fire.jpg)`
+					break;
+			}
+		}
+
+
+	}, [searchType, isError, searchedData, userInput]);
 
 	return (
 		<div>
@@ -137,27 +169,35 @@ export function Search() {
 
 					<Grid item container>
 
-			<Autocomplete
-				disablePortal
-				id="combo-box-demo"
-				onInputChange={(_event, value: string | null) => {
-						setUserInput(value);
-						setSearchedData(null)
-				}}
-				options={
-					searchType === "professor" ? groupedProfessorData :
-					searchType === "department" ? groupedDepartmentData : []
-				}
-				sx={{ width: 300 }}
-				renderInput={(params) =>
-					<TextField {...params} label={searchType == "" ? "Choose Search Type" : searchType } />}
-				disabled={searchType === ""}
-			/>
+						<Autocomplete
+							// value={userInput ? { label: userInput } as AutoComplete : null}
+							onKeyDown={(event) => {
+								if (event.key === 'Enter') {
+									handleSearch();
+								}
+							}}
+							clearOnBlur={false}
+							disablePortal
+							id="combo-box-demo"
+							onInputChange={(_event, value: string | null) => {
+								setUserInput(value);
+								setSearchedData(null)
+								setIsError(false);
+							}}
+							options={
+								searchType === "professor" ? groupedProfessorData :
+									searchType === "department" ? groupedDepartmentData : []
+							}
+							sx={{ width: 300 }}
+							renderInput={(params) =>
+								<TextField {...params} label={searchType === "" ? "Choose Search Type" : searchType } />}
+							disabled={searchType === ""}
+						/>
 						{searchType === "department" && <TextField
 							id="department-year"
 							label="Year"
 							value={deptYear}
-							type="number"
+							type="string"
 							onChange={(event) => {
 								if(event.target.value === "") {
 									setDeptYear(null);
@@ -171,6 +211,7 @@ export function Search() {
 								}
 
 				<Button
+					type={"submit"}
 					variant="contained"
 					disabled={searchType === "" || userInput === null}
 					onClick={handleSearch}
@@ -178,25 +219,77 @@ export function Search() {
 					padding: "15px"
 				}} > Search </Button>
 					</Grid>
+
+					{isError && <Grid item mt={2} sx={{
+						backgroundImage: `url(popo.jpg)`,
+					}}>
+
+
+							{/*BOLD RED TEXT ABOUT INVALID CHARACTERS ENTERED*/}
+							<Typography variant="h6" color="fuchsia">
+								Invalid Search Parameter
+							</Typography>
+							<Typography variant="h1" color="red" fontWeight={"bold"}>
+                                ENTER A ONE THAT EXISTS IN THE DATABASE
+							</Typography>
+
+					</Grid>}
+
 				</Grid>
+
 			</Paper>
 
-			{searchedData && <Paper sx={{
-				padding: 1,
-				marginTop: 1,
-				maxHeight: 500,
-				overflow: 'auto'
-			}}
-			>
-				{searchedData.map((section) => (
-					<>
-					<Grid item key={section.sections_uuid} sx={{
-						padding:2,
-					}}
-					>
+			{searchType === "professor" && searchedData &&
+                <Paper sx={{
+					padding: 1,
+					marginTop: 1,
+				}}>
+                    <FormControl fullWidth>
+                        <InputLabel>Course</InputLabel>
+                        <Select
+                            label={"Course"}
+                            value={courseSelected}
+                            onChange={(event) => {
+								setCourseSelected(event.target.value as string);
+							}}
+                        >
+							<MenuItem value={"all"}>
+								All
+							</MenuItem>
+							{
+								// Create a unique set of courses based on sections_id
+								Array.from(new Set(searchedData.map(section => section.sections_id)))
+									.sort((a, b) => a.localeCompare(b)) // Sort if needed
+									.map(id => {
+										// Find the first section that matches this id
+										const section = searchedData.find(s => s.sections_id === id);
+										return (
+											<MenuItem key={section?.sections_id} value={section?.sections_id}>
+												{section?.sections_id}
+											</MenuItem>
+										);
+									})
+							}
+                        </Select>
+                    </FormControl>
+                </Paper>
+			}
+
+			{searchedData && (
+				<Paper sx={{ padding: 1, marginTop: 1, maxHeight: "60vh", overflow: 'auto' }}>
+					{
+						searchedData
+							.filter(section => courseSelected === "all" || section.sections_id === courseSelected)
+							.map((section) => (
+								<Fragment key={section.sections_uuid}>
+									<Grid item sx={{ padding: 2 }}>
+										<Grid item>
+											<u>Course ID</u>: {section.sections_id}
+										</Grid>
 						<Grid item>
 							<u>Title</u>: {section.sections_title}
 						</Grid>
+
 						<Grid item>
 							<u>Audit</u>: {section.sections_audit}
 						</Grid>
@@ -209,28 +302,27 @@ export function Search() {
 						<Grid item>
 							<u>Fail</u>: {section.sections_fail}
 						</Grid>
+
 						<Grid item>
-							<u>ID</u>: {section.sections_id}
-						</Grid>
-						<Grid item>
-							<u>Instructor(s)</u>: {section.sections_instructor.split(';').map((instructor) => (
-							<>
-								{instructor}
-								<br/>
-							</>
-						))}
-						</Grid>
-						<Grid item>
-						Pass: {section.sections_pass}
+							<u>Pass</u>: {section.sections_pass}
 						</Grid>
 						<Grid item>
 							<u>Year</u>: {section.sections_year}
 						</Grid>
-					</Grid>
-					<Divider />
-					</>
+							<Grid item>
+								<u>Instructor(s)</u>: <br/>{section.sections_instructor.split(';').map((instructor, index) => (
+								<Fragment key={section.sections_uuid + '-' + index}> {/* Unique key for each instructor */}
+									{instructor}
+									<br />
+								</Fragment>
+							))}
+							</Grid>
+						</Grid>
+						<Divider />
+					</Fragment>
 				))}
-			</Paper>}
+			</Paper>
+			)}
 		</div>
 	)
 }
