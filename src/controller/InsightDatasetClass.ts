@@ -41,27 +41,12 @@ export abstract class InsightDatasetClass implements InsightDataset {
 			throw new InsightError("No data content provided");
 		}
 
-		// if (this.kind == InsightDatasetKind.Sections) {
-		// 	this.processSectionsData(content);
-		// } else {
-		// 	this.processRoomsData(content);
-		// }
-		//
-		// let files = await this.getFilesFromZip(content);
-
 		let result = await this.processFileContents(content);
-		console.log(result);
-		return result;
-	}
-
-	private isValidPath(path: string) {
-		let parts = path.split("/");
-		if (this.kind === InsightDatasetKind.Sections) {
-			return (parts.length === 2 && parts[0] === "courses" && parts[1] !== "");
-		} else {
-			// NEED TO HANDLE index.htm somehow...
-			return true;
+		if (result.length === 0) {
+			throw new InsightError("This dataset had no valid sections");
 		}
+		this._data = result;
+		this.numRows = result.length;
 	}
 
 	private validateID(id: string) {
@@ -74,6 +59,9 @@ export abstract class InsightDatasetClass implements InsightDataset {
 		}
 	}
 
-	protected abstract processFileContents(content: string): Promise<any[]>;
+	public writeToDisk() {
+		return;
+	}
 
+	protected abstract processFileContents(content: string): Promise<any[]>;
 }

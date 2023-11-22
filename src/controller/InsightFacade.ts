@@ -13,7 +13,7 @@ import {handleQuery} from "../queryScripts/PerformQuery";
 import * as DiskUtil from "./DiskUtil";
 import {sectionLogicAndOutput} from "./SectionDatasetUtil";
 import {roomLogicAndOutput} from "./RoomDatasetUtil";
-import {retrieveDatasetModel} from "./CommonDatasetUtil";
+import {createInsightDataset, retrieveDatasetModel} from "./CommonDatasetUtil";
 // import * as DatasetProcessor from "./DatasetProcessor";
 
 /**
@@ -90,6 +90,17 @@ export default class InsightFacade implements IInsightFacade {
 	// 		.catch((error) => {
 	// 			throw new InsightError(error.message);
 	// 		});
+	// }
+
+	// public addDatasetJosh(id: string, content: string, kind: InsightDatasetKind): Promise<String[]> {
+	// 	try {
+	// 		let dataset = createInsightDataset(id, kind, 0);
+	// 		dataset.addData(content);
+	// 		dataset.writeToDisk();
+	// 	} catch {
+	// 		throw new InsightError("something went wrong monkaS");
+	// 	}
+	//
 	// }
 
 	public removeDataset(id: string): Promise<string> {
