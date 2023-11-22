@@ -1,10 +1,10 @@
-import chai from "chai";
+import chai, {expect} from "chai";
 import chaiAsPromised from "chai-as-promised";
 
 import {getContentFromArchives} from "../test/resources/archives/TestUtil";
 
-import {InsightDatasetClass} from "../src/controller/DatasetProcessor";
 import {InsightDatasetKind} from "../src/controller/IInsightFacade";
+import {createInsightDataset} from "../src/controller/CommonDatasetUtil";
 
 const ROOMS_PATH = "rooms_datasets/";
 
@@ -19,17 +19,21 @@ chai.use(chaiAsPromised);
 
 describe("InsightDatasetClass", () => {
 	describe("Constructor", () => {
-		it("should process file contents", () => {
-			let dataset = new InsightDatasetClass(
+		it("process file contents for sections dataset", () => {
+			let dataset = createInsightDataset(
 				"test",
 				InsightDatasetKind.Sections,
 				0);
-			console.log("lol");
-			dataset.addData(smallSections).then(() => {
-				console.log("we finished adding shit");
-			}).catch(() => {
-				console.log("oh no");
-			});
+			let result = dataset.addData(smallSections);
+			return expect(result).to.eventually.deep.equal(["asdf"]);
 		});
+		// it("process file contents for rooms dataset", () => {
+		// 	let dataset = createInsightDataset(
+		// 		"test",
+		// 		InsightDatasetKind.Rooms,
+		// 		0);
+		// 	let result = dataset.addData(smallRooms);
+		// 	return expect(result).to.eventually.deep.equal(["asdf"]);
+		// });
 	});
 });
