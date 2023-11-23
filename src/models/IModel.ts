@@ -16,6 +16,7 @@ export interface DatasetModel {
 	numRows: number;
 }
 
+// needed for josh's refactor:
 export type InsightData = SectionData | RoomData;
 
 export interface SectionData {

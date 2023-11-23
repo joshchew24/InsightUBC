@@ -13,7 +13,6 @@ export class RoomDataset extends InsightDatasetClass {
 
 	protected async processFileContents(content: string): Promise<any[]> {
 		let zip: JSZip = new JSZip();
-		// TODO: add return here
 		return zip.loadAsync(content, {base64: true, createFolders: false})
 			.catch(() => {
 				throw new InsightError("Error loading zip file from content parameter");
@@ -38,6 +37,8 @@ export class RoomDataset extends InsightDatasetClass {
 				// if (buildingTable == null) {
 				// 	throw new InsightError("no valid building table");
 				// }
+				// this.validateHeader(buildingTable);
+				// for each building, construct building object and add to array
 				return Promise.resolve(["asdf"]);
 			})
 			.catch((err) => {
