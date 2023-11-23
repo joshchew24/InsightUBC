@@ -6,7 +6,7 @@ import * as parse5 from "parse5";
 import {ChildNode, Document, Element} from "parse5/dist/tree-adapters/default";
 import {Attribute} from "parse5/dist/common/token";
 import {makeAsync} from "./AsyncUtil";
-import {Building, createBuilding} from "../models/Building";
+import {Building, BuildingFactory} from "../models/Building";
 import {getChildElements} from "./HTMLUtil";
 
 export class RoomDataset extends InsightDatasetClass {
@@ -50,7 +50,7 @@ export class RoomDataset extends InsightDatasetClass {
 				}
 				let buildings: Building[] = [];
 				for (let buildingRow of buildingRows as Element[]) {
-					let building = createBuilding(buildingRow);
+					let building = BuildingFactory.createBuilding(buildingRow);
 					if (building) {
 						buildings.push(building);
 					}
