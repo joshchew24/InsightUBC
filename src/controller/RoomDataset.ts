@@ -1,7 +1,7 @@
 import {InsightDatasetClass} from "./InsightDatasetClass";
 import JSZip from "jszip";
 import {InsightError} from "./IInsightFacade";
-import {defaultTreeAdapter, parse} from "parse5";
+import {defaultTreeAdapter} from "parse5";
 import * as parse5 from "parse5";
 import {ChildNode, Document, Element} from "parse5/dist/tree-adapters/default";
 import {Attribute} from "parse5/dist/common/token";
@@ -28,18 +28,18 @@ export class RoomDataset extends InsightDatasetClass {
 				throw err;
 			})
 			.then((index: string) => {
-				let document: Document = parse(index);
+				let document: Document = parse5.parse(index);
 				if (!document || defaultTreeAdapter.getChildNodes(document).length === 0) {
 					throw new InsightError("index is empty");
 				}
 				return makeAsync(this.findBuildingTable,"No valid building table", document);
-				// return this.findBuildingTable(document);
 			}).then((buildingTable) => {
 				// if (buildingTable == null) {
 				// 	throw new InsightError("no valid building table");
 				// }
-				this.validateHeader(buildingTable as Element);
+				// this.validateHeader(buildingTable as Element);
 				// for each building, construct building object and add to array
+				this.getBuildings(buildingTable);
 				return Promise.resolve(["asdf"]);
 			})
 			.catch((err) => {
@@ -82,8 +82,31 @@ export class RoomDataset extends InsightDatasetClass {
 		return buildingTable;
 	}
 
+	// ensure header cells contain correct classes
+	// TODO: possibly remove, spec doesn't mention any requirements on table header
 	private validateHeader(buildingTable: Element) {
-		console.log(buildingTable);
+		let header: Element | null = null;
+		for (let child of defaultTreeAdapter.getChildNodes(buildingTable)) {
+			if (defaultTreeAdapter.isElementNode(child)
+				&& defaultTreeAdapter.getTagName(child) === parse5.html.TAG_NAMES.THEAD) {
+				header = child;
+				break;
+			}
+		}
+		if (header == null) {
+			throw new InsightError("The header is empty");
+		}
+		for (let child of defaultTreeAdapter.getChildNodes(header)) {
+			if (defaultTreeAdapter.isElementNode(child)
+				&& defaultTreeAdapter.getTagName(child) === parse5.html.TAG_NAMES.THEAD) {
+				header = child;
+				break;
+			}
+		}
+	}
+
+	private getBuildings(buildingTable: unknown) {
+		return;
 	}
 }
 
