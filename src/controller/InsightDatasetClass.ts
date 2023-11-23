@@ -59,7 +59,7 @@ export abstract class InsightDatasetClass implements InsightDataset {
 			throw new InsightError("This dataset has no data");
 		}
 		let header = this.toObjectString();
-		// write header to dataset_index.json
+		// TODO: write header to dataset_index.json (for listDataset)
 		let dataset = this.toObjectString(true);
 		return fs.outputFile(DiskUtil.PERSISTENT_DIR + this.id + ".json", dataset)
 			.catch(() => {

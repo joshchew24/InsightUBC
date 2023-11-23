@@ -19,22 +19,22 @@ chai.use(chaiAsPromised);
 
 describe("InsightDatasetClass", () => {
 	describe("Constructor", () => {
-		it("process file contents for sections dataset", async () => {
-			let dataset = createInsightDataset(
-				"test",
-				InsightDatasetKind.Sections,
-				0);
-			await dataset.addData(smallSections);
-			await dataset.writeToDisk();
-			// return expect(DiskUtil.retrieveAllDatasetIds()).to.eventually.deep.equal(["asdf"]);
-		});
-		// it("process file contents for rooms dataset", () => {
+		// it("process file contents for sections dataset", async () => {
 		// 	let dataset = createInsightDataset(
 		// 		"test",
-		// 		InsightDatasetKind.Rooms,
+		// 		InsightDatasetKind.Sections,
 		// 		0);
-		// 	let result = dataset.addData(smallRooms);
-		// 	return expect(result).to.eventually.deep.equal(["asdf"]);
+		// 	await dataset.addData(smallSections);
+		// 	await dataset.writeToDisk();
+		// 	// return expect(DiskUtil.retrieveAllDatasetIds()).to.eventually.deep.equal(["asdf"]);
 		// });
+		it("process file contents for rooms dataset", () => {
+			let dataset = createInsightDataset(
+				"test",
+				InsightDatasetKind.Rooms,
+				0);
+			let result = dataset.addData(smallRooms);
+			return expect(result).to.eventually.deep.equal(["asdf"]);
+		});
 	});
 });
