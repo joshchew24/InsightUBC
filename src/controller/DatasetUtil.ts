@@ -22,6 +22,6 @@ export function createInsightDataset(id: string, kind: InsightDatasetKind, numRo
 // 		throw new InsightError("Dataset ID: '" + id + "', already exists");
 // 	}
 // }
-export function isValidID(id: string) {
-	return !(id == null || !id.trim() || id.includes("_") || DiskUtil.doesDatasetIDExist(id));
-}
+// export function isValidID(id: string) {
+// 	return !(id == null || !id.trim() || id.includes("_") || DiskUtil.doesDatasetIDExist(id));
+// }

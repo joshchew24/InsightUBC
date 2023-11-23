@@ -14,7 +14,8 @@ import * as DiskUtil from "./DiskUtil";
 import {sectionLogicAndOutput} from "./SectionDatasetUtil";
 import {roomLogicAndOutput} from "./RoomDatasetUtil";
 import {retrieveDatasetModel} from "./CommonDatasetUtil";
-import {createInsightDataset, isValidID} from "./DatasetUtil";
+import {createInsightDataset} from "./DatasetUtil";
+import {InsightDatasetClass} from "./InsightDatasetClass";
 // import * as DatasetProcessor from "./DatasetProcessor";
 
 /**
@@ -94,10 +95,12 @@ export default class InsightFacade implements IInsightFacade {
 	// }
 
 	public addDataset(id: string, content: string, kind: InsightDatasetKind): Promise<string[]> {
-		if (!isValidID(id)) {
-			return Promise.reject(new InsightError("Invalid ID"));
+		let dataset: InsightDatasetClass;
+		try {
+			dataset = createInsightDataset(id, kind, 0);
+		} catch (err) {
+			return Promise.reject(err);
 		}
-		let dataset = createInsightDataset(id, kind, 0);
 		return dataset.addData(content)
 			.then(() => {
 				return dataset.writeToDisk();

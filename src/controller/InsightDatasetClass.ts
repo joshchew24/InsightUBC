@@ -13,7 +13,7 @@ export abstract class InsightDatasetClass implements InsightDataset {
 	// If creating a new dataset, use 0
 	// If modelling a dataset that already has been added, you must know all the fields (id, kind, numRows)
 	public constructor(id: string, kind: InsightDatasetKind, numRows: number) {
-		// this.validateID(id);		// throws InsightError with invalid ID
+		this.validateID(id);		// throws InsightError with invalid ID
 		this.id = id;
 		this.kind = kind;
 		if (numRows < 0) {
@@ -53,16 +53,6 @@ export abstract class InsightDatasetClass implements InsightDataset {
 		this.numRows = result.length;
 	}
 
-	// private validateID(id: string) {
-	// 	if (id == null || !id.trim() || id.includes("_")) {
-	// 		throw new InsightError("Invalid ID: '" + id + "'");
-	// 	}
-	// 	// check if id already exists in dataset
-	// 	if (DiskUtil.doesDatasetIDExist(id)) {
-	// 		throw new InsightError("Dataset ID: '" + id + "', already exists");
-	// 	}
-	// }
-
 	// returns void on success, throws error on failure
 	public async writeToDisk() {
 		if (this.numRows === 0) {
@@ -84,6 +74,16 @@ export abstract class InsightDatasetClass implements InsightDataset {
 			numRows: this.numRows,
 			...(withData ? {data: this._data} : {}),
 		});
+	}
+
+	private validateID(id: string) {
+		if (id == null || !id.trim() || id.includes("_")) {
+			throw new InsightError("Invalid ID: '" + id + "'");
+		}
+	// check if id already exists in dataset
+		if (DiskUtil.doesDatasetIDExist(id)) {
+			throw new InsightError("Dataset ID: '" + id + "', already exists");
+		}
 	}
 
 	protected abstract processFileContents(content: string): Promise<any[]>;
