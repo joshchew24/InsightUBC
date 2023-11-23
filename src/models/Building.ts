@@ -1,5 +1,11 @@
 import {Room} from "./IRoom";
 import JSZip from "jszip";
+import {Element} from "parse5/dist/tree-adapters/default";
+
+export function createBuilding(buildingRow: Element): Building | null {
+	console.log(buildingRow);
+	return null;
+}
 
 export class Building {
 	public shortname: string;

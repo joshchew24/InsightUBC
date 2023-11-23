@@ -3,10 +3,7 @@ import {Room} from "../models/IRoom";
 import {RoomDatasetModel, SectionDatasetModel} from "../models/IModel";
 import fs from "fs-extra";
 import {Section, SectionPruned} from "../models/ISection";
-import {retrieveAllDatasetIds, retrieveDataset} from "./DiskUtil";
-import {SectionDataset} from "./SectionDataset";
-import {RoomDataset} from "./RoomDataset";
-import * as DiskUtil from "./DiskUtil";
+import {retrieveAllDatasetIds} from "./DiskUtil";
 
 // Type guard for Room
 function isRoom(obj: any): obj is Room {

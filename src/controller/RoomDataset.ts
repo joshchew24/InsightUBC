@@ -6,6 +6,8 @@ import * as parse5 from "parse5";
 import {ChildNode, Document, Element} from "parse5/dist/tree-adapters/default";
 import {Attribute} from "parse5/dist/common/token";
 import {makeAsync} from "./AsyncUtil";
+import {Building, createBuilding} from "../models/Building";
+import {getChildElements} from "./HTMLUtil";
 
 export class RoomDataset extends InsightDatasetClass {
 	private readonly ROOMS_DIR = "campus/discover/buildings-and-classrooms";
@@ -34,12 +36,27 @@ export class RoomDataset extends InsightDatasetClass {
 				}
 				return makeAsync(this.findBuildingTable,"No valid building table", document);
 			}).then((buildingTable) => {
-				// if (buildingTable == null) {
-				// 	throw new InsightError("no valid building table");
-				// }
+				// makeAsync will reject if the result is null, but we double check anyway
+				if (buildingTable == null) {
+					throw new InsightError("no valid building table");
+				}
 				// this.validateHeader(buildingTable as Element);
 				// for each building, construct building object and add to array
-				this.getBuildings(buildingTable);
+				return makeAsync(this.getBuildingRows, "Building table was empty", buildingTable);
+			})
+			.then((buildingRows) => {
+				if (buildingRows == null || (buildingRows as Element[]).length === 0) {
+					throw new InsightError("Building Table was empty");
+				}
+				let buildings: Building[] = [];
+				for (let buildingRow of buildingRows as Element[]) {
+					let building = createBuilding(buildingRow);
+					if (building) {
+						buildings.push(building);
+					}
+				}
+			})
+			.then(() => {
 				return Promise.resolve(["asdf"]);
 			})
 			.catch((err) => {
@@ -105,8 +122,18 @@ export class RoomDataset extends InsightDatasetClass {
 		}
 	}
 
-	private getBuildings(buildingTable: unknown) {
-		return;
+	private getBuildingRows(buildingTable: Element): Element[] {
+		let buildingTableBody = getChildElements(buildingTable, true, parse5.html.TAG_NAMES.TBODY);
+
+		if (buildingTableBody == null) {
+			// TODO: if we use stricter checking,the table may not be empty
+			throw new InsightError("the building table is empty");
+		}
+		let buildingRows = getChildElements(buildingTableBody as Element, false, parse5.html.TAG_NAMES.TR);
+		if (buildingRows == null) {
+			throw new InsightError("the building table is empty");
+		}
+		return buildingRows as Element[];
 	}
 }
 
