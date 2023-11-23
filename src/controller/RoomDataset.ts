@@ -32,12 +32,13 @@ export class RoomDataset extends InsightDatasetClass {
 				if (!document || defaultTreeAdapter.getChildNodes(document).length === 0) {
 					throw new InsightError("index is empty");
 				}
-				return makeAsync(this.findBuildingTable,"No valid building table", [document]);
+				return makeAsync(this.findBuildingTable,"No valid building table", document);
+				// return this.findBuildingTable(document);
 			}).then((buildingTable) => {
 				// if (buildingTable == null) {
 				// 	throw new InsightError("no valid building table");
 				// }
-				// this.validateHeader(buildingTable);
+				this.validateHeader(buildingTable as Element);
 				// for each building, construct building object and add to array
 				return Promise.resolve(["asdf"]);
 			})
@@ -79,6 +80,10 @@ export class RoomDataset extends InsightDatasetClass {
 			}
 		}
 		return buildingTable;
+	}
+
+	private validateHeader(buildingTable: Element) {
+		console.log(buildingTable);
 	}
 }
 
