@@ -55,11 +55,17 @@ export class SectionDataset extends InsightDatasetClass {
 			});
 	}
 
-	private processCourseString(courseString: string): SectionData[] {
-		let rawCourseObject = JSON.parse(courseString);
+	private processCourseString(courseString: string): SectionData[] | null {
+		let rawCourseObject;
+		try {
+			rawCourseObject = JSON.parse(courseString);
+		} catch {
+			return null;
+		}
 		if (Object.keys(rawCourseObject)[0] !== "result") {
 			// we just skip this one
-			throw new InsightError("Section data should be stored in an array under 'result' key");
+			// throw new InsightError("Section data should be stored in an array under 'result' key");
+			return null;
 		}
 		let rawSectionsData: object[] = rawCourseObject["result"];
 		let processedCourse: SectionData[] = [];

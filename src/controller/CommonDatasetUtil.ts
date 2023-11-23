@@ -6,17 +6,7 @@ import {Section, SectionPruned} from "../models/ISection";
 import {retrieveAllDatasetIds, retrieveDataset} from "./DiskUtil";
 import {SectionDataset} from "./SectionDataset";
 import {RoomDataset} from "./RoomDataset";
-
-export function createInsightDataset(id: string, kind: InsightDatasetKind, numRows: number) {
-	if (kind === InsightDatasetKind.Sections) {
-		return new SectionDataset(id, kind, numRows);
-	} else if (kind === InsightDatasetKind.Rooms) {
-		return new RoomDataset(id, kind, numRows);
-	} else {
-		throw new InsightError("invalid kind");
-	}
-}
-
+import * as DiskUtil from "./DiskUtil";
 
 // Type guard for Room
 function isRoom(obj: any): obj is Room {

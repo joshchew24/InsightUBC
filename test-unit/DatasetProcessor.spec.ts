@@ -4,7 +4,7 @@ import chaiAsPromised from "chai-as-promised";
 import {getContentFromArchives} from "../test/resources/archives/TestUtil";
 
 import {InsightDatasetKind} from "../src/controller/IInsightFacade";
-import {createInsightDataset} from "../src/controller/CommonDatasetUtil";
+import {createInsightDataset} from "../src/controller/DatasetUtil";
 
 const ROOMS_PATH = "rooms_datasets/";
 
