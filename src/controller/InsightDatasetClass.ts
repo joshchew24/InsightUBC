@@ -1,6 +1,7 @@
 import {InsightDataset, InsightDatasetKind, InsightError} from "./IInsightFacade";
 import * as DiskUtil from "./DiskUtil";
 import {InsightData} from "../models/IModel";
+import fs from "fs-extra";
 
 export abstract class InsightDatasetClass implements InsightDataset {
 	// id, kind, numRows have to be public because the interface is not modifiable
@@ -33,6 +34,9 @@ export abstract class InsightDatasetClass implements InsightDataset {
 		return this._data;
 	}
 
+	// try to add data from content string into this dataset
+	// Stores data in memory only
+	// returns void on success, throws error on failure
 	public async addData(content: string) {
 		if (this._data != null) {
 			throw new InsightError("You cannot overwrite the contents of an existing dataset. Remove it instead.");
@@ -43,7 +47,7 @@ export abstract class InsightDatasetClass implements InsightDataset {
 
 		let result = await this.processFileContents(content);
 		if (result.length === 0) {
-			throw new InsightError("This dataset had no valid sections");
+			throw new InsightError("This dataset had no data");
 		}
 		this._data = result;
 		this.numRows = result.length;
@@ -59,8 +63,27 @@ export abstract class InsightDatasetClass implements InsightDataset {
 		}
 	}
 
-	public writeToDisk() {
-		return;
+	// returns void on success, throws error on failure
+	public async writeToDisk() {
+		if (this.numRows === 0) {
+			throw new InsightError("This dataset has no data");
+		}
+		let header = this.toObjectString();
+		// write header to dataset_index.json
+		let dataset = this.toObjectString(true);
+		return fs.outputFile(DiskUtil.PERSISTENT_DIR + this.id + ".json", dataset)
+			.catch(() => {
+				throw new InsightError("There was a problem writing the dataset to disk");
+			});
+	}
+
+	private toObjectString(withData: boolean = false): string {
+		return JSON.stringify({
+			id: this.id,
+			kind: this.kind,
+			numRows: this.numRows,
+			...(withData ? {data: this._data} : {}),
+		});
 	}
 
 	protected abstract processFileContents(content: string): Promise<any[]>;

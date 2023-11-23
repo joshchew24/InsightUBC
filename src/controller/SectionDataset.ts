@@ -10,7 +10,7 @@ export class SectionDataset extends InsightDatasetClass {
 	protected async processFileContents(content: string): Promise<any[]> {
 		let zip: JSZip = new JSZip();
 		return zip.loadAsync(content, {base64: true, createFolders: false})
-			.catch((err) => {
+			.catch(() => {
 				throw new InsightError("Error loading zip file from content parameter");
 			})
 			.then(() => {
@@ -27,6 +27,7 @@ export class SectionDataset extends InsightDatasetClass {
 			.then((dataDirectory) => {
 				const promises: any[] = [];
 				dataDirectory.forEach((relativePath, file) => {
+					// relativePath part of callback signature on JSZip folder
 					promises.push(zip.file(file.name)?.async("text"));
 				});
 				return Promise.all(promises);
@@ -60,19 +61,19 @@ export class SectionDataset extends InsightDatasetClass {
 			// we just skip this one
 			throw new InsightError("Section data should be stored in an array under 'result' key");
 		}
-		let rawSectionsData: Object[] = rawCourseObject["result"];
+		let rawSectionsData: object[] = rawCourseObject["result"];
 		let processedCourse: SectionData[] = [];
 		rawSectionsData.forEach((rawSection) => {
 			let processedSection: SectionData | null = this.processRawSection(rawSection);
 			if (processedSection != null) {
 				processedCourse.push(processedSection);
 			}
-		})
+		});
 
 		return processedCourse;
 	}
 
-	private processRawSection(rawSection: Object): SectionData | null {
+	private processRawSection(rawSection: object): SectionData | null {
 		let result: SectionData;
 		if ("Section" in rawSection && rawSection["Section"] === "overall" && "Year" in rawSection) {
 			rawSection.Year = 1900;
@@ -101,7 +102,7 @@ export class SectionDataset extends InsightDatasetClass {
 			pass: rawSection.Pass as number,
 			fail: rawSection.Fail as number,
 			audit: rawSection.Audit as number
-		}
+		};
 		return result;
 	}
 }

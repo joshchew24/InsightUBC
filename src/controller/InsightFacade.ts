@@ -92,11 +92,19 @@ export default class InsightFacade implements IInsightFacade {
 	// 		});
 	// }
 
-	// public addDatasetJosh(id: string, content: string, kind: InsightDatasetKind): Promise<String[]> {
+	// public addDataset(id: string, content: string, kind: InsightDatasetKind): Promise<string[]> {
 	// 	try {
 	// 		let dataset = createInsightDataset(id, kind, 0);
-	// 		dataset.addData(content);
-	// 		dataset.writeToDisk();
+	// 		return dataset.addData(content)
+	// 			.then(() => {
+	// 				return dataset.writeToDisk();
+	// 			})
+	// 			.then(() => {
+	// 				return DiskUtil.retrieveAllDatasetIds();
+	// 			})
+	// 			.catch((err) => {
+	// 				throw err;
+	// 			});
 	// 	} catch {
 	// 		throw new InsightError("something went wrong monkaS");
 	// 	}

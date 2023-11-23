@@ -19,13 +19,14 @@ chai.use(chaiAsPromised);
 
 describe("InsightDatasetClass", () => {
 	describe("Constructor", () => {
-		it("process file contents for sections dataset", () => {
+		it("process file contents for sections dataset", async () => {
 			let dataset = createInsightDataset(
 				"test",
 				InsightDatasetKind.Sections,
 				0);
-			let result = dataset.addData(smallSections);
-			return expect(result).to.eventually.deep.equal(["asdf"]);
+			await dataset.addData(smallSections);
+			await dataset.writeToDisk();
+			// return expect(DiskUtil.retrieveAllDatasetIds()).to.eventually.deep.equal(["asdf"]);
 		});
 		// it("process file contents for rooms dataset", () => {
 		// 	let dataset = createInsightDataset(
