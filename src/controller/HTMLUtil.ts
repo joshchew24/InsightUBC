@@ -48,6 +48,23 @@ function findTable(document: Document): Element | null {
 	return buildingTable;
 }
 
+export function getTableRows(buildingTable: Element): Element[] {
+	let tableBody = getChildElements(buildingTable,
+		true, parse5.html.TAG_NAMES.TBODY);
+	if (tableBody == null) {
+		// TODO: if we use stricter checking,the table may not be empty
+		throw new InsightError("the table is empty");
+	}
+
+	let rows = getChildElements(tableBody as Element,
+		false, parse5.html.TAG_NAMES.TR);
+	if (rows == null) {
+		throw new InsightError("the table is empty");
+	}
+
+	return rows as Element[];
+}
+
 
 export function getChildElements(parent: Element,
 								 findFirst: boolean,

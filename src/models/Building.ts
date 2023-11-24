@@ -1,7 +1,7 @@
 import {Room, RoomFactory} from "./Room";
 import JSZip from "jszip";
 import {ChildNode, Element, TextNode} from "parse5/dist/tree-adapters/default";
-import {findTableInHTML, getChildElements, getChildNodes} from "../controller/HTMLUtil";
+import {findTableInHTML, getChildElements, getChildNodes, getTableRows} from "../controller/HTMLUtil";
 import * as parse5 from "parse5";
 import {defaultTreeAdapter} from "parse5";
 import {InsightError} from "../controller/IInsightFacade";
@@ -169,11 +169,21 @@ export class Building {
 
 	// propagates errors to caller
 	// attempts to add rooms from this.buildingFilePath to Rooms[]
-	public async addRooms(): Promise<void> {
+	public async addRooms() {
 		let path = this.buildingFilePath.trim().replace(/^\.\/+/, "");
 		let buildingFile = await getFileFromZip(this.zip, path);
-		let buildingTableNode = await findTableInHTML(buildingFile, "building document");
-			// return Promise.resolve(buildingTableNode);
+		let roomTable = await findTableInHTML(buildingFile, "building document");
+		// return Promise.resolve(roomTable);
+		let roomTableRows = getTableRows(roomTable as Element);
+		// if (roomTableRows == null || (roomTableRows as Element[]).length === 0) {
+		// 	throw new InsightError("Room Table was empty");
+		// }
+		// for (let row of roomTableRows) {
+		// 	let room = RoomFactory.createRoom(row, this);
+		// 	if (room) {
+		// 		this.rooms.push(room);
+		// 	}
+		// }
 	// get rows from building
 	// for each row, createRoom
 	}

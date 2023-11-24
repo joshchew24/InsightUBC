@@ -4,7 +4,6 @@ import {InsightError} from "./IInsightFacade";
 import {defaultTreeAdapter} from "parse5";
 import * as parse5 from "parse5";
 import {ChildNode, Document, Element} from "parse5/dist/tree-adapters/default";
-import {Attribute} from "parse5/dist/common/token";
 import {makeAsync} from "./AsyncUtil";
 import {Building, BuildingFactory} from "../models/Building";
 import * as HTMLUtil from "./HTMLUtil";
@@ -33,7 +32,7 @@ export class RoomDataset extends InsightDatasetClass {
 				if (buildingTable == null) {
 					throw new InsightError("no valid building table");
 				}
-				return makeAsync(this.getBuildingRows, "Building table was empty", buildingTable);
+				return makeAsync(HTMLUtil.getTableRows, "Building table was empty", buildingTable);
 			})
 			.then((buildingRows) => {
 				return makeAsync(this.extractBuildingsFromTable, "Buildings table was empty", buildingRows, zip);
@@ -101,23 +100,6 @@ export class RoomDataset extends InsightDatasetClass {
 				break;
 			}
 		}
-	}
-
-	private getBuildingRows(buildingTable: Element): Element[] {
-		let buildingTableBody = HTMLUtil.getChildElements(buildingTable,
-			true, parse5.html.TAG_NAMES.TBODY);
-		if (buildingTableBody == null) {
-			// TODO: if we use stricter checking,the table may not be empty
-			throw new InsightError("the building table is empty");
-		}
-
-		let buildingRows = HTMLUtil.getChildElements(buildingTableBody as Element,
-			false, parse5.html.TAG_NAMES.TR);
-		if (buildingRows == null) {
-			throw new InsightError("the building table is empty");
-		}
-
-		return buildingRows as Element[];
 	}
 }
 
