@@ -1,22 +1,36 @@
 import {Room} from "./IRoom";
 import JSZip from "jszip";
-import {Element, TextNode} from "parse5/dist/tree-adapters/default";
+import {ChildNode, Element, TextNode} from "parse5/dist/tree-adapters/default";
 import {getChildElements, getChildNodes} from "../controller/HTMLUtil";
 import * as parse5 from "parse5";
 import {defaultTreeAdapter} from "parse5";
 import {InsightError} from "../controller/IInsightFacade";
 
-const validClasses = [
-	"views-field views-field-field-building-image",
+const ValidClass = [
+	// "views-field views-field-field-building-image",
 	"views-field views-field-field-building-code",
 	"views-field views-field-title",
 	"views-field views-field-field-building-address",
 	"views-field views-field-nothing"
 ];
+enum ValidClassMap {
+	SHORTNAME = "views-field views-field-field-building-code",
+	FULLNAME = "views-field views-field-title",
+	ADDRESS = "views-field views-field-field-building-address",
+	PATH = "views-field views-field-nothing"
+}
+
+interface BuildingFields {
+	shortname?: string,
+	fullname?: string,
+	address?: string,
+	buildingPath?: string
+}
 
 interface IBuildingFactory {
 	createBuilding(buildingRow: Element): Building | null;
 	validateBuilding(buildingCellsArr: Element[]): void;
+	getFieldFromCell(buildingCell: Element, fieldType: string, buildingFieldsObject: BuildingFields): void;
 }
 
 export const BuildingFactory: IBuildingFactory = {
@@ -58,28 +72,94 @@ export const BuildingFactory: IBuildingFactory = {
 			// TODO: is it possible for a building to have not 5 columns?
 			throw new InsightError("building should have 5 columns");
 		}
-		let shortname: string;
-		let fullname: string;
-		let address: string;
-		let buildingPath: string;
-		let buildingFields = []; // shortname, fullname, address, buildingPath];
+		let buildingFields: BuildingFields = {};
 
-		for (let i = 0; i < 5; i++) {
-			let currCell = buildingCellsArr[i];
-			// console.log(currCell);
-			let attrList = defaultTreeAdapter.getAttrList(currCell);
+		for (let cell of buildingCellsArr) {
+			let attrList = defaultTreeAdapter.getAttrList(cell);
 			for (let attr of attrList) {
-				if (attr.name !== "class" || attr.value !== validClasses[i]) {
-					throw new InsightError("building is missing the correct class");
+				if (attr.name === "class" && ValidClass.includes(attr.value)) {
+					// let idx = validClasses.indexOf(attr.value);
+					// if (idx < 0 || idx > 4) {
+					// 	continue;
+					// }
+					this.getFieldFromCell(cell, attr.value, buildingFields);
 				}
 			}
-			// TODO: left off here
-			// if valid attribute, get the appropriate field from the children
-			let children = defaultTreeAdapter.getChildNodes(currCell);
-			for (let child of children) {
-				// getChildNodes(child, true, "text");
-				console.log(child);
+		}
+		console.log(buildingFields);
+	},
+
+	// modifies buildingFieldsObject
+	getFieldFromCell(buildingCell: Element, fieldType: string, buildingFieldsObject: BuildingFields) {
+		switch (fieldType) {
+			case ValidClassMap.SHORTNAME: {
+				// TODO: find all childNodes of this cell - if numChildren !== 1, incorrect?
+				let result = getChildNodes(buildingCell, false, "text");
+				let fieldNodes: ChildNode[];
+				if (result == null || (fieldNodes = result as ChildNode[]).length !== 1) {
+					break;
+				}
+				buildingFieldsObject.shortname = (fieldNodes[0] as TextNode).value.trim();
+				break;
 			}
+			case ValidClassMap.FULLNAME:{
+				// TODO: find first child of this cell with correct tag
+				let result = getChildNodes(buildingCell, true, "element", parse5.html.TAG_NAMES.A);
+				if (result == null) {
+					break;
+				}
+				let title = getChildNodes(result as Element, true, "text");
+				if (title == null) {
+					break;
+				}
+				buildingFieldsObject.fullname = (title as TextNode).value.trim();
+				break;
+			}
+			case ValidClassMap.ADDRESS: {
+				// TODO: find all childNodes of this cell: if numChildren !== 1, incorrect?
+				let result = getChildNodes(buildingCell, true, "text");
+				if (result == null) {
+					break;
+				}
+				buildingFieldsObject.address = (result as TextNode).value.trim();
+				break;
+			}
+			case ValidClassMap.PATH: {
+				// TODO: find all childNodes of this cell - if numChildren !== 1, incorrect?
+				let result = getChildNodes(buildingCell, false, "element", parse5.html.TAG_NAMES.A);
+				let anchorNodes: ChildNode[];
+				if (result == null || (anchorNodes = result as ChildNode[]).length !== 1) {
+					break;
+				}
+				let attrList = defaultTreeAdapter.getAttrList(anchorNodes[0] as Element);
+				for (let attr of attrList) {
+					if (attr.name === "href") {
+						buildingFieldsObject.buildingPath = attr.value.trim();
+					}
+				}
+				break;
+			}
+		}
+	}
+};
+
+		//
+		// for (let i = 0; i < 5; i++) {
+		// 	let currCell = buildingCellsArr[i];
+		// 	// console.log(currCell);
+		// 	let attrList = defaultTreeAdapter.getAttrList(currCell);
+		// 	for (let attr of attrList) {w
+		// 		if (attr.name !== "class" || attr.value !== validClasses[i]) {
+		// 			throw new InsightError("building is missing the correct class");
+		// 		}
+		// 	}
+		// 	// TODO: left off here
+		// 	// if valid attribute, get the appropriate field from the children
+		// 	let children = defaultTreeAdapter.getChildNodes(currCell);
+		// 	for (let child of children) {
+		// 		// getChildNodes(child, true, "text");
+		// 		console.log(child);
+		// 	}
 			// switch(i) {
 
 			// 	case 0:
@@ -87,10 +167,10 @@ export const BuildingFactory: IBuildingFactory = {
 			// 	case 1:
 			// 		getChildElements();
 			// }
-		}
+		// }
 		// console.log(buildingFields);
-	}
-};
+// 	}
+// };
 
 export class Building {
 	public shortname: string;
