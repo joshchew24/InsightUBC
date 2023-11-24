@@ -1,15 +1,15 @@
 import {InsightDatasetKind, InsightError, InsightResult, ResultTooLargeError} from "../controller/IInsightFacade";
-import {SectionPruned} from "../models/ISection";
 import {retrieveDataset} from "../controller/DiskUtil";
 import {mapColumns, orderRows, passesQuery, processQueryToAST, transformResult} from "./ExecuteQuery";
 import {QueryASTNode} from "../models/QueryASTNode";
 import {validateQuery} from "./ValidateQuery";
 import {MetaQuery} from "../models/IQuery";
-import {Room} from "../models/IRoom";
-import {RoomDatasetModel, SectionDatasetModel} from "../models/IModel";
+import {Dataset, InsightData, RoomData, SectionData} from "../models/IModel";
+import {SectionClass} from "../models/ISection";
+import {RoomClass} from "../models/IRoom";
 
 export function handleQuery(query: unknown): Promise<InsightResult[]> {
-	let currDataset: SectionDatasetModel | RoomDatasetModel;
+	let currDataset: Dataset;
 	if (!isJSON(query)) {
 		return Promise.reject(new InsightError("Invalid query string"));
 	}
@@ -39,23 +39,37 @@ export function isJSON(input: unknown): boolean {
 	return input !== null && input !== undefined && typeof input === "object" && !Array.isArray(input);
 }
 
-function executeQuery(inputQuery: any, currDataset: SectionDatasetModel | RoomDatasetModel) {
+
+function executeQuery(inputQuery: any, currDataset: Dataset) {
 	let rawResult = [];
 	let queryTree: QueryASTNode = processQueryToAST(inputQuery["WHERE"]);
-
+	let dataArr: InsightData[] | undefined;
+	// if (currDataset.kind === InsightDatasetKind.Sections) {
+	// 	dataArr = currDataset.data as SectionClass[];
+	// } else if (currDataset.kind === InsightDatasetKind.Rooms) {
+	// 	dataArr = currDataset.data as RoomClass[];
+	// }
+	// if (dataArr == null) {
+	// 	throw new InsightError("invalid kind");
+	// }
+	// for (let entry of dataArr) {
+	// 	if (passesQuery(entry, queryTree)) {
+	// 		rawResult.push(entry);
+	// 	}
+	// }
 	if (currDataset.kind === InsightDatasetKind.Rooms) {
-		let roomDataset = currDataset as RoomDatasetModel;
-		for (let room of roomDataset.room) {
-			let currRoom = new Room(room);
+		let roomDataset = currDataset;
+		for (let room of roomDataset.data) {
+			let currRoom = new RoomClass(room);
 			if (passesQuery(currRoom, queryTree)) {
 				rawResult.push(currRoom);
 			}
 		}
 	} else if (currDataset.kind === InsightDatasetKind.Sections) {
-		let sectionDataset = currDataset as SectionDatasetModel;
+		let sectionDataset = currDataset;
 		// iterate through section list and add sections to unprocessed result list that pass query
-		for (let section of sectionDataset.section) {
-			let currSection = new SectionPruned(section);
+		for (let section of sectionDataset.data) {
+			let currSection = new SectionClass(section);
 			if (passesQuery(currSection, queryTree)) {
 				rawResult.push(currSection);
 			}
