@@ -50,7 +50,7 @@ export class SectionDataset extends InsightDatasetClass {
 				return allSections;
 			})
 			.catch((err) => {
-				console.log("something unexpected happened: " + err);
+				// console.log("something unexpected happened: " + err);
 				throw err;
 			});
 	}

@@ -58,7 +58,7 @@ export class RoomDataset extends InsightDatasetClass {
 						rooms.push(...building.getRoomData());
 					}
 				}
-				console.log(rooms);
+				// console.log(rooms);
 				return rooms;
 			})
 			.catch((err) => {
