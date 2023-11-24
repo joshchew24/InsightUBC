@@ -28,46 +28,34 @@ interface BuildingFields {
 }
 
 interface IBuildingFactory {
-	createBuilding(buildingRow: Element): Building | null;
-	validateBuilding(buildingCellsArr: Element[]): void;
+	createBuilding(buildingRow: Element, zip: JSZip): Building | null;
+	validateAndGetBuildingFields(buildingCellsArr: Element[]): BuildingFields | null;
 	getFieldFromCell(buildingCell: Element, fieldType: string, buildingFieldsObject: BuildingFields): void;
 }
 
 export const BuildingFactory: IBuildingFactory = {
 
-	createBuilding(buildingRow: Element): Building | null {
+	createBuilding(buildingRow: Element, zip: JSZip): Building | null {
 		let buildingCells = getChildElements(buildingRow, false, parse5.html.TAG_NAMES.TD);
 		if (buildingCells == null) {
 			return null;
 		}
 		let buildingCellsArr = buildingCells as Element[];
 
-
-		try {
-			this.validateBuilding(buildingCellsArr);
-		} catch (err) {
-			console.log(err);
+		let buildingFields = this.validateAndGetBuildingFields(buildingCellsArr);
+		if (buildingFields == null) {
 			return null;
 		}
-
-		return null;
+		return new Building(
+			buildingFields.shortname as string,
+			buildingFields.fullname as string,
+			buildingFields.address as string,
+			buildingFields.buildingPath as string,
+			zip
+		);
 	},
 
-	// validateBuilding(buildingCellsArr: Element[]) {
-	// 	if (buildingCellsArr.length !== 5) {
-	// 		throw new InsightError("building should have 5 columns");
-	// 	}
-	// 	for (let i = 0; i < 5; i++) {
-	// 		let attrList = defaultTreeAdapter.getAttrList(buildingCellsArr[i]);
-	// 		for (let attr of attrList) {
-	// 			if (attr.name !== "class" || attr.value !== validClasses[i]) {
-	// 				throw new InsightError("building is missing the correct class");
-	// 			}
-	// 		}
-	// 	}
-	// },
-
-	validateBuilding(buildingCellsArr: Element[]) {
+	validateAndGetBuildingFields(buildingCellsArr: Element[]) {
 		if (buildingCellsArr.length !== 5) {
 			// TODO: is it possible for a building to have not 5 columns?
 			throw new InsightError("building should have 5 columns");
@@ -78,15 +66,15 @@ export const BuildingFactory: IBuildingFactory = {
 			let attrList = defaultTreeAdapter.getAttrList(cell);
 			for (let attr of attrList) {
 				if (attr.name === "class" && ValidClass.includes(attr.value)) {
-					// let idx = validClasses.indexOf(attr.value);
-					// if (idx < 0 || idx > 4) {
-					// 	continue;
-					// }
 					this.getFieldFromCell(cell, attr.value, buildingFields);
 				}
 			}
 		}
-		console.log(buildingFields);
+		// if we were not able to get all fields for this building, it's not valid so return null
+		if (Object.values(buildingFields).some((value) => value === undefined)) {
+			return null;
+		}
+		return buildingFields;
 	},
 
 	// modifies buildingFieldsObject
@@ -116,7 +104,7 @@ export const BuildingFactory: IBuildingFactory = {
 				break;
 			}
 			case ValidClassMap.ADDRESS: {
-				// TODO: find all childNodes of this cell: if numChildren !== 1, incorrect?
+				// TODO: find first child of this cell with correct tag
 				let result = getChildNodes(buildingCell, true, "text");
 				if (result == null) {
 					break;
@@ -142,35 +130,6 @@ export const BuildingFactory: IBuildingFactory = {
 		}
 	}
 };
-
-		//
-		// for (let i = 0; i < 5; i++) {
-		// 	let currCell = buildingCellsArr[i];
-		// 	// console.log(currCell);
-		// 	let attrList = defaultTreeAdapter.getAttrList(currCell);
-		// 	for (let attr of attrList) {w
-		// 		if (attr.name !== "class" || attr.value !== validClasses[i]) {
-		// 			throw new InsightError("building is missing the correct class");
-		// 		}
-		// 	}
-		// 	// TODO: left off here
-		// 	// if valid attribute, get the appropriate field from the children
-		// 	let children = defaultTreeAdapter.getChildNodes(currCell);
-		// 	for (let child of children) {
-		// 		// getChildNodes(child, true, "text");
-		// 		console.log(child);
-		// 	}
-			// switch(i) {
-
-			// 	case 0:
-			// 		break;
-			// 	case 1:
-			// 		getChildElements();
-			// }
-		// }
-		// console.log(buildingFields);
-// 	}
-// };
 
 export class Building {
 	public shortname: string;

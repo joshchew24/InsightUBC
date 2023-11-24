@@ -50,11 +50,12 @@ export class RoomDataset extends InsightDatasetClass {
 				}
 				let buildings: Building[] = [];
 				for (let buildingRow of buildingRows as Element[]) {
-					let building = BuildingFactory.createBuilding(buildingRow);
+					let building = BuildingFactory.createBuilding(buildingRow, zip);
 					if (building) {
 						buildings.push(building);
 					}
 				}
+				console.log(buildings);
 			})
 			.then(() => {
 				return Promise.resolve(["asdf"]);
