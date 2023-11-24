@@ -1,5 +1,6 @@
 import fs from "fs-extra";
-import {RoomDatasetModel, SectionDatasetModel} from "../models/IModel";
+import {Dataset, Header, RoomDatasetModel, SectionDatasetModel} from "../models/IModel";
+import {InsightError} from "./IInsightFacade";
 
 export const PERSISTENT_DIR = "./data/";
 
@@ -24,4 +25,34 @@ export function retrieveAllDatasetIds(): string[] {
 		}
 	});
 	return ids;
+}
+
+export function updateDatasetIndex(header: Dataset | Header) {
+	let toDisk = JSON.stringify([header]);
+	// TODO: this could go into DiskUtil, also it might be buggy?
+	if (!fs.existsSync(`${PERSISTENT_DIR}dataset_index.json`)) {
+		fs.mkdirSync(PERSISTENT_DIR);
+	} else {
+		let indexString = fs.readFileSync(`${PERSISTENT_DIR}dataset_index.json`, {encoding: "utf8"});
+		let index: Header[] = JSON.parse(indexString);
+		index.push(header);
+		toDisk = JSON.stringify(index);
+	}
+
+	fs.outputFileSync(`${PERSISTENT_DIR}dataset_index.json`, toDisk);
+}
+
+export function removeFromDatasetIndex(id: string) {
+	if (!fs.existsSync(`${PERSISTENT_DIR}dataset_index.json`)) {
+		throw new InsightError("ID not found");
+	}
+	let indexString = fs.readFileSync(`${PERSISTENT_DIR}dataset_index.json`, {encoding: "utf8"});
+	let index: Header[] = JSON.parse(indexString);
+	for (let i = 0; i < index.length; i++) {
+		if (index[i].id === id) {
+			index.splice(i, 1);
+			return id;
+		}
+	}
+	throw new InsightError("ID not found");
 }

@@ -3,6 +3,7 @@ import * as DiskUtil from "./DiskUtil";
 import {Dataset, Header, InsightData} from "../models/IModel";
 import fs from "fs-extra";
 import {PERSISTENT_DIR} from "./DiskUtil";
+import * as DatasetUtil from "./DatasetUtil";
 
 export abstract class InsightDatasetClass implements InsightDataset {
 	// id, kind, numRows have to be public because the interface is not modifiable
@@ -14,7 +15,7 @@ export abstract class InsightDatasetClass implements InsightDataset {
 	// If creating a new dataset, use 0
 	// If modelling a dataset that already has been added, you must know all the fields (id, kind, numRows)
 	public constructor(id: string, kind: InsightDatasetKind, numRows: number) {
-		this.validateID(id);		// throws InsightError with invalid ID
+		DatasetUtil.validateID(id);		// throws InsightError with invalid ID
 		this.id = id;
 		this.kind = kind;
 		if (numRows < 0) {
@@ -60,17 +61,7 @@ export abstract class InsightDatasetClass implements InsightDataset {
 			throw new InsightError("This dataset has no data");
 		}
 		let header = this.toObject();
-		let toDisk = JSON.stringify([header]);
-		if (!fs.existsSync(`${PERSISTENT_DIR}dataset_index.json`)) {
-			fs.mkdirSync(PERSISTENT_DIR);
-		} else {
-			let indexString = fs.readFileSync(`${PERSISTENT_DIR}dataset_index.json`, {encoding: "utf8"});
-			let index: Header[] = JSON.parse(indexString);
-			index.push(header);
-			toDisk = JSON.stringify(index);
-		}
-
-		fs.outputFileSync(`${PERSISTENT_DIR}dataset_index.json`, toDisk);
+		DiskUtil.updateDatasetIndex(header);
 
 
 		let dataset = JSON.stringify(this.toObject(true));
@@ -87,16 +78,6 @@ export abstract class InsightDatasetClass implements InsightDataset {
 			numRows: this.numRows,
 			...(withData ? {data: this._data} : {}),
 		};
-	}
-
-	private validateID(id: string) {
-		if (id == null || !id.trim() || id.includes("_")) {
-			throw new InsightError("Invalid ID: '" + id + "'");
-		}
-	// check if id already exists in dataset
-		if (DiskUtil.doesDatasetIDExist(id)) {
-			throw new InsightError("Dataset ID: '" + id + "', already exists");
-		}
 	}
 
 	protected abstract processFileContents(content: string): Promise<InsightData[]>;

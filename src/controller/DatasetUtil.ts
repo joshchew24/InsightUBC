@@ -22,15 +22,17 @@ export async function getFileFromZip(zip: JSZip, path: string) {
 	return index.async("text");
 }
 
-// export function validateID(id: string) {
-// 	if (id == null || !id.trim() || id.includes("_")) {
-// 		throw new InsightError("Invalid ID: '" + id + "'");
-// 	}
-// 	// check if id already exists in dataset
-// 	if (DiskUtil.doesDatasetIDExist(id)) {
-// 		throw new InsightError("Dataset ID: '" + id + "', already exists");
-// 	}
-// }
+
+export function validateID(id: string) {
+	if (id == null || !id.trim() || id.includes("_")) {
+		throw new InsightError("Invalid ID: '" + id + "'");
+	}
+	// check if id already exists in dataset
+	if (DiskUtil.doesDatasetIDExist(id)) {
+		throw new InsightError("Dataset ID: '" + id + "', already exists");
+	}
+}
+
 // export function isValidID(id: string) {
 // 	return !(id == null || !id.trim() || id.includes("_") || DiskUtil.doesDatasetIDExist(id));
 // }
