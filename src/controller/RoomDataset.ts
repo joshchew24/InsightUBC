@@ -38,6 +38,7 @@ export class RoomDataset extends InsightDatasetClass {
 				return makeAsync(this.extractBuildingsFromTable, "Buildings table was empty", buildingRows, zip);
 			})
 			.then((buildings) => {
+				console.log(buildings);
 				if (buildings == null || (buildings as Building[]).length === 0) {
 					throw new InsightError("Buildings table was empty");
 				}
@@ -49,7 +50,6 @@ export class RoomDataset extends InsightDatasetClass {
 			})
 			.then((buildings) => {
 				let validBuildings: Building[] = [];
-				console.log(buildings);
 				for (let building of buildings) {
 					if (building != null) {
 						validBuildings.push(building as Building);

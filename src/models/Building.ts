@@ -1,4 +1,4 @@
-import {Room, RoomFactory} from "./Room";
+import {Room, RoomFactory, RoomFields} from "./Room";
 import JSZip from "jszip";
 import {ChildNode, Element, TextNode} from "parse5/dist/tree-adapters/default";
 import {
@@ -36,7 +36,6 @@ export interface BuildingFields {
 
 interface IBuildingFactory {
 	createBuilding(buildingRow: Element, zip: JSZip): Building | null;
-	validateAndGetBuildingFields(buildingCellsArr: Element[]): BuildingFields | null;
 	getFieldFromCell(buildingCell: Element, fieldType: string, buildingFieldsObject: BuildingFields): void;
 }
 
@@ -47,10 +46,16 @@ export const BuildingFactory: IBuildingFactory = {
 		if (buildingCells == null) {
 			return null;
 		}
+		let fieldsObject: BuildingFields = {
+			shortname: undefined,
+			fullname: undefined,
+			address: undefined,
+			buildingPath: undefined
+		};
 		// let buildingFields = this.validateAndGetBuildingFields(buildingCells as Element[]);
 		let buildingFields = validateAndGetTableFields(
 			buildingCells as Element[],
-			{} as BuildingFields,
+			fieldsObject,
 			ValidClass,
 			this.getFieldFromCell
 		);
@@ -65,28 +70,6 @@ export const BuildingFactory: IBuildingFactory = {
 			buildingFieldObject.buildingPath as string,
 			zip
 		);
-	},
-
-	validateAndGetBuildingFields(buildingCellsArr: Element[]) {
-		// if (buildingCellsArr.length !== 5) {
-		// 	// TODO: is it possible for a building to have not 5 columns?
-		// 	throw new InsightError("building should have 5 columns");
-		// }
-		let buildingFields: BuildingFields = {};
-
-		for (let cell of buildingCellsArr) {
-			let attrList = defaultTreeAdapter.getAttrList(cell);
-			for (let attr of attrList) {
-				if (attr.name === "class" && ValidClass.includes(attr.value)) {
-					this.getFieldFromCell(cell, attr.value, buildingFields);
-				}
-			}
-		}
-		// if we were not able to get all fields for this building, it's not valid so return null
-		if (Object.values(buildingFields).some((value) => value === undefined)) {
-			return null;
-		}
-		return buildingFields;
 	},
 
 	// modifies buildingFieldsObject

@@ -131,6 +131,7 @@ export function validateAndGetTableFields(
 	}
 	// if we were not able to get all fields for this building, it's not valid so return null
 	// TODO: this is slightly bugged - null values might not exist if the property was never created
+	// i try initializing the fieldObject to have undefined values for each property
 	if (Object.values(fieldObject).some((value) => value === undefined)) {
 		return null;
 	}

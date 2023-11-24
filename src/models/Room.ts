@@ -1,9 +1,17 @@
 import {Building} from "./Building";
 import JSZip from "jszip";
 import {Element} from "parse5/dist/tree-adapters/default";
-import {getChildElements} from "../controller/HTMLUtil";
+import {getChildElements, validateAndGetTableFields} from "../controller/HTMLUtil";
 import * as parse5 from "parse5";
 import {defaultTreeAdapter} from "parse5";
+
+const ValidClass = [
+	// "views-field views-field-field-building-image",
+	"views-field views-field-field-building-code",
+	"views-field views-field-title",
+	"views-field views-field-field-building-address",
+	"views-field views-field-nothing"
+];
 
 export interface RoomFields {
 	number?: string,
@@ -15,7 +23,7 @@ export interface RoomFields {
 
 interface IRoomFactory {
 	createRoom(roomRow: Element, parent: Building): Room | null;
-	validateAndGetRoomFields(roomCellsArr: Element[]): RoomFields | null;
+	getFieldFromCell(roomCell: Element, fieldType: string, roomFieldObject: RoomFields): void;
 }
 
 export const RoomFactory: IRoomFactory = {
@@ -24,26 +32,26 @@ export const RoomFactory: IRoomFactory = {
 		if (roomCells == null) {
 			return null;
 		}
-
-		let roomFields = this.validateAndGetRoomFields(roomCells as Element[]);
+		let fieldsObject: RoomFields = {
+			number: undefined,
+			seats: undefined,
+			type: undefined,
+			furniture: undefined,
+			href: undefined
+		};
+		let roomFields = validateAndGetTableFields(
+			roomCells as Element[],
+			fieldsObject,
+			ValidClass,
+			this.getFieldFromCell
+		);
 		if (roomFields == null) {
 			return null;
 		}
 		return null;
 	},
-
-	validateAndGetRoomFields(roomCellsArr: Element[]): RoomFields | null {
-		// let roomFields: RoomFields = {};
-		//
-		// for (let cell of roomCellsArr) {
-		// 	let attrList = defaultTreeAdapter.getAttrList(cell);
-		// 	for (let attr of attrList) {
-		// 		if (attr.name === "class" && ValidClass.includes(attr.value)) {
-		// 			this.getFieldFromCell(cell, attr.value, roomFields);
-		// 		}
-		// 	}
-		// }
-		return null;
+	getFieldFromCell(roomCell: Element, fieldType: string, roomFieldObject: RoomFields): void {
+		return;
 	}
 };
 
