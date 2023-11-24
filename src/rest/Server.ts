@@ -110,8 +110,10 @@ export default class Server {
 
 			if(req.params.kind === "sections") {
 				datasetKind = InsightDatasetKind.Sections;
-			} else {
+			} else if (req.params.kind === "rooms") {
 				datasetKind = InsightDatasetKind.Rooms;
+			} else {
+				throw new Error("Illegal dataset kind: must be sections or rooms");
 			}
 
 			const arr = await facade.addDataset(id, content.toString("base64"), datasetKind);
