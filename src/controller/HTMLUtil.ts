@@ -1,6 +1,52 @@
 import {defaultTreeAdapter} from "parse5";
 import * as parse5 from "parse5";
-import {ChildNode, Element, Node, ParentNode, TextNode} from "parse5/dist/tree-adapters/default";
+import {ChildNode, Document, Element, Node, ParentNode, TextNode} from "parse5/dist/tree-adapters/default";
+import JSZip from "jszip";
+import {InsightError} from "./IInsightFacade";
+import {getFileFromZip} from "./DatasetUtil";
+import {makeAsync} from "./AsyncUtil";
+import {Attribute} from "parse5/dist/common/token";
+
+
+export function findTableInHTML(documentString: string, docName: string = "document") {
+	let document: Document = parse5.parse(documentString);
+	if (!document || defaultTreeAdapter.getChildNodes(document).length === 0) {
+		throw new InsightError(docName + " is empty");
+	}
+	return makeAsync(findTable,"No valid building table", document);
+}
+
+function findTable(document: Document): Element | null {
+	let tableSearchStack: ChildNode[] = defaultTreeAdapter.getChildNodes(document);
+	// TODO: can we move these declarations inside the loop for better readability?
+	let currNode: ChildNode;
+	let currElem: Element;
+	let attributes: Attribute[];
+	let buildingTable: Element | null = null;
+	searchLoop: while (tableSearchStack && tableSearchStack.length > 0) {
+		currNode = tableSearchStack.pop() as ChildNode;
+		if ("childNodes" in currNode) {
+			tableSearchStack.push(...defaultTreeAdapter.getChildNodes(currNode));
+		}
+		if (!defaultTreeAdapter.isElementNode(currNode)
+			|| defaultTreeAdapter.getTagName(currNode) !== parse5.html.TAG_NAMES.TABLE) {
+			continue;
+		}
+		currElem = currNode as Element;
+		attributes = defaultTreeAdapter.getAttrList(currElem);
+		if (!attributes) {
+			continue;
+		}
+		// TODO: stricter check that this is the correct table (find a TD with a views-field class)
+		for (let attribute of attributes) {
+			if (attribute.name === "class" && attribute.value.includes("views-table")) {
+				buildingTable = currElem;
+				break searchLoop;
+			}
+		}
+	}
+	return buildingTable;
+}
 
 
 export function getChildElements(parent: Element,

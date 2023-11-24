@@ -7,7 +7,7 @@ import {ChildNode, Document, Element} from "parse5/dist/tree-adapters/default";
 import {Attribute} from "parse5/dist/common/token";
 import {makeAsync} from "./AsyncUtil";
 import {Building, BuildingFactory} from "../models/Building";
-import {getChildElements} from "./HTMLUtil";
+import {findTableInHTML, getChildElements} from "./HTMLUtil";
 import {getFileFromZip} from "./DatasetUtil";
 
 export class RoomDataset extends InsightDatasetClass {
@@ -27,11 +27,7 @@ export class RoomDataset extends InsightDatasetClass {
 				throw err;
 			})
 			.then((index: string) => {
-				let document: Document = parse5.parse(index);
-				if (!document || defaultTreeAdapter.getChildNodes(document).length === 0) {
-					throw new InsightError("index is empty");
-				}
-				return makeAsync(this.findBuildingTable,"No valid building table", document);
+				return findTableInHTML(index, "index");
 			}).then((buildingTable) => {
 				// makeAsync will reject if the result is null, but we double check anyway
 				if (buildingTable == null) {
