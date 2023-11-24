@@ -1,6 +1,6 @@
 # React + TypeScript + Vite
 
-DEMO VIDEO <3 https://vm.tiktok.com/ZM61RbjFe/
+DEMO VIDEO https://vm.tiktok.com/ZM618UG4E/
 
 This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
 
