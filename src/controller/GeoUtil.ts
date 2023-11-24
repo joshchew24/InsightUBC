@@ -28,13 +28,13 @@ export async function fetchGeoLocation(address: string): Promise<GeoResponse> {
 					response = JSON.parse(data);
 					resolve(response);
 				} catch (error) {
-					console.error("Error parsing response JSON:", error);
+					// console.error("Error parsing response JSON:", error);
 					reject(new InsightError((error as Error).message));
 				}
 			});
 		})
 			.on("error", (error) => {
-				console.error("Error making GET request:", error.message);
+				// console.error("Error making GET request:", error.message);
 				reject(new InsightError(error.message));
 			});
 	});
