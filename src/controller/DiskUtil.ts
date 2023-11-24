@@ -1,6 +1,6 @@
 import fs from "fs-extra";
 import {Dataset, Header, RoomDatasetModel, SectionDatasetModel} from "../models/IModel";
-import {InsightError} from "./IInsightFacade";
+import {InsightError, NotFoundError} from "./IInsightFacade";
 
 export const PERSISTENT_DIR = "./data/";
 
@@ -44,7 +44,7 @@ export function updateDatasetIndex(header: Dataset | Header) {
 
 export function removeFromDatasetIndex(id: string) {
 	if (!fs.existsSync(`${PERSISTENT_DIR}dataset_index.json`)) {
-		throw new InsightError("ID not found");
+		throw new NotFoundError("ID not found");
 	}
 	let indexString = fs.readFileSync(`${PERSISTENT_DIR}dataset_index.json`, {encoding: "utf8"});
 	let index: Header[] = JSON.parse(indexString);
@@ -54,5 +54,15 @@ export function removeFromDatasetIndex(id: string) {
 			return id;
 		}
 	}
-	throw new InsightError("ID not found");
+	throw new NotFoundError("ID not found");
+}
+
+export function removeDataset(id: string) {
+	let path = `${PERSISTENT_DIR}${id}.json`;
+	if (!fs.existsSync(path)) {
+		throw new NotFoundError("ID not found");
+	} else {
+		fs.removeSync(`${PERSISTENT_DIR}${id}.json`);
+		removeFromDatasetIndex(id);
+	}
 }

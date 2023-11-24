@@ -14,7 +14,7 @@ import * as DiskUtil from "./DiskUtil";
 import {sectionLogicAndOutput} from "./SectionDatasetUtil";
 import {roomLogicAndOutput} from "./RoomDatasetUtil";
 import {retrieveDatasetModel} from "./CommonDatasetUtil";
-import {createInsightDataset} from "./DatasetUtil";
+import * as DatasetUtil from "./DatasetUtil";
 import {InsightDatasetClass} from "./InsightDatasetClass";
 // import * as DatasetProcessor from "./DatasetProcessor";
 
@@ -97,7 +97,7 @@ export default class InsightFacade implements IInsightFacade {
 	public addDataset(id: string, content: string, kind: InsightDatasetKind): Promise<string[]> {
 		let dataset: InsightDatasetClass;
 		try {
-			dataset = createInsightDataset(id, kind, 0);
+			dataset = DatasetUtil.createInsightDataset(id, kind, 0);
 		} catch (err) {
 			return Promise.reject(err);
 		}
@@ -115,16 +115,8 @@ export default class InsightFacade implements IInsightFacade {
 
 	public removeDataset(id: string): Promise<string> {
 		try {
-			// id data validation
-			if (!id || /^\s*$/.test(id) || id.includes("_")) {
-				throw new InsightError("Invalid ID");
-			}
-			// check if id exists in dataset, else stop execution
-			if (!DiskUtil.doesDatasetIDExist(id)) {
-				throw new NotFoundError("ID not found");
-			}
-			// remove the dataset from disk
-			fs.removeSync(`./data/${id}.json`);
+			DatasetUtil.validateID(id, true);
+			DiskUtil.removeDataset(id);
 			return Promise.resolve(id);
 		} catch (err) {
 			return Promise.reject(err);
