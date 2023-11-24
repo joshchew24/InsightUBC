@@ -66,38 +66,6 @@ export class RoomDataset extends InsightDatasetClass {
 		return buildings;
 	}
 
-	private findBuildingTable(document: Document): Element | null {
-		let buildingTableSearchStack: ChildNode[] = defaultTreeAdapter.getChildNodes(document);
-		// TODO: can we move these declarations inside the loop for better readability?
-		let currNode: ChildNode;
-		let currElem: Element;
-		let attributes: Attribute[];
-		let buildingTable: Element | null = null;
-		searchLoop: while (buildingTableSearchStack && buildingTableSearchStack.length > 0) {
-			currNode = buildingTableSearchStack.pop() as ChildNode;
-			if ("childNodes" in currNode) {
-				buildingTableSearchStack.push(...defaultTreeAdapter.getChildNodes(currNode));
-			}
-			if (!defaultTreeAdapter.isElementNode(currNode)
-				|| defaultTreeAdapter.getTagName(currNode) !== parse5.html.TAG_NAMES.TABLE) {
-				continue;
-			}
-			currElem = currNode as Element;
-			attributes = defaultTreeAdapter.getAttrList(currElem);
-			if (!attributes) {
-				continue;
-			}
-			// TODO: stricter check that this is the correct table (find a TD with a views-field class)
-			for (let attribute of attributes) {
-				if (attribute.name === "class" && attribute.value.includes("views-table")) {
-					buildingTable = currElem;
-					break searchLoop;
-				}
-			}
-		}
-		return buildingTable;
-	}
-
 	// ensure header cells contain correct classes
 	// TODO: possibly remove, spec doesn't mention any requirements on table header
 	private validateHeader(buildingTable: Element) {
