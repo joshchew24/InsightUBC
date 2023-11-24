@@ -51,6 +51,7 @@ export function removeFromDatasetIndex(id: string) {
 	for (let i = 0; i < index.length; i++) {
 		if (index[i].id === id) {
 			index.splice(i, 1);
+			fs.outputFileSync(`${PERSISTENT_DIR}dataset_index.json`, JSON.stringify(index));
 			return id;
 		}
 	}

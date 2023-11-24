@@ -23,13 +23,17 @@ export async function getFileFromZip(zip: JSZip, path: string) {
 }
 
 
-export function validateID(id: string, allowDupes: boolean = false) {
+export function validateID(id: string, removing: boolean = false) {
 	if (id == null || !id.trim() || id.includes("_")) {
 		throw new InsightError("Invalid ID: '" + id + "'");
 	}
 	// check if id already exists in dataset
-	if (!allowDupes && DiskUtil.doesDatasetIDExist(id)) {
-		throw new InsightError("Dataset ID: '" + id + "', already exists");
+	if (DiskUtil.doesDatasetIDExist(id)) {
+		if (removing) {
+			return;
+		} else {
+			throw new InsightError("Dataset ID: '" + id + "', already exists");
+		}
 	}
 }
 

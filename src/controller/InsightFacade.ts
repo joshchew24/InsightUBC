@@ -8,7 +8,7 @@ import {
 	NotFoundError,
 } from "./IInsightFacade";
 import fs from "fs-extra";
-import {DatasetModel, RoomDatasetModel, SectionDatasetModel} from "../models/IModel";
+import {DatasetModel, Header, RoomDatasetModel, SectionDatasetModel} from "../models/IModel";
 import {handleQuery} from "../queryScripts/PerformQuery";
 import * as DiskUtil from "./DiskUtil";
 import {sectionLogicAndOutput} from "./SectionDatasetUtil";
@@ -16,6 +16,7 @@ import {roomLogicAndOutput} from "./RoomDatasetUtil";
 import {retrieveDatasetModel} from "./CommonDatasetUtil";
 import * as DatasetUtil from "./DatasetUtil";
 import {InsightDatasetClass} from "./InsightDatasetClass";
+import {PERSISTENT_DIR} from "./DiskUtil";
 // import * as DatasetProcessor from "./DatasetProcessor";
 
 /**
@@ -129,43 +130,10 @@ export default class InsightFacade implements IInsightFacade {
 
 	// TODO: enable mix and match if the type checking proves to be problematic
 	public listDatasets(): Promise<InsightDataset[]> {
-		try {
-			const datasetArr: DatasetModel[] = retrieveDatasetModel();
-			// check if datasetArr contains dataset objects, if not return empty array
-			if (datasetArr.length === 1 && datasetArr[0].id === undefined) {
-				return Promise.resolve([]);
-			}
-
-			// check if datasetArr is empty, if so return empty array
-			if (datasetArr.length === 0) {
-				return Promise.resolve(datasetArr as InsightDataset[]);
-			}
-
-			// check if datasetArr is Room or Section, can be mixed
-
-			const insightDatasetArr: InsightDataset[] = [];
-			for (const datasetModel of datasetArr) {
-				if (datasetModel.kind === InsightDatasetKind.Sections) {
-					const sectionDatasetArr = datasetModel as SectionDatasetModel;
-					const sectionInsightDatasetArr: InsightDataset = {
-						id: sectionDatasetArr.id,
-						kind: InsightDatasetKind.Sections,
-						numRows: sectionDatasetArr.section.length,
-					};
-					insightDatasetArr.push(sectionInsightDatasetArr);
-				} else if (datasetModel.kind === InsightDatasetKind.Rooms) {
-					const roomDatasetArr = datasetModel as RoomDatasetModel;
-					const roomInsightDatasetArr: InsightDataset = {
-						id: roomDatasetArr.id,
-						kind: InsightDatasetKind.Rooms,
-						numRows: roomDatasetArr.room.length,
-					};
-					insightDatasetArr.push(roomInsightDatasetArr);
-				}
-			}
-			return Promise.resolve(insightDatasetArr);
-		} catch (err) {
-			return Promise.reject(err);
+		if (!fs.existsSync(`${PERSISTENT_DIR}dataset_index.json`)) {
+			return Promise.resolve([]);
 		}
+		let indexString = fs.readFileSync(`${PERSISTENT_DIR}dataset_index.json`, {encoding: "utf8"});
+		return Promise.resolve(JSON.parse(indexString));
 	}
 }
