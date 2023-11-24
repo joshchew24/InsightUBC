@@ -1,6 +1,8 @@
 import express, {Application, Request, Response} from "express";
 import * as http from "http";
 import cors from "cors";
+import InsightFacade from "../controller/InsightFacade";
+import {InsightDatasetKind, InsightError, NotFoundError} from "../controller/IInsightFacade";
 
 export default class Server {
 	private readonly port: number;
@@ -84,8 +86,73 @@ export default class Server {
 		// http://localhost:4321/echo/hello
 		this.express.get("/echo/:msg", Server.echo);
 
-		// TODO: your other endpoints should go here
+		// initialize our instance of InsightFacade
+		let facade = new InsightFacade();
 
+		this.express.put("/dataset/:id/:kind", (req, res) =>
+			Server.putDataset(req, res, facade));
+
+		this.express.delete("/dataset/:id", (req, res) =>
+			Server.deleteDataset(req, res, facade));
+
+		this.express.post("/query", (req, res) =>
+			Server.postQuery(req, res, facade));
+
+		this.express.get("/datasets", (req, res) =>
+			Server.getDatasets(res, facade));
+	}
+
+	private static async putDataset(req: Request, res: Response, facade: InsightFacade) {
+		try {
+			const id = req.params.id;
+			const content = req.body as Buffer;
+			let datasetKind;
+
+			if(req.params.kind === "sections") {
+				datasetKind = InsightDatasetKind.Sections;
+			} else if (req.params.kind === "rooms") {
+				datasetKind = InsightDatasetKind.Rooms;
+			} else {
+				throw new Error("Illegal dataset kind: must be sections or rooms");
+			}
+
+			const arr = await facade.addDataset(id, content.toString("base64"), datasetKind);
+			res.status(200).json({result: arr});
+		} catch(err) {
+			res.status(400).json({error: (err as Error).message});
+		}
+	}
+
+	private static async deleteDataset(req: Request, res: Response, facade: InsightFacade) {
+		try {
+			const str = await facade.removeDataset(req.params.id);
+			res.status(200).json({result: str});
+		} catch(err) {
+			if(err instanceof InsightError) {
+				res.status(400).json({error: err.message});
+			} else if(err instanceof NotFoundError) {
+				res.status(404).json({error: err.message});
+			}
+		}
+	}
+
+	private static async postQuery(req: Request, res: Response, facade: InsightFacade) {
+		try {
+			const inputQuery = req.body;
+			const arr = await facade.performQuery(inputQuery);
+			res.status(200).json({result: arr});
+		} catch(err) {
+			res.status(400).json({error: (err as Error).message});
+		}
+	}
+
+	private static async getDatasets(res: Response, facade: InsightFacade) {
+		try {
+			const arr = await facade.listDatasets();
+			res.status(200).json({result: arr});
+		} catch(err) {
+			res.status(400).json({error: (err as Error).message});
+		}
 	}
 
 	// The next two methods handle the echo service.
