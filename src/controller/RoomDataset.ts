@@ -8,6 +8,7 @@ import {Attribute} from "parse5/dist/common/token";
 import {makeAsync} from "./AsyncUtil";
 import {Building, BuildingFactory} from "../models/Building";
 import {getChildElements} from "./HTMLUtil";
+import {getFileFromZip} from "./DatasetUtil";
 
 export class RoomDataset extends InsightDatasetClass {
 	private readonly ROOMS_DIR = "campus/discover/buildings-and-classrooms";
@@ -20,11 +21,7 @@ export class RoomDataset extends InsightDatasetClass {
 				throw new InsightError("Error loading zip file from content parameter");
 			})
 			.then(() => {
-				const index = zip.file(this.INDEX);
-				if (!index) {
-					throw new InsightError("'" + this.INDEX + "' was not found in the zip file.");
-				}
-				return index.async("text");
+				return getFileFromZip(zip, this.INDEX);
 			})
 			.catch((err) => {
 				throw err;
@@ -43,23 +40,13 @@ export class RoomDataset extends InsightDatasetClass {
 				return makeAsync(this.getBuildingRows, "Building table was empty", buildingTable);
 			})
 			.then((buildingRows) => {
-				if (buildingRows == null || (buildingRows as Element[]).length === 0) {
-					throw new InsightError("Building Table was empty");
-				}
-				let buildings: Building[] = [];
-				for (let buildingRow of buildingRows as Element[]) {
-					let building = BuildingFactory.createBuilding(buildingRow, zip);
-					if (building) {
-						buildings.push(building);
-					}
-				}
-				return buildings;
+				return makeAsync(this.extractBuildingsFromTable, "Buildings table was empty", buildingRows, zip);
 			})
-			// .then((buildings) => {
-			// 	for (let building of buildings) {
-			// 		building.getRooms();
-			// 	}
-			// })
+			.then((buildings) => {
+				for (let building of buildings as Building[]) {
+					building.getRooms();
+				}
+			})
 			.then(() => {
 				return Promise.resolve(["asdf"]);
 			})
@@ -68,6 +55,20 @@ export class RoomDataset extends InsightDatasetClass {
 			});
 	}
 
+
+	private extractBuildingsFromTable(buildingRows: any, zip: JSZip) {
+		if (buildingRows == null || (buildingRows as Element[]).length === 0) {
+			throw new InsightError("Building Table was empty");
+		}
+		let buildings: Building[] = [];
+		for (let buildingRow of buildingRows as Element[]) {
+			let building = BuildingFactory.createBuilding(buildingRow, zip);
+			if (building) {
+				buildings.push(building);
+			}
+		}
+		return buildings;
+	}
 
 	private findBuildingTable(document: Document): Element | null {
 		let buildingTableSearchStack: ChildNode[] = defaultTreeAdapter.getChildNodes(document);

@@ -2,6 +2,7 @@ import {InsightDatasetKind, InsightError} from "./IInsightFacade";
 import {SectionDataset} from "./SectionDataset";
 import {RoomDataset} from "./RoomDataset";
 import * as DiskUtil from "./DiskUtil";
+import JSZip from "jszip";
 
 export function createInsightDataset(id: string, kind: InsightDatasetKind, numRows: number) {
 	if (kind === InsightDatasetKind.Sections) {
@@ -11,6 +12,14 @@ export function createInsightDataset(id: string, kind: InsightDatasetKind, numRo
 	} else {
 		throw new InsightError("invalid kind");
 	}
+}
+
+export async function getFileFromZip(zip: JSZip, path: string) {
+	const index = zip.file(path);
+	if (!index) {
+		throw new InsightError("'" + path + "' was not found in the zip file.");
+	}
+	return index.async("text");
 }
 
 // export function validateID(id: string) {

@@ -1,4 +1,4 @@
-import {RoomFull} from "./IRoom";
+import {Room, RoomFactory} from "./Room";
 import JSZip from "jszip";
 import {ChildNode, Element, TextNode} from "parse5/dist/tree-adapters/default";
 import {getChildElements, getChildNodes} from "../controller/HTMLUtil";
@@ -132,16 +132,16 @@ export const BuildingFactory: IBuildingFactory = {
 };
 
 export class Building {
-	public shortname: string;
-	public fullname: string;
-	public address: string;
-	public buildingFilePath: string;
-	private readonly zip: JSZip;
+	public shortname: string; 			// Short building name (code).
+	public fullname: string;  			// Full building name.
+	public address: string;				// The building address.
+	public buildingFilePath: string;	// Path to building.htm file
+	public readonly zip: JSZip;
 	public lat?: number;
 	public lon?: number;
-	public rooms?: RoomFull[];
+	public rooms?: Room[];
 	constructor(shortname: string, fullname: string, address: string, buildingFilePath: string, zip: JSZip,
-		lat?: number, lon?: number, rooms?: RoomFull[]) {
+		lat?: number, lon?: number, rooms?: Room[]) {
 		this.shortname = shortname;
 		this.fullname = fullname;
 		this.address = address;
@@ -156,8 +156,12 @@ export class Building {
 		if (this.rooms != null) {
 			return this.rooms;
 		}
-		const buildingFile = this.zip.file(this.buildingFilePath);
-		console.log(buildingFile);
+		console.log(this.buildingFilePath);
+		let roomResult = RoomFactory.createRoom(this.buildingFilePath, this);
+		// if (roomResult == null) {
+			// throw new InsightError("This building has no valid rooms");
+		// }
+		// this.rooms = roomResult as Room[];
 		// use jszip to read
 	}
 }
