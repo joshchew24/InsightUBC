@@ -86,5 +86,5 @@ export abstract class InsightDatasetClass implements InsightDataset {
 		}
 	}
 
-	protected abstract processFileContents(content: string): Promise<any[]>;
+	protected abstract processFileContents(content: string): Promise<InsightData[]>;
 }

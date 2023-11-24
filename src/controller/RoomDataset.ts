@@ -8,12 +8,14 @@ import {makeAsync} from "./AsyncUtil";
 import {Building, BuildingFactory} from "../models/Building";
 import * as HTMLUtil from "./HTMLUtil";
 import * as DatasetUtil from "./DatasetUtil";
+import {InsightData, RoomData} from "../models/IModel";
 
 export class RoomDataset extends InsightDatasetClass {
-	private readonly ROOMS_DIR = "campus/discover/buildings-and-classrooms";
+	// private readonly ROOMS_DIR = "campus/discover/buildings-and-classrooms";
 	private readonly INDEX = "index.htm";
 
-	protected async processFileContents(content: string): Promise<any[]> {
+	// TODO: change return type to InsightData[]
+	protected async processFileContents(content: string): Promise<InsightData[]> {
 		let zip: JSZip = new JSZip();
 		return zip.loadAsync(content, {base64: true, createFolders: false})
 			.catch(() => {
@@ -37,26 +39,27 @@ export class RoomDataset extends InsightDatasetClass {
 			.then((buildingRows) => {
 				return makeAsync(this.extractBuildingsFromTable, "Buildings table was empty", buildingRows, zip);
 			})
-			.then((buildings) => {
-				if (buildings == null || (buildings as Building[]).length === 0) {
+			.then(async (buildings) => {
+				let buildingArr: Building[];
+				if (buildings == null || (buildingArr = buildings as Building[]).length === 0) {
 					throw new InsightError("Buildings table was empty");
 				}
-				// get rooms for each building -> if error, just return null
+				// populate each building -> if error, just return null
 				let callback = function(building: Building) {
 					return building.addRooms().catch((error) => null);
 				};
-				return Promise.all((buildings as Building[]).map(callback));
+				await Promise.all((buildingArr).map(callback));
+				return buildingArr;
 			})
 			.then((buildings) => {
-				let validBuildings: Building[] = [];
+				let rooms: RoomData[] = [];
 				for (let building of buildings) {
-					if (building != null) {
-						validBuildings.push(building as Building);
+					if (building.rooms) {
+						rooms.push(...building.getRoomData());
 					}
 				}
-			})
-			.then(() => {
-				return Promise.resolve(["asdf"]);
+				console.log(rooms);
+				return rooms;
 			})
 			.catch((err) => {
 				throw err;

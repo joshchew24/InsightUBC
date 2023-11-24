@@ -1,13 +1,13 @@
 import {InsightDatasetClass} from "./InsightDatasetClass";
 import JSZip from "jszip";
 import {InsightError} from "./IInsightFacade";
-import {SectionData} from "../models/IModel";
+import {InsightData, SectionData} from "../models/IModel";
 
 export class SectionDataset extends InsightDatasetClass {
 
 	private readonly SECTIONS_DIR = "courses";
 
-	protected async processFileContents(content: string): Promise<any[]> {
+	protected async processFileContents(content: string): Promise<InsightData[]> {
 		let zip: JSZip = new JSZip();
 		return zip.loadAsync(content, {base64: true, createFolders: false})
 			.catch(() => {

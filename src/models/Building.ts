@@ -14,6 +14,7 @@ import {InsightError} from "../controller/IInsightFacade";
 import {getFileFromZip} from "../controller/DatasetUtil";
 import {fetchGeoLocation} from "../controller/GeoUtil";
 import {GeoResponse} from "./IGeoResponse";
+import {RoomData} from "./IModel";
 
 const ValidClass = [
 	// "views-field views-field-field-building-image",
@@ -191,5 +192,28 @@ export class Building {
 		} else {
 			throw new InsightError("Failed to fetch geolocation");
 		}
+	}
+
+	public getRoomData(): RoomData[] {
+		if (this.rooms == null) {
+			throw new InsightError("cannot retrieve room data on a building with no rooms (did you try addRooms?)");
+		}
+		let roomData: RoomData[] = [];
+		for (let room of this.rooms) {
+			roomData.push({
+				fullname: this.fullname,
+				shortname: this.shortname,
+				number: room.number,
+				name: room.name,
+				address: this.address,
+				lat: this.lat as number,
+				lon: this.lon as number,
+				seats: room.seats,
+				type: room.type,
+				furniture: room.furniture,
+				href: room.href,
+			});
+		}
+		return roomData;
 	}
 }
