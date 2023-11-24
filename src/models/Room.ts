@@ -1,17 +1,31 @@
 import {Building} from "./Building";
 import JSZip from "jszip";
 import {Element} from "parse5/dist/tree-adapters/default";
-import {getChildElements, validateAndGetTableFields} from "../controller/HTMLUtil";
+import {
+	getChildElements,
+	getChildNodes,
+	getFirstChildTextNodeValue, getHrefLinkFromAnchor, getTextChildFromAnchor,
+	validateAndGetTableFields
+} from "../controller/HTMLUtil";
 import * as parse5 from "parse5";
 import {defaultTreeAdapter} from "parse5";
 
 const ValidClass = [
-	// "views-field views-field-field-building-image",
-	"views-field views-field-field-building-code",
-	"views-field views-field-title",
-	"views-field views-field-field-building-address",
+	"views-field views-field-field-room-number",
+	"views-field views-field-field-room-capacity",
+	"views-field views-field-field-room-furniture",
+	"views-field views-field-field-room-type",
 	"views-field views-field-nothing"
 ];
+
+enum ValidClassMap {
+	NUMBER = "views-field views-field-field-room-number",
+	CAPACITY = "views-field views-field-field-room-capacity",
+	FURNITURE = "views-field views-field-field-room-furniture",
+	TYPE = "views-field views-field-field-room-type",
+	HREF = "views-field views-field-nothing"
+}
+
 
 export interface RoomFields {
 	number?: string,
@@ -45,13 +59,37 @@ export const RoomFactory: IRoomFactory = {
 			ValidClass,
 			this.getFieldFromCell
 		);
+		console.log(roomFields);
 		if (roomFields == null) {
 			return null;
 		}
 		return null;
 	},
 	getFieldFromCell(roomCell: Element, fieldType: string, roomFieldObject: RoomFields): void {
-		return;
+		// console.log(roomCell);
+		switch (fieldType) {
+			case ValidClassMap.NUMBER: {
+				roomFieldObject.number = getTextChildFromAnchor(roomCell);
+				break;
+			}
+			case ValidClassMap.CAPACITY: {
+				roomFieldObject.seats = getFirstChildTextNodeValue(roomCell, true) as number | undefined;
+				break;
+			}
+			case ValidClassMap.FURNITURE: {
+				roomFieldObject.furniture = getFirstChildTextNodeValue(roomCell) as string | undefined;
+				break;
+			}
+			case ValidClassMap.TYPE: {
+				roomFieldObject.type = getFirstChildTextNodeValue(roomCell) as string | undefined;
+				break;
+			}
+			case ValidClassMap.HREF: {
+				roomFieldObject.href = getHrefLinkFromAnchor(roomCell);
+				break;
+			}
+
+		}
 	}
 };
 

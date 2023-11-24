@@ -137,3 +137,44 @@ export function validateAndGetTableFields(
 	}
 	return fieldObject;
 }
+
+export function getFirstChildTextNodeValue(
+	cell: Element,
+	convertToNumber: boolean = false): string | number | undefined {
+	let result = getChildNodes(cell, true, "text");
+	if (result == null) {
+		return undefined;
+	}
+	let resultString = (result as TextNode).value.trim();
+	if (convertToNumber) {
+		return parseInt(resultString, 10);
+	}
+	return resultString;
+}
+
+export function getHrefLinkFromAnchor(cell: Element): string | undefined {
+	let result = getChildNodes(cell, false, "element", parse5.html.TAG_NAMES.A);
+	let anchorNodes: ChildNode[];
+	if (result == null || (anchorNodes = result as ChildNode[]).length !== 1) {
+		return undefined;
+	}
+	let attrList = defaultTreeAdapter.getAttrList(anchorNodes[0] as Element);
+	for (let attr of attrList) {
+		if (attr.name === "href") {
+			return attr.value.trim();
+		}
+	}
+}
+
+export function getTextChildFromAnchor(cell: Element): string | undefined {
+	// TODO: find first child of this cell with correct tag
+	let result = getChildNodes(cell, true, "element", parse5.html.TAG_NAMES.A);
+	if (result == null) {
+		return undefined;
+	}
+	let title = getChildNodes(result as Element, true, "text");
+	if (title == null) {
+		return undefined;
+	}
+	return (title as TextNode).value.trim();
+}
