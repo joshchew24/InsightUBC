@@ -1,10 +1,11 @@
 import {Room, RoomFactory} from "./Room";
 import JSZip from "jszip";
 import {ChildNode, Element, TextNode} from "parse5/dist/tree-adapters/default";
-import {getChildElements, getChildNodes} from "../controller/HTMLUtil";
+import {findTableInHTML, getChildElements, getChildNodes} from "../controller/HTMLUtil";
 import * as parse5 from "parse5";
 import {defaultTreeAdapter} from "parse5";
 import {InsightError} from "../controller/IInsightFacade";
+import {getFileFromZip} from "../controller/DatasetUtil";
 
 const ValidClass = [
 	// "views-field views-field-field-building-image",
@@ -152,16 +153,28 @@ export class Building {
 		this.rooms = rooms;
 	}
 
-	public getRooms() {
-		if (this.rooms != null) {
-			return this.rooms;
+	// returns the list of rooms in this building
+	// if this.rooms is null, attempts to addRooms via this.buildingFilePath
+	// returns Room[] on success
+	public async getRooms(): Promise<Room[] | undefined> {
+		if (this.rooms == null) {
+			try {
+				await this.addRooms();
+			} catch (err) {
+				return undefined;
+			}
 		}
-		console.log(this.buildingFilePath);
-		let roomResult = RoomFactory.createRoom(this.buildingFilePath, this);
-		// if (roomResult == null) {
-			// throw new InsightError("This building has no valid rooms");
-		// }
-		// this.rooms = roomResult as Room[];
-		// use jszip to read
+		return this.rooms;
+	}
+
+	// propagates errors to caller
+	// attempts to add rooms from this.buildingFilePath to Rooms[]
+	public async addRooms(): Promise<void> {
+		let path = this.buildingFilePath.trim().replace(/^\.\/+/, "");
+		let buildingFile = await getFileFromZip(this.zip, path);
+		let buildingTableNode = await findTableInHTML(buildingFile, "building document");
+			// return Promise.resolve(buildingTableNode);
+	// get rows from building
+	// for each row, createRoom
 	}
 }

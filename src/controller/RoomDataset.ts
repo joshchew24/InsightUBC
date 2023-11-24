@@ -42,8 +42,19 @@ export class RoomDataset extends InsightDatasetClass {
 				if (buildings == null || (buildings as Building[]).length === 0) {
 					throw new InsightError("Buildings table was empty");
 				}
-				for (let building of buildings as Building[]) {
-					building.getRooms();
+				// get rooms for each building -> if error, just return null
+				let callback = function(building: Building) {
+					return building.addRooms().catch((error) => null);
+				};
+				return Promise.all((buildings as Building[]).map(callback));
+			})
+			.then((buildings) => {
+				let validBuildings: Building[] = [];
+
+				for (let building of buildings) {
+					if (building != null) {
+						validBuildings.push(building as Building);
+					}
 				}
 			})
 			.then(() => {

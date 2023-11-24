@@ -13,7 +13,7 @@ export function findTableInHTML(documentString: string, docName: string = "docum
 	if (!document || defaultTreeAdapter.getChildNodes(document).length === 0) {
 		throw new InsightError(docName + " is empty");
 	}
-	return makeAsync(findTable,"No valid building table", document);
+	return makeAsync(findTable,"No valid table", document);
 }
 
 function findTable(document: Document): Element | null {
