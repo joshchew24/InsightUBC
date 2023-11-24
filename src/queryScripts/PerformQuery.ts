@@ -10,7 +10,7 @@ import {RoomClass} from "../models/IRoom";
 
 export function handleQuery(query: unknown): Promise<InsightResult[]> {
 	let currDataset: Dataset;
-	if (!isJSON) {
+	if (!isJSON(query)) {
 		return Promise.reject(new InsightError("Invalid query string"));
 	}
 
@@ -39,7 +39,7 @@ export function isJSON(input: unknown): boolean {
 	return input !== null && input !== undefined && typeof input === "object" && !Array.isArray(input);
 }
 
-// TODO: need to refactor to take into account rooms
+
 function executeQuery(inputQuery: any, currDataset: Dataset) {
 	let rawResult = [];
 	let queryTree: QueryASTNode = processQueryToAST(inputQuery["WHERE"]);
@@ -80,17 +80,15 @@ function executeQuery(inputQuery: any, currDataset: Dataset) {
 		rawResult = transformResult(inputQuery["TRANSFORMATIONS"], rawResult);
 	}
 
-	// check if result > 5000 after transfomration is done now
+	// check if result > 5000 after transformation is done now
 	if (rawResult.length > 5000) {
 		throw new ResultTooLargeError(
-			"The result is too big." + "Only queries with a maximum of 5000 results are supported."
+			"The result is too big. " + "Only queries with a maximum of 5000 results are supported."
 		);
 	}
 
-	// should transform result sections to object containing just the columns given no transformation
 	let processedResult = mapColumns(rawResult, inputQuery["OPTIONS"]["COLUMNS"]);
 
-	// will order transformed results if order key is given, else return unordered result
 	if (inputQuery["OPTIONS"]["ORDER"]) {
 		return orderRows(processedResult, inputQuery["OPTIONS"]["ORDER"]);
 	} else {

@@ -139,7 +139,7 @@ function validateIDs(query: object): string | never {
 	let idString = idStringList[0];
 	if (idStringList.every((id) => id === idString)) {
 		if (!doesDatasetIDExist(idString)) {
-			throw new InsightError('Referenced dataset "' + idString + '" not added yet');
+			throw new InsightError(`Referenced dataset "${idString}" not added yet`);
 		}
 		return idString;
 	} else {
