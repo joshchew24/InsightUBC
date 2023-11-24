@@ -78,7 +78,7 @@ export function isValidSection(section: Section): boolean {
 	}
 	if (section.Professor === undefined) {
 		return false;
-		// throw new InsightError("Invalid Search");
+		// throw new InsightError("Invalid Professor");
 	}
 	if (section.Subject === undefined) {
 		return false;
