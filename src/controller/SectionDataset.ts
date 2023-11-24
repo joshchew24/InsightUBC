@@ -103,7 +103,7 @@ export class SectionDataset extends InsightDatasetClass {
 			title: rawSection.Title as string,
 			instructor: rawSection.Professor as string,
 			dept: rawSection.Subject as string,
-			year: rawSection.Year as number,
+			year: parseInt(rawSection.Year as string, 10) as number,
 			avg: rawSection.Avg as number,
 			pass: rawSection.Pass as number,
 			fail: rawSection.Fail as number,
