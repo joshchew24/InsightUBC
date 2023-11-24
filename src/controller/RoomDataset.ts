@@ -40,8 +40,6 @@ export class RoomDataset extends InsightDatasetClass {
 				if (buildingTable == null) {
 					throw new InsightError("no valid building table");
 				}
-				// this.validateHeader(buildingTable as Element);
-				// for each building, construct building object and add to array
 				return makeAsync(this.getBuildingRows, "Building table was empty", buildingTable);
 			})
 			.then((buildingRows) => {
@@ -55,16 +53,19 @@ export class RoomDataset extends InsightDatasetClass {
 						buildings.push(building);
 					}
 				}
-				console.log(buildings);
+				return buildings;
 			})
+			// .then((buildings) => {
+			// 	for (let building of buildings) {
+			// 		building.getRooms();
+			// 	}
+			// })
 			.then(() => {
 				return Promise.resolve(["asdf"]);
 			})
 			.catch((err) => {
 				throw err;
 			});
-		// WIP
-		// return Promise.resolve(["hi"]);
 	}
 
 

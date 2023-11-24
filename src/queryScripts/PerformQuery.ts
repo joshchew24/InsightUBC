@@ -5,7 +5,7 @@ import {mapColumns, orderRows, passesQuery, processQueryToAST, transformResult} 
 import {QueryASTNode} from "../models/QueryASTNode";
 import {validateQuery} from "./ValidateQuery";
 import {MetaQuery} from "../models/IQuery";
-import {Room} from "../models/IRoom";
+import {RoomFull} from "../models/IRoom";
 import {RoomDatasetModel, SectionDatasetModel} from "../models/IModel";
 
 export function handleQuery(query: unknown): Promise<InsightResult[]> {
@@ -47,7 +47,7 @@ function executeQuery(inputQuery: any, currDataset: SectionDatasetModel | RoomDa
 	if (currDataset.kind === InsightDatasetKind.Rooms) {
 		let roomDataset = currDataset as RoomDatasetModel;
 		for (let room of roomDataset.room) {
-			let currRoom = new Room(room);
+			let currRoom = new RoomFull(room);
 			if (passesQuery(currRoom, queryTree)) {
 				rawResult.push(currRoom);
 			}

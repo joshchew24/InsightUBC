@@ -1,12 +1,12 @@
 import {InsightDatasetKind, InsightError} from "./IInsightFacade";
-import {Room} from "../models/IRoom";
+import {RoomFull} from "../models/IRoom";
 import {RoomDatasetModel, SectionDatasetModel} from "../models/IModel";
 import fs from "fs-extra";
 import {Section, SectionPruned} from "../models/ISection";
 import {retrieveAllDatasetIds} from "./DiskUtil";
 
 // Type guard for Room
-function isRoom(obj: any): obj is Room {
+function isRoom(obj: any): obj is RoomFull {
 	return obj && "address" in obj;
 }
 

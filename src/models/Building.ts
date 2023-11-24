@@ -1,4 +1,4 @@
-import {Room} from "./IRoom";
+import {RoomFull} from "./IRoom";
 import JSZip from "jszip";
 import {ChildNode, Element, TextNode} from "parse5/dist/tree-adapters/default";
 import {getChildElements, getChildNodes} from "../controller/HTMLUtil";
@@ -139,9 +139,9 @@ export class Building {
 	private readonly zip: JSZip;
 	public lat?: number;
 	public lon?: number;
-	public rooms?: Room[];
+	public rooms?: RoomFull[];
 	constructor(shortname: string, fullname: string, address: string, buildingFilePath: string, zip: JSZip,
-		lat?: number, lon?: number, rooms?: Room[]) {
+		lat?: number, lon?: number, rooms?: RoomFull[]) {
 		this.shortname = shortname;
 		this.fullname = fullname;
 		this.address = address;

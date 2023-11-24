@@ -1,4 +1,4 @@
-export class Room {
+export class RoomFull {
 	public fullname: string; // Full building name.
 	public shortname: string; // Short building name.
 	public number: string; // The room number. Not always a number so represented as a string.
