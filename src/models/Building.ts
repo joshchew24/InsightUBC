@@ -13,6 +13,7 @@ import {defaultTreeAdapter} from "parse5";
 import {InsightError} from "../controller/IInsightFacade";
 import {getFileFromZip} from "../controller/DatasetUtil";
 import {fetchGeoLocation} from "../controller/GeoUtil";
+import {GeoResponse} from "./IGeoResponse";
 
 const ValidClass = [
 	// "views-field views-field-field-building-image",
@@ -183,7 +184,12 @@ export class Building {
 			throw new InsightError("Rooms Table was empty");
 		}
 		this.rooms = rooms;
-		let result = await fetchGeoLocation(this.address);
-		console.log(result);
+		let result: GeoResponse = await fetchGeoLocation(this.address);
+		if ("lat" in result) {
+			this.lat = result.lat;
+			this.lon = result.lon;
+		} else {
+			throw new InsightError("Failed to fetch geolocation");
+		}
 	}
 }
