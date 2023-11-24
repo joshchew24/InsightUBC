@@ -41,9 +41,7 @@ export const BuildingFactory: IBuildingFactory = {
 		if (buildingCells == null) {
 			return null;
 		}
-		let buildingCellsArr = buildingCells as Element[];
-
-		let buildingFields = this.validateAndGetBuildingFields(buildingCellsArr);
+		let buildingFields = this.validateAndGetBuildingFields(buildingCells as Element[]);
 		if (buildingFields == null) {
 			return null;
 		}

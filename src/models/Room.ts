@@ -1,14 +1,48 @@
 import {Building} from "./Building";
 import JSZip from "jszip";
 import {Element} from "parse5/dist/tree-adapters/default";
+import {getChildElements} from "../controller/HTMLUtil";
+import * as parse5 from "parse5";
+import {defaultTreeAdapter} from "parse5";
+
+interface RoomFields {
+	number?: string,
+	seats?: number,
+	type?: string,
+	furniture?: string,
+	href?: string
+}
 
 interface IRoomFactory {
 	createRoom(roomRow: Element, parent: Building): Room | null;
+	validateAndGetRoomFields(roomCellsArr: Element[]): RoomFields | null;
 }
 
 export const RoomFactory: IRoomFactory = {
 	createRoom(roomRow: Element, parent: Building): Room | null {
-		console.log(roomRow);
+		let roomCells = getChildElements(roomRow, false, parse5.html.TAG_NAMES.TD);
+		if (roomCells == null) {
+			return null;
+		}
+
+		let roomFields = this.validateAndGetRoomFields(roomCells as Element[]);
+		if (roomFields == null) {
+			return null;
+		}
+		return null;
+	},
+
+	validateAndGetRoomFields(roomCellsArr: Element[]): RoomFields | null {
+		// let roomFields: RoomFields = {};
+		//
+		// for (let cell of roomCellsArr) {
+		// 	let attrList = defaultTreeAdapter.getAttrList(cell);
+		// 	for (let attr of attrList) {
+		// 		if (attr.name === "class" && ValidClass.includes(attr.value)) {
+		// 			this.getFieldFromCell(cell, attr.value, roomFields);
+		// 		}
+		// 	}
+		// }
 		return null;
 	}
 };
