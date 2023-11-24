@@ -12,6 +12,7 @@ import * as parse5 from "parse5";
 import {defaultTreeAdapter} from "parse5";
 import {InsightError} from "../controller/IInsightFacade";
 import {getFileFromZip} from "../controller/DatasetUtil";
+import {fetchGeoLocation} from "../controller/GeoUtil";
 
 const ValidClass = [
 	// "views-field views-field-field-building-image",
@@ -182,7 +183,7 @@ export class Building {
 			throw new InsightError("Rooms Table was empty");
 		}
 		this.rooms = rooms;
-	// get rows from building
-	// for each row, createRoom
+		let result = await fetchGeoLocation(this.address);
+		console.log(result);
 	}
 }
