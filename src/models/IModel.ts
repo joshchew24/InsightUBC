@@ -16,6 +16,16 @@ export interface DatasetModel {
 	numRows: number;
 }
 
+export interface Dataset extends Header{
+	data: InsightData[];
+}
+
+export interface Header {
+	id: string;
+	kind: InsightDatasetKind;
+	numRows: number;
+}
+
 // needed for josh's refactor:
 export type InsightData = SectionData | RoomData;
 
