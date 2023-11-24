@@ -1,16 +1,14 @@
 import {Building} from "./Building";
 import JSZip from "jszip";
+import {Element} from "parse5/dist/tree-adapters/default";
 
 interface IRoomFactory {
-	createRoom(path: string, parent: Building): Room | null;
+	createRoom(roomRow: Element, parent: Building): Room | null;
 }
 
 export const RoomFactory: IRoomFactory = {
-	createRoom(path: string, parent: Building): Room | null {
-		let zip: JSZip = parent.zip;
-		let trimmedPath = path.trim().replace(/^\.\/+/, "");
-		let result = zip.file(trimmedPath);
-		console.log(result);
+	createRoom(roomRow: Element, parent: Building): Room | null {
+		console.log(roomRow);
 		return null;
 	}
 };

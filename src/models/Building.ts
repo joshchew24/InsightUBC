@@ -175,15 +175,20 @@ export class Building {
 		let roomTable = await findTableInHTML(buildingFile, "building document");
 		// return Promise.resolve(roomTable);
 		let roomTableRows = getTableRows(roomTable as Element);
-		// if (roomTableRows == null || (roomTableRows as Element[]).length === 0) {
-		// 	throw new InsightError("Room Table was empty");
-		// }
-		// for (let row of roomTableRows) {
-		// 	let room = RoomFactory.createRoom(row, this);
-		// 	if (room) {
-		// 		this.rooms.push(room);
-		// 	}
-		// }
+		if (roomTableRows == null || (roomTableRows as Element[]).length === 0) {
+			throw new InsightError("Room Table was empty");
+		}
+		let rooms = [];
+		for (let row of roomTableRows) {
+			let room = RoomFactory.createRoom(row, this);
+			if (room) {
+				rooms.push(room);
+			}
+		}
+		if (rooms.length === 0) {
+			throw new InsightError("Rooms Table was empty");
+		}
+		this.rooms = rooms;
 	// get rows from building
 	// for each row, createRoom
 	}
