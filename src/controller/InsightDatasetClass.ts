@@ -1,7 +1,8 @@
 import {InsightDataset, InsightDatasetKind, InsightError} from "./IInsightFacade";
 import * as DiskUtil from "./DiskUtil";
-import {InsightData} from "../models/IModel";
+import {Dataset, Header, InsightData} from "../models/IModel";
 import fs from "fs-extra";
+import {PERSISTENT_DIR} from "./DiskUtil";
 
 export abstract class InsightDatasetClass implements InsightDataset {
 	// id, kind, numRows have to be public because the interface is not modifiable
@@ -58,22 +59,34 @@ export abstract class InsightDatasetClass implements InsightDataset {
 		if (this.numRows === 0) {
 			throw new InsightError("This dataset has no data");
 		}
-		let header = this.toObjectString();
-		// TODO: write header to dataset_index.json (for listDataset)
-		let dataset = this.toObjectString(true);
-		return fs.outputFile(DiskUtil.PERSISTENT_DIR + this.id + ".json", dataset)
-			.catch(() => {
-				throw new InsightError("There was a problem writing the dataset to disk");
-			});
+		let header = this.toObject();
+		let toDisk = JSON.stringify([header]);
+		if (!fs.existsSync(`${PERSISTENT_DIR}dataset_index.json`)) {
+			fs.mkdirSync(PERSISTENT_DIR);
+		} else {
+			let indexString = fs.readFileSync(`${PERSISTENT_DIR}dataset_index.json`, {encoding: "utf8"});
+			let index: Header[] = JSON.parse(indexString);
+			index.push(header);
+			toDisk = JSON.stringify(index);
+		}
+
+		fs.outputFileSync(`${PERSISTENT_DIR}dataset_index.json`, toDisk);
+
+
+		let dataset = JSON.stringify(this.toObject(true));
+		return fs.outputFileSync(PERSISTENT_DIR + this.id + ".json", dataset);
+			// .catch(() => {
+			// 	throw new InsightError("There was a problem writing the dataset to disk");
+			// });
 	}
 
-	private toObjectString(withData: boolean = false): string {
-		return JSON.stringify({
+	private toObject(withData: boolean = false): Dataset | Header {
+		return {
 			id: this.id,
 			kind: this.kind,
 			numRows: this.numRows,
 			...(withData ? {data: this._data} : {}),
-		});
+		};
 	}
 
 	private validateID(id: string) {

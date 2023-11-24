@@ -18,7 +18,10 @@ export function retrieveDataset(id: string): SectionDatasetModel | RoomDatasetMo
 export function retrieveAllDatasetIds(): string[] {
 	let ids: string[] = [];
 	fs.readdirSync(PERSISTENT_DIR).forEach((file) => {
-		ids.push(file.split(".")[0]);
+		let id = file.split(".")[0];
+		if (!id.includes("dataset_index")) {
+			ids.push(file.split(".")[0]);
+		}
 	});
 	return ids;
 }
