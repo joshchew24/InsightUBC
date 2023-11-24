@@ -1,6 +1,6 @@
 import JSZip from "jszip";
 import {InsightDatasetKind, InsightError} from "./IInsightFacade";
-import {DomNode, RoomFull} from "../models/IRoom";
+import {DomNode, RoomClass} from "../models/IRoom";
 import {parse} from "parse5";
 import {GeoResponse} from "../models/IGeoResponse";
 import {outputDataset} from "./CommonDatasetUtil";
@@ -17,7 +17,7 @@ export function roomLogicAndOutput(data: JSZip, id: string, kind: InsightDataset
 		});
 }
 // make rooms filled with fullname, shortname, and address
-function masterRecurseAST(currNode: DomNode[], size: number, roomArr: RoomFull[], room: RoomFull) {
+function masterRecurseAST(currNode: DomNode[], size: number, roomArr: RoomClass[], room: RoomClass) {
 	// base case
 	if (size === 0) {
 		return;
@@ -33,7 +33,7 @@ function masterRecurseAST(currNode: DomNode[], size: number, roomArr: RoomFull[]
 				if (!roomArr.includes(room)) {
 					roomArr.push(room);
 				}
-				room = {} as RoomFull;
+				room = {} as RoomClass;
 			}
 		}
 		// if node has child nodes then recurse
@@ -42,7 +42,7 @@ function masterRecurseAST(currNode: DomNode[], size: number, roomArr: RoomFull[]
 		}
 	}
 }
-function recurseAST(currNode: DomNode[], size: number, roomArr: RoomFull[], buildingCode: string, room: RoomFull) {
+function recurseAST(currNode: DomNode[], size: number, roomArr: RoomClass[], buildingCode: string, room: RoomClass) {
 	// base case
 	if (size === 0) {
 		return;
@@ -59,7 +59,7 @@ function recurseAST(currNode: DomNode[], size: number, roomArr: RoomFull[], buil
 				if (!roomArr.includes(room)) {
 					roomArr.push(room);
 				}
-				room = {} as RoomFull;
+				room = {} as RoomClass;
 			}
 		}
 		// if node has child nodes then recurse
@@ -68,7 +68,7 @@ function recurseAST(currNode: DomNode[], size: number, roomArr: RoomFull[], buil
 		}
 	}
 }
-function masterIterativelyPopulateRoom(attribute: string, room: RoomFull, currNode: DomNode): RoomFull {
+function masterIterativelyPopulateRoom(attribute: string, room: RoomClass, currNode: DomNode): RoomClass {
 	switch (attribute) {
 		case "views-field views-field-title": // fullname
 			if (currNode.childNodes?.[0].value !== undefined) {
@@ -105,7 +105,7 @@ function masterIterativelyPopulateRoom(attribute: string, room: RoomFull, currNo
 	}
 	return room;
 }
-function iterativelyPopulateRoom(attribute: string, room: RoomFull, currNode: DomNode): RoomFull {
+function iterativelyPopulateRoom(attribute: string, room: RoomClass, currNode: DomNode): RoomClass {
 	switch (attribute) {
 		case "views-field views-field-field-room-number": // number
 			if (currNode.childNodes?.[0].value !== undefined) {
@@ -143,7 +143,7 @@ function iterativelyPopulateRoom(attribute: string, room: RoomFull, currNode: Do
 	}
 	return room;
 }
-async function combineMasterAndRoomLogic(roomArr: RoomFull[], masterRoomArr: RoomFull[]): Promise<RoomFull[]> {
+async function combineMasterAndRoomLogic(roomArr: RoomClass[], masterRoomArr: RoomClass[]): Promise<RoomClass[]> {
 	if (masterRoomArr.length === 0 || roomArr.length === 0) {
 		throw new InsightError("No valid room in dataset");
 	}
@@ -162,7 +162,7 @@ async function combineMasterAndRoomLogic(roomArr: RoomFull[], masterRoomArr: Roo
 		}
 	});
 
-	const updatedRooms: Array<RoomFull | null> = await Promise.all(geoPromises);
+	const updatedRooms: Array<RoomClass | null> = await Promise.all(geoPromises);
 
 	const combinedRoomArr = roomArr
 		.map((room) => {
@@ -172,7 +172,7 @@ async function combineMasterAndRoomLogic(roomArr: RoomFull[], masterRoomArr: Roo
 		.filter((room) => isRoomValid(room));
 	return combinedRoomArr;
 }
-function isRoomValid(room: RoomFull): boolean {
+function isRoomValid(room: RoomClass): boolean {
 	if (
 		room.fullname === undefined ||
 		room.shortname === undefined ||
@@ -190,7 +190,7 @@ function isRoomValid(room: RoomFull): boolean {
 	}
 	return true;
 }
-function processZipContent(data: JSZip, masterRoomArr: RoomFull[], roomArr: RoomFull[]) {
+function processZipContent(data: JSZip, masterRoomArr: RoomClass[], roomArr: RoomClass[]) {
 	const fileProcessingPromises = Object.keys(data.files).map((relativePath) => {
 		return data
 			.file(relativePath)
@@ -213,11 +213,11 @@ function processZipContent(data: JSZip, masterRoomArr: RoomFull[], roomArr: Room
 				} else {
 					// dig through child nodes recursively
 					// master index of buildings
-					masterRecurseAST(DomNodes, parse5AST.childNodes.length, masterRoomArr, {} as RoomFull);
+					masterRecurseAST(DomNodes, parse5AST.childNodes.length, masterRoomArr, {} as RoomClass);
 					return masterRoomArr;
 				}
 				// recurse through all nodes, start populating array if buildingCode is not empty
-				recurseAST(DomNodes, parse5AST.childNodes.length, roomArr, buildingCode, {} as RoomFull);
+				recurseAST(DomNodes, parse5AST.childNodes.length, roomArr, buildingCode, {} as RoomClass);
 				return roomArr;
 			})
 			.catch((error) => {
@@ -226,9 +226,9 @@ function processZipContent(data: JSZip, masterRoomArr: RoomFull[], roomArr: Room
 	});
 	return fileProcessingPromises;
 }
-export function roomProcessingPromises(data: JSZip): Promise<RoomFull[]> {
-	const roomArr: RoomFull[] = [];
-	const masterRoomArr: RoomFull[] = [];
+export function roomProcessingPromises(data: JSZip): Promise<RoomClass[]> {
+	const roomArr: RoomClass[] = [];
+	const masterRoomArr: RoomClass[] = [];
 	const fileProcessingPromises = processZipContent(data, masterRoomArr, roomArr);
 	return Promise.all(fileProcessingPromises).then(() => {
 		return combineMasterAndRoomLogic(roomArr, masterRoomArr);

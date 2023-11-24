@@ -1,13 +1,13 @@
-import {SectionPruned} from "./ISection";
+import {SectionClass} from "./ISection";
 import {InsightDatasetKind} from "../controller/IInsightFacade";
-import {RoomFull} from "./IRoom";
+import {RoomClass} from "./IRoom";
 
 export interface SectionDatasetModel extends DatasetModel {
-	section: SectionPruned[];
+	section: SectionClass[];
 }
 
 export interface RoomDatasetModel extends DatasetModel {
-	room: RoomFull[];
+	room: RoomClass[];
 }
 
 export interface DatasetModel {
@@ -16,7 +16,7 @@ export interface DatasetModel {
 	numRows: number;
 }
 
-export interface Dataset extends Header{
+export interface Dataset extends Header {
 	data: InsightData[];
 }
 
@@ -55,3 +55,12 @@ export interface RoomData {
 	furniture: string; 	// The room furniture.
 	href: string; 		// The link to the full details online.
 }
+
+export function isSectionData(data: InsightData) {
+	return "uuid" in data;
+}
+
+export function isRoomData(data: InsightData) {
+	return "fullname" in data;
+}
+

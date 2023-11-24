@@ -1,7 +1,7 @@
-import {SectionPruned} from "../models/ISection";
+import {SectionClass} from "../models/ISection";
 import {QueryASTNode} from "../models/QueryASTNode";
 import {InsightResult} from "../controller/IInsightFacade";
-import {RoomFull} from "../models/IRoom";
+import {RoomClass} from "../models/IRoom";
 import Decimal from "decimal.js";
 
 export function processQueryToAST(queryItem: any) {
@@ -34,7 +34,7 @@ export function processQueryToAST(queryItem: any) {
 	}
 }
 
-export function passesQuery(currClass: SectionPruned | RoomFull, query: QueryASTNode): boolean {
+export function passesQuery(currClass: SectionClass | RoomClass, query: QueryASTNode): boolean {
 	// if class doesn't pass any of the query execution return false; will only return true if query works
 	let includeClass = false;
 	let queryNodeKey = query.key;
@@ -128,7 +128,7 @@ export function transformResult(inputQueryElement: any, processedResult: any): I
 
 // HELPER FUNCTIONS
 
-function passesMComparator(currClass: SectionPruned | RoomFull, mComparison: QueryASTNode, mComparator: string) {
+function passesMComparator(currClass: SectionClass | RoomClass, mComparison: QueryASTNode, mComparator: string) {
 	let fieldName = mComparison.key.split("_")[1];
 	let mValue: number = mComparison.children as number;
 	let classField: number = 0;
@@ -147,7 +147,7 @@ function passesMComparator(currClass: SectionPruned | RoomFull, mComparison: Que
 	}
 }
 
-function matchesSField(currClass: SectionPruned | RoomFull, sComparison: QueryASTNode) {
+function matchesSField(currClass: SectionClass | RoomClass, sComparison: QueryASTNode) {
 	let fieldName = sComparison.key.split("_")[1];
 	let sValue: string = sComparison.children as string;
 	let field: string = "";
@@ -175,7 +175,7 @@ function matchesSField(currClass: SectionPruned | RoomFull, sComparison: QueryAS
 	}
 }
 
-function groupResult(groupKeys: any, processedResult: SectionPruned[] | RoomFull[]) {
+function groupResult(groupKeys: any, processedResult: SectionClass[] | RoomClass[]) {
 	let mappedResult: Map<string, any[]> = new Map();
 	for (let result of processedResult) {
 		let mapGroupKey = [];
@@ -218,7 +218,7 @@ function applyResult(applyRuleList: any, groupedResult: Map<string, any[]>) {
 }
 
 // Apply Helper Functions
-function applyCurrRule(resultGroup: RoomFull[] | SectionPruned[], applyToken: string, keyField: any) {
+function applyCurrRule(resultGroup: RoomClass[] | SectionClass[], applyToken: string, keyField: any) {
 	switch (applyToken) {
 		case "MAX":
 			return getMaxResult(resultGroup, keyField);
@@ -235,7 +235,7 @@ function applyCurrRule(resultGroup: RoomFull[] | SectionPruned[], applyToken: st
 	}
 }
 
-function getMaxResult(resultGroup: RoomFull[] | SectionPruned[], keyField: string) {
+function getMaxResult(resultGroup: RoomClass[] | SectionClass[], keyField: string) {
 	let maxResult = 0;
 	for (let result of resultGroup) {
 		let fieldValue = Number(result.getField?.(keyField));
@@ -246,7 +246,7 @@ function getMaxResult(resultGroup: RoomFull[] | SectionPruned[], keyField: strin
 	return maxResult;
 }
 
-function getMinResult(resultGroup: RoomFull[] | SectionPruned[], keyField: string) {
+function getMinResult(resultGroup: RoomClass[] | SectionClass[], keyField: string) {
 	let minResult = Number(resultGroup[0].getField?.(keyField));
 	for (let result of resultGroup) {
 		let fieldValue = Number(result.getField?.(keyField));
@@ -257,7 +257,7 @@ function getMinResult(resultGroup: RoomFull[] | SectionPruned[], keyField: strin
 	return minResult;
 }
 
-function getAvgResult(resultGroup: RoomFull[] | SectionPruned[], keyField: string) {
+function getAvgResult(resultGroup: RoomClass[] | SectionClass[], keyField: string) {
 	let sum = new Decimal(0);
 	for (let result of resultGroup) {
 		sum = sum.add(new Decimal(Number(result.getField?.(keyField))));
@@ -266,7 +266,7 @@ function getAvgResult(resultGroup: RoomFull[] | SectionPruned[], keyField: strin
 	return Number(avg.toFixed(2));
 }
 
-function sumGroupKeyField(resultGroup: RoomFull[] | SectionPruned[], keyField: string) {
+function sumGroupKeyField(resultGroup: RoomClass[] | SectionClass[], keyField: string) {
 	let sum = new Decimal(0);
 	for (let result of resultGroup) {
 		sum = sum.add(new Decimal(Number(result.getField?.(keyField))));
@@ -274,7 +274,7 @@ function sumGroupKeyField(resultGroup: RoomFull[] | SectionPruned[], keyField: s
 	return Number(sum.toFixed(2));
 }
 
-function countUniqueFieldOccurence(resultGroup: RoomFull[] | SectionPruned[], keyField: any) {
+function countUniqueFieldOccurence(resultGroup: RoomClass[] | SectionClass[], keyField: any) {
 	// prevents duplicates
 	let uniqueFields = new Set();
 

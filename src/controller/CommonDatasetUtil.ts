@@ -1,12 +1,12 @@
 import {InsightDatasetKind, InsightError} from "./IInsightFacade";
-import {RoomFull} from "../models/IRoom";
+import {RoomClass} from "../models/IRoom";
 import {RoomDatasetModel, SectionDatasetModel} from "../models/IModel";
 import fs from "fs-extra";
-import {Section, SectionPruned} from "../models/ISection";
+import {Section, SectionClass} from "../models/ISection";
 import {retrieveAllDatasetIds} from "./DiskUtil";
 
 // Type guard for Room
-function isRoom(obj: any): obj is RoomFull {
+function isRoom(obj: any): obj is RoomClass {
 	return obj && "address" in obj;
 }
 
@@ -34,7 +34,7 @@ export function outputDataset(id: string, kind: InsightDatasetKind, arr: any[]):
 			id: id,
 			kind: kind,
 			numRows: arr.length,
-			section: arr.map((section: any) => new SectionPruned(section)),
+			section: arr.map((section: any) => new SectionClass(section)),
 		} as SectionDatasetModel;
 	} else {
 		throw new InsightError("Invalid dataset type");

@@ -1,6 +1,6 @@
 // iterates through all files in the zip and returns an array of sections
 import JSZip from "jszip";
-import {Section, SectionPruned, SectionQuery} from "../models/ISection";
+import {Section, SectionClass, SectionQuery} from "../models/ISection";
 import {InsightDatasetKind, InsightError} from "./IInsightFacade";
 import {SectionDatasetModel} from "../models/IModel";
 import fs from "fs-extra";

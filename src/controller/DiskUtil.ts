@@ -1,5 +1,5 @@
 import fs from "fs-extra";
-import {Dataset, Header, RoomDatasetModel, SectionDatasetModel} from "../models/IModel";
+import {Dataset, Header, InsightData, RoomDatasetModel, SectionDatasetModel} from "../models/IModel";
 import {InsightError, NotFoundError} from "./IInsightFacade";
 
 export const PERSISTENT_DIR = "./data/";
@@ -11,7 +11,7 @@ export function doesDatasetIDExist(id: string): boolean {
 
 // TODO: make this async
 // retrieve dataset with given ID
-export function retrieveDataset(id: string): SectionDatasetModel | RoomDatasetModel {
+export function retrieveDataset(id: string): Dataset {
 	const data = fs.readFileSync(PERSISTENT_DIR + id + ".json", "utf8");
 	return JSON.parse(data);
 }

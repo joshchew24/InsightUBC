@@ -1,3 +1,5 @@
+import {SectionData} from "./IModel";
+
 export interface SectionQuery {
 	result: Section[];
 	rank: number;
@@ -42,7 +44,7 @@ export interface Section {
 	Subject: string;
 }
 
-export class SectionPruned {
+export class SectionClass implements SectionData {
 	public uuid: string;
 	public id: string;
 	public title: string;
