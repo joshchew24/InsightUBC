@@ -5,10 +5,11 @@ import {
 	getChildElements,
 	getChildNodes,
 	getFirstChildTextNodeValue, getHrefLinkFromAnchor, getTextChildFromAnchor,
-	validateAndGetTableFields
+	populateFieldObjectFromTable
 } from "../controller/HTMLUtil";
 import * as parse5 from "parse5";
 import {defaultTreeAdapter} from "parse5";
+import {InsightError} from "../controller/IInsightFacade";
 
 const ValidClass = [
 	"views-field views-field-field-room-number",
@@ -36,15 +37,15 @@ export interface RoomFields {
 }
 
 interface IRoomFactory {
-	createRoom(roomRow: Element, parent: Building): Room | null;
+	createRoom(roomRow: Element, parent: Building): Room | undefined;
 	getFieldFromCell(roomCell: Element, fieldType: string, roomFieldObject: RoomFields): void;
 }
 
 export const RoomFactory: IRoomFactory = {
-	createRoom(roomRow: Element, parent: Building): Room | null {
+	createRoom(roomRow: Element, parent: Building): Room | undefined {
 		let roomCells = getChildElements(roomRow, false, parse5.html.TAG_NAMES.TD);
 		if (roomCells == null) {
-			return null;
+			return undefined;
 		}
 		let fieldsObject: RoomFields = {
 			number: undefined,
@@ -53,17 +54,26 @@ export const RoomFactory: IRoomFactory = {
 			furniture: undefined,
 			href: undefined
 		};
-		let roomFields = validateAndGetTableFields(
+		populateFieldObjectFromTable(
 			roomCells as Element[],
 			fieldsObject,
 			ValidClass,
 			this.getFieldFromCell
 		);
-		console.log(roomFields);
-		if (roomFields == null) {
-			return null;
+
+		// check that all the properties in FieldObject have some real value
+		if (Object.values(fieldsObject).some((value) => value === undefined)) {
+			return undefined;
 		}
-		return null;
+
+		return new Room(
+			fieldsObject.number as string,
+			fieldsObject.seats as number,
+			fieldsObject.furniture as string,
+			fieldsObject.type as string,
+			fieldsObject.href as string,
+			parent
+		);
 	},
 	getFieldFromCell(roomCell: Element, fieldType: string, roomFieldObject: RoomFields): void {
 		// console.log(roomCell);
@@ -103,14 +113,13 @@ export class Room {
 	public building: Building; 		// The building this room is in
 
 	constructor(number: string,
-		name: string,
 		seats: number,
 		type: string,
 		furniture: string,
 		href: string,
 		building: Building) {
 		this.number = number;
-		this.name = name;
+		this.name = building.shortname + "_" + number;
 		this.seats = seats;
 		this.type = type;
 		this.furniture = furniture;

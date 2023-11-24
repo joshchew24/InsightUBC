@@ -6,7 +6,7 @@ import {
 	getChildElements,
 	getChildNodes,
 	getTableRows,
-	validateAndGetTableFields
+	populateFieldObjectFromTable
 } from "../controller/HTMLUtil";
 import * as parse5 from "parse5";
 import {defaultTreeAdapter} from "parse5";
@@ -35,16 +35,16 @@ export interface BuildingFields {
 }
 
 interface IBuildingFactory {
-	createBuilding(buildingRow: Element, zip: JSZip): Building | null;
+	createBuilding(buildingRow: Element, zip: JSZip): Building | undefined;
 	getFieldFromCell(buildingCell: Element, fieldType: string, buildingFieldsObject: BuildingFields): void;
 }
 
 export const BuildingFactory: IBuildingFactory = {
 
-	createBuilding(buildingRow: Element, zip: JSZip): Building | null {
+	createBuilding(buildingRow: Element, zip: JSZip): Building | undefined {
 		let buildingCells = getChildElements(buildingRow, false, parse5.html.TAG_NAMES.TD);
 		if (buildingCells == null) {
-			return null;
+			return undefined;
 		}
 		let fieldsObject: BuildingFields = {
 			shortname: undefined,
@@ -53,21 +53,20 @@ export const BuildingFactory: IBuildingFactory = {
 			buildingPath: undefined
 		};
 		// let buildingFields = this.validateAndGetBuildingFields(buildingCells as Element[]);
-		let buildingFields = validateAndGetTableFields(
+		populateFieldObjectFromTable(
 			buildingCells as Element[],
 			fieldsObject,
 			ValidClass,
 			this.getFieldFromCell
 		);
-		if (buildingFields == null) {
-			return null;
+		if (Object.values(fieldsObject).some((value) => value === undefined)) {
+			return undefined;
 		}
-		let buildingFieldObject = buildingFields as BuildingFields;
 		return new Building(
-			buildingFieldObject.shortname as string,
-			buildingFieldObject.fullname as string,
-			buildingFieldObject.address as string,
-			buildingFieldObject.buildingPath as string,
+			fieldsObject.shortname as string,
+			fieldsObject.fullname as string,
+			fieldsObject.address as string,
+			fieldsObject.buildingPath as string,
 			zip
 		);
 	},
