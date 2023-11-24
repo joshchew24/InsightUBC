@@ -511,7 +511,7 @@ describe("InsightFacade", function () {
 						{
 							id: "rooms",
 							kind: InsightDatasetKind.Rooms,
-							numRows: 363,
+							numRows: 364,
 						},
 						{
 							id: "sections",
