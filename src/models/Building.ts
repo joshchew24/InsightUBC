@@ -1,7 +1,13 @@
 import {Room, RoomFactory} from "./Room";
 import JSZip from "jszip";
 import {ChildNode, Element, TextNode} from "parse5/dist/tree-adapters/default";
-import {findTableInHTML, getChildElements, getChildNodes, getTableRows} from "../controller/HTMLUtil";
+import {
+	findTableInHTML,
+	getChildElements,
+	getChildNodes,
+	getTableRows,
+	validateAndGetTableFields
+} from "../controller/HTMLUtil";
 import * as parse5 from "parse5";
 import {defaultTreeAdapter} from "parse5";
 import {InsightError} from "../controller/IInsightFacade";
@@ -21,7 +27,7 @@ enum ValidClassMap {
 	PATH = "views-field views-field-nothing"
 }
 
-interface BuildingFields {
+export interface BuildingFields {
 	shortname?: string,
 	fullname?: string,
 	address?: string,
@@ -41,24 +47,31 @@ export const BuildingFactory: IBuildingFactory = {
 		if (buildingCells == null) {
 			return null;
 		}
-		let buildingFields = this.validateAndGetBuildingFields(buildingCells as Element[]);
+		// let buildingFields = this.validateAndGetBuildingFields(buildingCells as Element[]);
+		let buildingFields = validateAndGetTableFields(
+			buildingCells as Element[],
+			{} as BuildingFields,
+			ValidClass,
+			this.getFieldFromCell
+		);
 		if (buildingFields == null) {
 			return null;
 		}
+		let buildingFieldObject = buildingFields as BuildingFields;
 		return new Building(
-			buildingFields.shortname as string,
-			buildingFields.fullname as string,
-			buildingFields.address as string,
-			buildingFields.buildingPath as string,
+			buildingFieldObject.shortname as string,
+			buildingFieldObject.fullname as string,
+			buildingFieldObject.address as string,
+			buildingFieldObject.buildingPath as string,
 			zip
 		);
 	},
 
 	validateAndGetBuildingFields(buildingCellsArr: Element[]) {
-		if (buildingCellsArr.length !== 5) {
-			// TODO: is it possible for a building to have not 5 columns?
-			throw new InsightError("building should have 5 columns");
-		}
+		// if (buildingCellsArr.length !== 5) {
+		// 	// TODO: is it possible for a building to have not 5 columns?
+		// 	throw new InsightError("building should have 5 columns");
+		// }
 		let buildingFields: BuildingFields = {};
 
 		for (let cell of buildingCellsArr) {

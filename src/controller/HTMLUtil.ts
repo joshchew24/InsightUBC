@@ -6,6 +6,8 @@ import {InsightError} from "./IInsightFacade";
 import {getFileFromZip} from "./DatasetUtil";
 import {makeAsync} from "./AsyncUtil";
 import {Attribute} from "parse5/dist/common/token";
+import {Building, BuildingFields} from "../models/Building";
+import {RoomFields} from "../models/Room";
 
 
 export function findTableInHTML(documentString: string, docName: string = "document") {
@@ -111,4 +113,26 @@ export function getChildNodes(parent: ParentNode,
 		return null;
 	}
 	return children;
+}
+
+export function validateAndGetTableFields(
+	tableCellsArr: Element[],
+	fieldObject: BuildingFields | RoomFields,
+	validClasses: string[],
+	getFieldFunction: (...args: any[]) => void) {
+
+	for (let cell of tableCellsArr) {
+		let attrList = defaultTreeAdapter.getAttrList(cell);
+		for (let attr of attrList) {
+			if (attr.name === "class" && validClasses.includes(attr.value)) {
+				getFieldFunction(cell, attr.value, fieldObject);
+			}
+		}
+	}
+	// if we were not able to get all fields for this building, it's not valid so return null
+	// TODO: this is slightly bugged - null values might not exist if the property was never created
+	if (Object.values(fieldObject).some((value) => value === undefined)) {
+		return null;
+	}
+	return fieldObject;
 }

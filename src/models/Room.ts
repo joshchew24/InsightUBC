@@ -5,7 +5,7 @@ import {getChildElements} from "../controller/HTMLUtil";
 import * as parse5 from "parse5";
 import {defaultTreeAdapter} from "parse5";
 
-interface RoomFields {
+export interface RoomFields {
 	number?: string,
 	seats?: number,
 	type?: string,

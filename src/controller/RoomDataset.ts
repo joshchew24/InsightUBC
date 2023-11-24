@@ -49,7 +49,7 @@ export class RoomDataset extends InsightDatasetClass {
 			})
 			.then((buildings) => {
 				let validBuildings: Building[] = [];
-
+				console.log(buildings);
 				for (let building of buildings) {
 					if (building != null) {
 						validBuildings.push(building as Building);
