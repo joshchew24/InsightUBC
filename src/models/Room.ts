@@ -31,8 +31,8 @@ enum ValidClassMap {
 export interface RoomFields {
 	number?: string,
 	seats?: number,
-	type?: string,
 	furniture?: string,
+	type?: string,
 	href?: string
 }
 
@@ -50,8 +50,8 @@ export const RoomFactory: IRoomFactory = {
 		let fieldsObject: RoomFields = {
 			number: undefined,
 			seats: undefined,
-			type: undefined,
 			furniture: undefined,
+			type: undefined,
 			href: undefined
 		};
 		populateFieldObjectFromTable(
@@ -107,22 +107,22 @@ export class Room {
 	public number: string; 			// The room number. Not always a number so represented as a string.
 	public name: string; 			// The room id. Should be rooms_shortname + "_" + rooms_number.
 	public seats: number; 			// The number of seats in the room.
-	public type: string; 			// The room type.
 	public furniture: string; 		// The room furniture.
+	public type: string; 			// The room type.
 	public href: string; 			// The link to the full details online.
 	public building: Building; 		// The building this room is in
 
 	constructor(number: string,
 		seats: number,
-		type: string,
 		furniture: string,
+		type: string,
 		href: string,
 		building: Building) {
 		this.number = number;
 		this.name = building.shortname + "_" + number;
 		this.seats = seats;
-		this.type = type;
 		this.furniture = furniture;
+		this.type = type;
 		this.href = href;
 		this.building = building;
 	}
